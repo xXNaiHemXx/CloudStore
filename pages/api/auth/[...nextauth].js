@@ -4,7 +4,7 @@ import { MongoClient } from "mongodb";
 
 const clientPromise = MongoClient.connect(process.env.MONGODB_URI);
 
-export default NextAuth({
+export const authOptions = {
     providers: [
         DiscordProvider({
             clientId: process.env.DISCORD_CLIENT_ID,
@@ -17,7 +17,8 @@ export default NextAuth({
     },
     callbacks: {
         async session({ session, token }) {
-            session.user.id = token.sub; // ✅ ดึง Discord ID แล้วใส่ใน session
+            session.user.id = token.sub;
+            session.user.discordId = token.sub;
 
             const client = await clientPromise;
             const db = client.db("CloudStore");
@@ -26,7 +27,9 @@ export default NextAuth({
             const dbUser = await usersCollection.findOne({ discordId: token.sub });
 
             if (dbUser) {
-                session.user.points = dbUser.points || 0; // ✅ ดึง Point จาก Database
+                session.user.points = dbUser.points || 0;
+                session.user.name = dbUser.name || session.user.name;
+                session.user.email = dbUser.email || session.user.email;
             }
 
             return session;
@@ -39,16 +42,15 @@ export default NextAuth({
             const existingUser = await usersCollection.findOne({ discordId: user.id });
 
             if (!existingUser) {
-                // ✅ บันทึกข้อมูลใหม่ลง Database
                 await usersCollection.insertOne({
                     discordId: user.id,
                     name: user.name,
                     email: user.email,
-                    points: 0, // ✅ เริ่มต้นที่ 0
+                    points: 0,
+                    products: [],
                     loginAt: new Date(),
                 });
             } else {
-                // ✅ อัปเดตเวลาล็อกอินล่าสุด
                 await usersCollection.updateOne(
                     { discordId: user.id },
                     { $set: { loginAt: new Date() } }
@@ -58,4 +60,6 @@ export default NextAuth({
             return true;
         },
     },
-});
+};
+
+export default NextAuth(authOptions);

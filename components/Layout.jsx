@@ -1,43 +1,16 @@
 import { useSession, signIn } from "next-auth/react";
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import axios from "axios";
 import Head from "next/head";
+import { useUser } from "../context/UserContext"; // ✅ import useUser
 
 export default function Layout({ children }) {
   const { data: session } = useSession();
-  const [userPoints, setUserPoints] = useState(0);
-
-  const fetchUserPoints = useCallback(async () => {
-    if (!session?.user?.id) return;
-    try {
-      const res = await axios.get(`/api/user?discordId=${session.user.id}`);
-      setUserPoints(res.data.points || 0);
-    } catch {
-      // silently ignore
-    }
-  }, [session]);
-
-  // Save user to DB + fetch points on session change
-  useEffect(() => {
-    if (!session) return;
-    (async () => {
-      try {
-        if (session?.user?.id) {
-          await axios.post("/api/user", {
-            discordId: session.user.id,
-            name: session.user.name,
-            email: session.user.email,
-          });
-        }
-      } catch (err) {
-        console.error("Save user error:", err);
-      }
-      await fetchUserPoints();
-    })();
-  }, [session, fetchUserPoints]);
+  const { userPoints, isLoading } = useUser(); // ✅ ใช้ points จาก Context
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
     const links = document.querySelector(".header-links");
     if (links) links.classList.toggle("active");
   };
@@ -74,7 +47,13 @@ export default function Layout({ children }) {
                     alt="Profile"
                     className="profile-pic"
                   />
-                  <span className="profile-text">{userPoints} Point</span>
+                  <span className="profile-text">
+                    {isLoading ? (
+                      <span className="animate-pulse" style={{ opacity: 0.5 }}>⏳</span>
+                    ) : (
+                      `${userPoints?.toLocaleString() || 0} Point`
+                    )}
+                  </span>
                 </Link>
               </div>
             ) : (

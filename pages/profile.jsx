@@ -5,51 +5,33 @@ import axios from "axios";
 import Link from "next/link";
 import Layout from "../components/Layout";
 import styles from "../styles/Profile.module.css";
+import { useUser } from "../context/UserContext";
 
 export default function Profile() {
   const { data: session } = useSession();
   const router = useRouter();
+  const { userPoints, refreshPoints, isLoading, userProducts: contextUserProducts } = useUser();
   
-  // --- Common State ---
-  const [userPoints, setUserPoints] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const adminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
-
-  // --- Tab State ---
-  const [activeTab, setActiveTab] = useState("products"); // products | topup | history
-
-  // --- Products State ---
-  const [userProducts, setUserProducts] = useState([]);
-
-  // --- Topup State ---
+  const [activeTab, setActiveTab] = useState("products");
   const [file, setFile] = useState(null);
   const [amount, setAmount] = useState("");
   const [previewUrl, setPreviewUrl] = useState(null);
   const [fileName, setFileName] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  // --- History State ---
   const [topups, setTopups] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  
+  // ✅ เพิ่ม state สำหรับเก็บสินค้าแยก (เผื่อต้องการจัดการเอง)
+  const [myProducts, setMyProducts] = useState([]);
 
-  // --- Fetch User Data ---
+  const adminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
+
+  // ✅ เมื่อ contextUserProducts เปลี่ยน ให้อัปเดต myProducts
   useEffect(() => {
-    if (!session) {
-      setLoading(false);
-      return;
-    }
-    axios.get(`/api/user?discordId=${session.user.id}`)
-      .then((res) => {
-        setUserPoints(res.data.points || 0);
-        setUserProducts(res.data.products || []);
-      })
-      .catch((err) => {
-        console.error("Error fetching user data:", err);
-      })
-      .finally(() => setLoading(false));
-  }, [session]);
+    setMyProducts(contextUserProducts || []);
+  }, [contextUserProducts]);
 
-  // --- Fetch History when tab active ---
+  // Fetch History when tab active
   useEffect(() => {
     if (!session || activeTab !== "history") return;
     setLoadingHistory(true);
@@ -58,8 +40,12 @@ export default function Profile() {
       .catch((err) => console.error("History load error:", err))
       .finally(() => setLoadingHistory(false));
   }, [session, activeTab]);
-
-  // --- Topup: File Change ---
+  useEffect(() => {
+    if (session && activeTab === 'products') {
+      refreshPoints();
+    }
+  }, [session, activeTab]);
+  // handleFileChange function
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
@@ -73,7 +59,7 @@ export default function Profile() {
     setPreviewUrl(URL.createObjectURL(selectedFile));
   };
 
-  // --- Topup: Remove File ---
+  // removeFile function
   const removeFile = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setFile(null);
@@ -81,7 +67,22 @@ export default function Profile() {
     setPreviewUrl(null);
   };
 
-  // --- Topup: Submit ---
+  // getStatusClass function
+  const getStatusClass = (status) => {
+    switch (status?.toLowerCase()) {
+      case "success":
+      case "approved":
+        return styles.statusSuccess;
+      case "pending":
+        return styles.statusPending;
+      case "failed":
+      case "rejected":
+        return styles.statusFailed;
+      default:
+        return styles.statusPending;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!file || !amount || !session?.user?.id) {
       alert("กรุณากรอกข้อมูลให้ครบ");
@@ -129,28 +130,12 @@ export default function Profile() {
       alert(`✅ ส่งคำขอเติมเงินสำเร็จ! กรุณารอการตรวจสอบ`);
       removeFile();
       setAmount("");
-      setUserPoints(verifyData.newPoints || userPoints);
+      await refreshPoints(); // ✅ รีเฟรชแต้ม
     } catch (error) {
       console.error("Top-up error:", error);
       alert("เกิดข้อผิดพลาดในการดำเนินการ");
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  // --- Status Helper ---
-  const getStatusClass = (status) => {
-    switch (status?.toLowerCase()) {
-      case "success":
-      case "approved":
-        return styles.statusSuccess;
-      case "pending":
-        return styles.statusPending;
-      case "failed":
-      case "rejected":
-        return styles.statusFailed;
-      default:
-        return styles.statusPending;
     }
   };
 
@@ -196,7 +181,7 @@ export default function Profile() {
             <div className={styles.profileActions}>
               <div className={styles.pointsBadge}>
                 <span className={styles.pointsIcon}>💎</span>
-                {userPoints.toLocaleString()} Point
+                {userPoints?.toLocaleString() || 0} Point
               </div>
               {adminIds.includes(session.user.id) && (
                 <Link href="/admin" className={styles.btnAdmin}>
@@ -244,7 +229,7 @@ export default function Profile() {
             {/* ========================================== */}
             {activeTab === 'products' && (
               <>
-                {loading ? (
+                {isLoading ? (
                   <div className={styles.loadingContainer}>
                     <div className={styles.loadingSpinner}></div>
                     <p>กำลังโหลด...</p>
@@ -253,11 +238,11 @@ export default function Profile() {
                   <>
                     <div className={styles.productCountHeader}>
                       <p className={styles.productCount}>
-                        คุณมีสินค้า <span>{userProducts.length}</span> ชิ้น
+                        คุณมีสินค้า <span>{myProducts?.length || 0}</span> ชิ้น
                       </p>
                     </div>
 
-                    {userProducts.length === 0 ? (
+                    {!myProducts || myProducts.length === 0 ? (
                       <div className={styles.emptyState}>
                         <span className={styles.emptyIcon}>🛍️</span>
                         <p className={styles.emptyTitle}>ยังไม่มีสินค้า</p>
@@ -270,8 +255,8 @@ export default function Profile() {
                       </div>
                     ) : (
                       <div className={styles.productGrid}>
-                        {userProducts.map((product) => (
-                          <div key={product.productId || product._id} className={styles.productCard}>
+                        {myProducts.map((product, index) => (  // ✅ เพิ่ม index
+                          <div key={`${product.productId}-${index}`} className={styles.productCard}>
                             <div className={styles.cardImageWrapper}>
                               <img
                                 src={product.image || '/images/placeholder.png'}

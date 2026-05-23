@@ -769,3 +769,503 @@
     font-size: 0.8rem;
   }
 }
+
+
+/* ==================== USER DETAIL MODAL ==================== */
+
+.userDetailModal {
+  background: #1a1d2e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 2rem;
+  width: 650px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+  color: #e4e6f0;
+  position: relative;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.userDetailModal::-webkit-scrollbar {
+  width: 6px;
+}
+
+.userDetailModal::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+/* Close Button */
+.modalCloseBtn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8b8fa6;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 2;
+}
+
+.modalCloseBtn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* User Detail Header */
+.userDetailHeader {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.userAvatarLarge {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+}
+
+.userDetailName {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.2rem;
+}
+
+.userDetailEmail {
+  font-size: 0.85rem;
+  color: #8b8fa6;
+  margin: 0;
+}
+
+/* User Info Cards */
+.userInfoCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 500px) {
+  .userInfoCards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.userInfoCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(15, 17, 25, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.userInfoCard:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 17, 25, 0.7);
+}
+
+.userInfoCardIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.userInfoCardLabel {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.15rem;
+}
+
+.userInfoCardValue {
+  font-size: 0.85rem;
+  color: #d1d5db;
+  margin: 0;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.userInfoCardValueHighlight {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #10b981;
+  margin: 0;
+}
+
+/* Divider */
+.userDetailDivider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0 1rem;
+  color: #818cf8;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.userDetailDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Point Adjustment Section */
+.pointAdjustSection {
+  background: rgba(15, 17, 25, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.pointAdjustInput {
+  margin-bottom: 1rem;
+}
+
+.pointAdjustLabel {
+  display: block;
+  font-size: 0.8rem;
+  color: #8b8fa6;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.pointInput {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: #0f1119;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: #e4e6f0;
+  font-size: 0.95rem;
+  font-family: 'Noto Sans Thai', sans-serif;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.pointInput:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.pointAdjustButtons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.pointAddBtn,
+.pointSubtractBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+
+.pointAddBtn {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.pointAddBtn:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.2);
+  transform: translateY(-1px);
+}
+
+.pointSubtractBtn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.pointSubtractBtn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  transform: translateY(-1px);
+}
+
+.pointAddBtn:disabled,
+.pointSubtractBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Point Preview */
+.pointPreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1rem;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.pointPreviewLabel {
+  font-size: 0.85rem;
+  color: #a5b4fc;
+  font-weight: 500;
+}
+
+.pointPreviewValue {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Action Buttons */
+.pointActionButtons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.pointSaveBtn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+
+.pointSaveBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+}
+
+.pointSaveBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pointCancelBtn {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8b8fa6;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+
+.pointCancelBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #d1d5db;
+}
+
+.pointCancelBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Purchased Products */
+.purchasedProducts {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.purchasedProducts::-webkit-scrollbar {
+  width: 4px;
+}
+
+.purchasedProducts::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+.purchasedProductCard {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(15, 17, 25, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.purchasedProductCard:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(15, 17, 25, 0.6);
+}
+
+.purchasedProductInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.purchasedProductName {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #e4e6f0;
+  margin: 0 0 0.4rem;
+}
+
+.purchasedProductMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.purchasedProductVersion {
+  font-size: 0.75rem;
+  color: #a5b4fc;
+  background: rgba(99, 102, 241, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-weight: 600;
+}
+
+.purchasedProductDate {
+  font-size: 0.72rem;
+  color: #6b7280;
+}
+
+.purchasedProductLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.purchasedProductDownload {
+  font-size: 0.8rem;
+  color: #10b981;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.purchasedProductDownload:hover {
+  color: #34d399;
+  text-decoration: underline;
+}
+
+.purchasedProductRoles {
+  font-size: 0.72rem;
+  color: #a78bfa;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+}
+
+.purchasedProductRemoveBtn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.purchasedProductRemoveBtn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  transform: scale(1.05);
+}
+
+.purchasedProductRemoveBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* No Products */
+.noProducts {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.noProductsIcon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+.noProducts p {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* --- Product Role ID Tag --- */
+.productRoleId {
+  margin-top: 0.5rem;
+}
+
+.productRoleId small {
+  color: #a78bfa;
+  font-size: 0.7rem;
+  background: rgba(139, 92, 246, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+}

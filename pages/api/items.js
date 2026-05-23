@@ -1,21 +1,18 @@
 import { connectToDB } from "../../utils/db";
-import Item from "../../models/items"; // ✅ ตรวจสอบว่าชื่อโมเดลถูกต้อง (ควรเป็น Item ไม่ใช่ items)
+import Item from "../../models/items";
 
 export default async function handler(req, res) {
-  await connectToDB(); // ✅ เชื่อมต่อกับฐานข้อมูล
+  await connectToDB();
 
   switch (req.method) {
     case "GET":
       try {
-        
         const { id } = req.query;
         if (id) {
-          // ✅ ถ้ามี `id` ให้ดึงสินค้าเฉพาะตัว
           const item = await Item.findById(id);
           if (!item) return res.status(404).json({ error: "Item not found" });
           return res.status(200).json(item);
         }
-        // ✅ ถ้าไม่มี `id` ให้ดึงสินค้าทั้งหมด
         const items = await Item.find({});
         res.status(200).json(items);
       } catch (error) {
@@ -24,11 +21,15 @@ export default async function handler(req, res) {
       }
       break;
 
-      case "POST":
+    case "POST":
       try {
-        console.log("✅ Received Data from Frontend:", req.body); // ✅ Debug ข้อมูลที่รับจาก Frontend
+        console.log("✅ Received Data from Frontend:", req.body);
 
-        const { itemsname, itemsprice, itemsimage, itemsimages, itemsdesc, itemsurlyoutube, itemstitle, itemsfile, itemsversion } = req.body;
+        const { 
+          itemsname, itemsprice, itemsimage, itemsimages, 
+          itemsdesc, itemsurlyoutube, itemstitle, itemsfile, 
+          itemsversion, discordRoleIds
+        } = req.body;
 
         if (!itemsname || !itemsprice || !itemsimage || !itemsdesc || !itemstitle || !itemsfile || !itemsversion) {
           return res.status(400).json({ error: "กรุณากรอกข้อมูลให้ครบ" });
@@ -36,7 +37,16 @@ export default async function handler(req, res) {
 
         const formattedImages = Array.isArray(itemsimages) ? itemsimages : [];
         const formattedurl = itemsurlyoutube && typeof itemsurlyoutube === "string" ? itemsurlyoutube : "";
+        
+        // ✅ แปลง discordRoleIds ให้เป็น Array ของ String
+        let formattedRoleIds = [];
+        if (Array.isArray(discordRoleIds)) {
+          formattedRoleIds = discordRoleIds.filter(id => id && id.trim() !== "");
+        } else if (typeof discordRoleIds === "string") {
+          formattedRoleIds = discordRoleIds.split(/[ ,\n]+/).filter(id => id && id.trim() !== "");
+        }
 
+        console.log("✅ Saving discordRoleIds:", formattedRoleIds);
 
         const newItem = new Item({
           itemsname,
@@ -48,10 +58,11 @@ export default async function handler(req, res) {
           itemstitle,
           itemsfile,
           itemsversion,
+          discordRoleIds: formattedRoleIds,
         });
 
-        await newItem.save({ new: true });
-        console.log("✅ Saved Item to MongoDB:", newItem); // ✅ Debug ข้อมูลที่ถูกบันทึก
+        await newItem.save();
+        console.log("✅ Saved Item to MongoDB:", newItem);
 
         res.status(201).json(newItem);
       } catch (error) {
@@ -60,14 +71,25 @@ export default async function handler(req, res) {
       }
       break;
 
-
-      
-      
-
     case "PUT":
       try {
-        const { id, itemsname, itemsprice, itemsimage, itemsimages, itemsurlyoutube, itemsdesc, itemstitle, itemsfile, itemsversion } = req.body;
+        const { 
+          id, itemsname, itemsprice, itemsimage, itemsimages, 
+          itemsurlyoutube, itemsdesc, itemstitle, itemsfile, 
+          itemsversion, discordRoleIds
+        } = req.body;
+        
         if (!id) return res.status(400).json({ error: "Missing item ID" });
+
+        // ✅ แปลง discordRoleIds ให้เป็น Array ของ String
+        let formattedRoleIds = [];
+        if (Array.isArray(discordRoleIds)) {
+          formattedRoleIds = discordRoleIds.filter(id => id && id.trim() !== "");
+        } else if (typeof discordRoleIds === "string") {
+          formattedRoleIds = discordRoleIds.split(/[ ,\n]+/).filter(id => id && id.trim() !== "");
+        }
+
+        console.log("✅ Updating discordRoleIds:", formattedRoleIds);
 
         const updatedItem = await Item.findByIdAndUpdate(id, {
           itemsname,
@@ -79,6 +101,7 @@ export default async function handler(req, res) {
           itemstitle,
           itemsfile,
           itemsversion,
+          discordRoleIds: formattedRoleIds,
         }, { new: true });
 
         if (!updatedItem) return res.status(404).json({ error: "Item not found" });

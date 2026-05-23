@@ -1,10 +1,15 @@
-import '../styles/globals.css';  // ✅ ใช้ path import '../styles/globals.css';
 import { SessionProvider } from "next-auth/react";
+import { UserProvider } from "../context/UserContext";
+import "../styles/globals.css";
 
-export default function App({ Component, pageProps }) {
-    return (
-        <SessionProvider session={pageProps.session}>
-            <Component {...pageProps} />
-        </SessionProvider>
-    );
+function MyApp({ Component, pageProps }) {
+  return (
+    <SessionProvider session={pageProps.session}>
+      <UserProvider>
+        <Component {...pageProps} />
+      </UserProvider>
+    </SessionProvider>
+  );
 }
+
+export default MyApp;
