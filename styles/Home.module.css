@@ -1,0 +1,756 @@
+/* ==================== HOME PAGE STYLES (FULLSCREEN + RESPONSIVE) ==================== */
+
+/* ---------- Reset & Base ---------- */
+.homePage {
+  width: 100%;
+  min-height: 100vh;
+  background: #0a0a1a;
+  overflow-x: hidden;
+}
+
+/* ---------- Hero Section ---------- */
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: 
+    radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #0a0a1a 0%, #0d1117 40%, #111827 100%);
+  isolation: isolate;
+}
+
+/* Animated Grid */
+.heroGrid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(99, 102, 241, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+  animation: gridMove 25s linear infinite;
+  z-index: 0;
+}
+
+@keyframes gridMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(80px, 80px); }
+}
+
+/* Floating Orbs */
+.heroOrb1 {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  top: -150px;
+  right: -100px;
+  animation: orbFloat1 10s ease-in-out infinite;
+  z-index: 0;
+}
+
+.heroOrb2 {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+  bottom: -100px;
+  left: -80px;
+  animation: orbFloat2 8s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-50px, 40px) scale(1.1); }
+  66% { transform: translate(30px, -30px) scale(0.9); }
+}
+
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -30px) scale(1.15); }
+  66% { transform: translate(-20px, 20px) scale(0.85); }
+}
+
+/* Content */
+.heroContent {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 2rem;
+  max-width: 850px;
+  width: 100%;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 50px;
+  color: #a5b4fc;
+  font-size: clamp(0.75rem, 2vw, 0.9rem);
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  animation: pulse 2.5s ease-in-out infinite;
+  white-space: nowrap;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.3); }
+  50% { box-shadow: 0 0 0 15px rgba(99, 102, 241, 0); }
+}
+
+/* Hero Title */
+.heroTitle {
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.heroTitleAccent {
+  background: linear-gradient(135deg, #6366f1 0%, #818cf8 35%, #a78bfa 65%, #6366f1 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
+}
+
+.heroSubtitle {
+  font-size: clamp(0.9rem, 2.5vw, 1.15rem);
+  color: #9ca3af;
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  line-height: 1.7;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 1rem;
+}
+
+/* Buttons */
+.heroButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 1rem;
+}
+
+.btnDiscord {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: clamp(0.7rem, 2vw, 0.85rem) clamp(1.25rem, 3vw, 1.75rem);
+  background: #5865f2;
+  color: white;
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: clamp(0.85rem, 2vw, 1rem);
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.btnDiscord::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.15) 50%, transparent 100%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.btnDiscord:hover::after {
+  transform: translateX(100%);
+}
+
+.btnDiscord:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(88, 101, 242, 0.45);
+}
+
+.btnDiscord img {
+  width: clamp(20px, 3vw, 24px);
+  height: clamp(20px, 3vw, 24px);
+}
+
+.btnShop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: clamp(0.7rem, 2vw, 0.85rem) clamp(1.25rem, 3vw, 1.75rem);
+  background: rgba(255, 255, 255, 0.04);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  font-weight: 600;
+  font-size: clamp(0.85rem, 2vw, 1rem);
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
+}
+
+.btnShop:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+}
+
+/* Scroll Indicator */
+.scrollIndicator {
+  position: absolute;
+  bottom: clamp(1rem, 3vw, 2rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-size: 0.75rem;
+  animation: bounce 2s ease-in-out infinite;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.scrollMouse {
+  width: 22px;
+  height: 36px;
+  border: 2px solid #6b7280;
+  border-radius: 12px;
+  position: relative;
+}
+
+.scrollMouse::before {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 7px;
+  background: #6b7280;
+  border-radius: 2px;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scrollWheel 1.5s ease-in-out infinite;
+}
+
+@keyframes scrollWheel {
+  0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(10px); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-8px); }
+}
+
+/* ---------- Latest Products Section ---------- */
+.latestProducts {
+  width: 100%;
+  padding: clamp(3rem, 8vw, 6rem) clamp(1rem, 4vw, 2rem);
+  background: #0d1117;
+  position: relative;
+}
+
+.latestProducts::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(200px, 40vw);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+}
+
+.sectionTitle {
+  text-align: center;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 700;
+  color: white;
+  margin-bottom: clamp(2rem, 5vw, 3rem);
+}
+
+.sectionTitle span {
+  background: linear-gradient(135deg, #6366f1, #a78bfa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Product Grid */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: clamp(1rem, 3vw, 1.5rem);
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* Desktop: 3 columns */
+@media (min-width: 1024px) {
+  .productGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Tablet: 2 columns */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .productGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile: 1 column */
+@media (max-width: 639px) {
+  .productGrid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+}
+
+/* Product Card */
+.productCard {
+  background: rgba(30, 35, 50, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  text-decoration: none;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  animation: fadeInUp 0.6s ease-out backwards;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.productCard:nth-child(1) { animation-delay: 0.05s; }
+.productCard:nth-child(2) { animation-delay: 0.15s; }
+.productCard:nth-child(3) { animation-delay: 0.25s; }
+.productCard:nth-child(4) { animation-delay: 0.35s; }
+.productCard:nth-child(5) { animation-delay: 0.45s; }
+.productCard:nth-child(6) { animation-delay: 0.55s; }
+
+/* Mobile: no hover animation, use active instead */
+@media (hover: hover) {
+  .productCard:hover {
+    transform: translateY(-6px);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  }
+
+  .productCard:hover .productImageWrapper img {
+    transform: scale(1.06);
+  }
+}
+
+@media (hover: none) {
+  .productCard:active {
+    transform: scale(0.98);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+}
+
+.productImageWrapper {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  position: relative;
+  background: #1a1d2e;
+}
+
+.productImageWrapper::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(30, 35, 50, 0.95), transparent);
+  z-index: 1;
+}
+
+.productImageWrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.productInfo {
+  padding: clamp(0.75rem, 2vw, 1rem) clamp(1rem, 3vw, 1.25rem) clamp(1rem, 3vw, 1.25rem);
+  position: relative;
+  z-index: 2;
+}
+
+.productName {
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.productTitleTag {
+  font-size: clamp(0.7rem, 1.8vw, 0.8rem);
+  color: #818cf8;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.productPriceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.productPrice {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  font-weight: 700;
+  color: #10b981;
+}
+
+.viewBtn {
+  font-size: clamp(0.7rem, 1.8vw, 0.8rem);
+  color: #818cf8;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: gap 0.3s ease;
+}
+
+@media (hover: hover) {
+  .productCard:hover .viewBtn {
+    gap: 0.5rem;
+  }
+}
+
+.emptyState {
+  text-align: center;
+  padding: clamp(2rem, 5vw, 3rem);
+  color: #6b7280;
+  background: rgba(30, 35, 50, 0.4);
+  border-radius: 16px;
+  border: 2px dashed rgba(255, 255, 255, 0.06);
+  grid-column: 1 / -1;
+  font-size: clamp(0.9rem, 2vw, 1rem);
+}
+
+/* ---------- Stats Section ---------- */
+.statsSection {
+  width: 100%;
+  padding: clamp(3rem, 8vw, 5rem) clamp(1rem, 4vw, 2rem);
+  background: linear-gradient(180deg, #0d1117 0%, #111827 100%);
+  position: relative;
+}
+
+.statsContainer {
+  display: flex;
+  justify-content: center;
+  gap: clamp(1rem, 3vw, 2rem);
+  flex-wrap: wrap;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.statCard {
+  flex: 1;
+  min-width: 150px;
+  max-width: 260px;
+  background: rgba(30, 35, 50, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: clamp(1.5rem, 4vw, 2rem) clamp(1rem, 3vw, 1.5rem);
+  text-align: center;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.statCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--stat-color, #6366f1), transparent);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  border-radius: 0 0 3px 3px;
+}
+
+@media (hover: hover) {
+  .statCard:hover::before {
+    opacity: 1;
+  }
+
+  .statCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@media (hover: none) {
+  .statCard:active {
+    transform: scale(0.97);
+  }
+}
+
+.statIcon {
+  font-size: clamp(2rem, 5vw, 2.5rem);
+  margin-bottom: 0.5rem;
+  display: block;
+  animation: float 3s ease-in-out infinite;
+}
+
+.statCard:nth-child(2) .statIcon { animation-delay: 0.5s; }
+.statCard:nth-child(3) .statIcon { animation-delay: 1s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.statValue {
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 800;
+  color: white;
+  margin-bottom: 0.25rem;
+  line-height: 1;
+}
+
+.statLabel {
+  font-size: clamp(0.8rem, 1.8vw, 0.9rem);
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* ---------- Team Section ---------- */
+.teamSection {
+  width: 100%;
+  padding: clamp(3rem, 8vw, 5rem) clamp(1rem, 4vw, 2rem);
+  background: #0d1117;
+  text-align: center;
+}
+
+.teamTitle {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+  font-weight: 700;
+  color: white;
+  margin-bottom: clamp(2rem, 5vw, 3rem);
+}
+
+.teamCard {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(30, 35, 50, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: clamp(2rem, 5vw, 2.5rem) clamp(2rem, 6vw, 3rem);
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  max-width: 350px;
+  width: 100%;
+}
+
+.teamCard::after {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+  top: -50px;
+  right: -50px;
+  border-radius: 50%;
+  transition: all 0.4s ease;
+}
+
+@media (hover: hover) {
+  .teamCard:hover::after {
+    transform: scale(1.4);
+  }
+
+  .teamCard:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+
+  .teamCard:hover .teamAvatar {
+    border-color: #818cf8;
+    box-shadow: 0 0 35px rgba(99, 102, 241, 0.35);
+  }
+}
+
+.teamAvatar {
+  width: clamp(100px, 20vw, 120px);
+  height: clamp(100px, 20vw, 120px);
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(99, 102, 241, 0.4);
+  margin-bottom: 1.25rem;
+  position: relative;
+  z-index: 1;
+  transition: all 0.4s ease;
+}
+
+.teamName {
+  font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0.25rem;
+  position: relative;
+  z-index: 1;
+}
+
+.teamRole {
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+  color: #818cf8;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- Tablet Specific ---------- */
+@media (max-width: 1023px) and (min-width: 640px) {
+  .heroOrb1 {
+    width: 350px;
+    height: 350px;
+    top: -100px;
+    right: -80px;
+  }
+  
+  .heroOrb2 {
+    width: 250px;
+    height: 250px;
+    bottom: -80px;
+    left: -60px;
+  }
+}
+
+/* ---------- Mobile Specific ---------- */
+@media (max-width: 639px) {
+  .hero {
+    min-height: 100vh;
+    min-height: 100dvh; /* dynamic viewport height */
+  }
+  
+  .heroGrid {
+    background-size: 40px 40px;
+  }
+  
+  .heroOrb1 {
+    width: 250px;
+    height: 250px;
+    top: -80px;
+    right: -60px;
+  }
+  
+  .heroOrb2 {
+    width: 180px;
+    height: 180px;
+    bottom: -60px;
+    left: -50px;
+  }
+
+  .heroButtons {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .btnDiscord,
+  .btnShop {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+  }
+
+  .heroSubtitle {
+    padding: 0 0.5rem;
+  }
+
+  .statsContainer {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .statCard {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .productCard {
+    border-radius: 12px;
+  }
+  
+  .productImageWrapper {
+    aspect-ratio: 16 / 9;
+  }
+
+  .teamCard {
+    border-radius: 20px;
+    padding: 1.5rem;
+    max-width: 100%;
+  }
+}
+
+/* ---------- Small Mobile ---------- */
+@media (max-width: 380px) {
+  .badge {
+    padding: 0.4rem 1rem;
+    font-size: 0.7rem;
+  }
+
+  .heroTitle {
+    font-size: 1.75rem;
+  }
+}
