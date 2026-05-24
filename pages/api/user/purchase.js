@@ -147,7 +147,90 @@ export default async function handler(req, res) {
       // =====================================================
       // เพิ่ม DISCORD ROLE
       // =====================================================
+      
+      // =====================================================
+// POST = ซื้อสินค้า
+// =====================================================
 
+if (req.method === "POST") {
+
+  try {
+
+    const { userId, productId, price } = req.body;
+
+    if (!userId || !productId) {
+      return res.status(400).json({ error: "Missing userId or productId" });
+    }
+
+    const user = await User.findOne({ discordId: userId });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const product = await Item.findById(productId);
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // เช็ค point
+    const currentPoints = Number(user.points || 0);
+    const productPrice = Number(price);
+
+    if (currentPoints < productPrice) {
+      return res.status(400).json({ 
+        error: `Point ไม่เพียงพอ! คุณมี ${currentPoints} Point แต่ต้องใช้ ${productPrice} Point` 
+      });
+    }
+
+    // หัก point
+    user.points = currentPoints - productPrice;
+
+    // เพิ่มสินค้า
+    if (!user.products) user.products = [];
+
+    user.products.push({
+      productId: product._id.toString(),
+      name: product.itemsname,
+      version: product.itemsversion,
+      image: product.itemsimage,
+      fileUrl: product.itemsfile,
+      discordRoleIds: product.discordRoleIds || [],
+      purchaseDate: new Date(),
+      currentVersion: product.itemsversion,
+      hasUpdate: false
+    });
+
+    user.markModified("products");
+    await user.save();
+
+    // บันทึกประวัติ
+    await Purchase.create({
+      userId: user.discordId,
+      userName: user.name,
+      productId: product._id,
+      productName: product.itemsname,
+      price: productPrice,
+      purchaseDate: new Date()
+    });
+
+    // Discord Roles
+    if (product.discordRoleIds?.length > 0) {
+      await addDiscordRoles(user.discordId, product.discordRoleIds);
+    }
+
+    // ✅ สำคัญ: ส่ง remainingPoints กลับไป
+    return res.status(200).json({
+      success: true,
+      message: "Purchase successful",
+      remainingPoints: user.points  // ✅ ต้องมีบรรทัดนี้!
+    });
+
+  } catch (error) {
+    console.error("PURCHASE ERROR:", error);
+    return res.status(500).json({ error: error.message });
+  }
+
+}
       if (
         product.discordRoleIds &&
         product.discordRoleIds.length > 0
