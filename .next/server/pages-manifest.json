@@ -7,5 +7,10 @@
   "/products/[id]": "pages/products/[id].js",
   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
   "/api/user/check-updates": "pages/api/user/check-updates.js",
-  "/api/user": "pages/api/user.js"
+  "/api/user": "pages/api/user.js",
+  "/api/items": "pages/api/items.js",
+  "/admin": "pages/admin.js",
+  "/api/user/count": "pages/api/user/count.js",
+  "/api/user/purchase": "pages/api/user/purchase.js",
+  "/api/uploads": "pages/api/uploads.js"
 }
