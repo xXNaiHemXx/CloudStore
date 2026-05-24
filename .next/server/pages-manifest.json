@@ -11,5 +11,6 @@
   "/api/user/purchase": "pages/api/user/purchase.js",
   "/api/user/count": "pages/api/user/count.js",
   "/api/uploads": "pages/api/uploads.js",
-  "/api/user/user": "pages/api/user/user.js"
+  "/api/user/user": "pages/api/user/user.js",
+  "/api/purchases/count": "pages/api/purchases/count.js"
 }
