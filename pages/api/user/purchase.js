@@ -119,7 +119,7 @@ export default async function handler(req, res) {
         version: product.itemsversion,
         fileUrl: product.itemsfile,
         image: product.itemsimages?.[0] || "",
-        itemsimage: product.itemsimage || [],
+        itemsimages: product.itemsimages || [],
         discordRoleIds: product.discordRoleIds || [],
         purchasedAt: new Date(),
       });
