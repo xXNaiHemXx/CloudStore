@@ -1,121 +1,141 @@
 import { connectToDB } from "../../../utils/db";
 import User from "../../../models/User";
+import Items from "../../../models/items";
 import { removeDiscordRoles } from "../../../utils/discord";
 
 export default async function handler(req, res) {
-
   if (req.method !== "PUT") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({
+      error: "Method not allowed",
+    });
   }
 
   try {
-
     await connectToDB();
 
     const { userId, productId, index } = req.body;
 
-    console.log("=========================================");
-    console.log("📌 ลบสินค้า request:", { userId, productId, index });
+    console.log("📌 REMOVE PRODUCT:", {
+      userId,
+      productId,
+      index,
+    });
 
     if (!userId || !productId) {
-      return res.status(400).json({ error: "ขาด userId หรือ productId" });
+      return res.status(400).json({
+        error: "Missing userId or productId",
+      });
     }
 
-    // =====================================================
+    // =========================
     // FIND USER
-    // =====================================================
-
-    const user = await User.findOne({ discordId: userId });
+    // =========================
+    const user = await User.findOne({
+      discordId: String(userId),
+    });
 
     if (!user) {
-      return res.status(404).json({ error: "ไม่พบผู้ใช้" });
+      return res.status(404).json({
+        error: "User not found",
+      });
     }
-
-    console.log("📌 ผู้ใช้:", user.name, "Discord ID:", user.discordId);
 
     const products = user.products || [];
 
-    // =====================================================
+    // =========================
     // FIND PRODUCT INDEX
-    // =====================================================
-
+    // =========================
     const matchedIndexes = products.reduce((acc, p, i) => {
       if (String(p.productId) === String(productId)) {
         acc.push(i);
       }
+
       return acc;
     }, []);
 
-    console.log("📌 matchedIndexes:", matchedIndexes);
-
     if (matchedIndexes.length === 0) {
-      return res.status(404).json({ error: "ไม่พบสินค้าในรายการของผู้ใช้" });
+      return res.status(404).json({
+        error: "Product not found in user account",
+      });
     }
-
-    // =====================================================
-    // SELECT WHICH INDEX TO REMOVE
-    // =====================================================
 
     let indexToRemove;
 
-    if (index !== undefined && matchedIndexes.includes(index)) {
+    if (
+      index !== undefined &&
+      matchedIndexes.includes(index)
+    ) {
       indexToRemove = index;
     } else {
-      indexToRemove = matchedIndexes[matchedIndexes.length - 1];
+      indexToRemove =
+        matchedIndexes[matchedIndexes.length - 1];
     }
 
     const removedProduct = products[indexToRemove];
 
-    console.log("📌 สินค้าที่จะลบ:", {
-      name: removedProduct.name,
-      discordRoleIds: removedProduct.discordRoleIds
-    });
+    console.log("📌 PRODUCT TO REMOVE:", removedProduct);
 
-    // =====================================================
-    // REMOVE DISCORD ROLES (ใช้ Snapshot)
-    // =====================================================
+    // =========================
+    // GET PRODUCT FROM ITEMS
+    // =========================
+    const item = await Items.findById(productId);
 
-    if (removedProduct.discordRoleIds && removedProduct.discordRoleIds.length > 0) {
+    console.log("📌 ITEM:", item?.itemsname);
 
-      console.log(`📌 กำลังลบ Role ${removedProduct.discordRoleIds.join(", ")} ของผู้ใช้ ${userId}...`);
+    console.log(
+      "📌 DISCORD ROLE IDS:",
+      item?.discordRoleIds
+    );
 
-      const result = await removeDiscordRoles(userId, removedProduct.discordRoleIds);
+    // =========================
+    // REMOVE DISCORD ROLES
+    // =========================
+    if (
+      item?.discordRoleIds &&
+      item.discordRoleIds.length > 0
+    ) {
+      console.log("📌 Removing Discord Roles...");
 
-      if (result.removed && result.removed.length > 0) {
-        console.log(`✅ ลบ Role สำเร็จ: ${result.removed.join(", ")}`);
-      }
+      const roleResult = await removeDiscordRoles(
+        userId,
+        item.discordRoleIds
+      );
 
-      if (result.failed && result.failed.length > 0) {
-        console.log(`❌ ลบ Role ไม่สำเร็จ: ${result.failed.join(", ")}`);
-      }
-
-    } else {
-      console.log("⚠️ สินค้านี้ไม่มี Discord Role IDs ให้ลบ");
+      console.log(
+        "📌 REMOVE ROLE RESULT:",
+        roleResult
+      );
     }
 
-    // =====================================================
-    // REMOVE PRODUCT FROM USER ARRAY
-    // =====================================================
+    // =========================
+    // REMOVE PRODUCT
+    // =========================
+    user.products = products.filter(
+      (_, i) => i !== indexToRemove
+    );
 
-    user.products = products.filter((_, i) => i !== indexToRemove);
     user.markModified("products");
+
     await user.save();
 
-    console.log(`✅ ลบสินค้า ${removedProduct.name} ของผู้ใช้ ${user.name} สำเร็จ!`);
-    console.log("=========================================");
+    console.log(
+      `✅ Removed product ${productId} from ${userId}`
+    );
 
     return res.status(200).json({
       success: true,
       message: "ลบสินค้าสำเร็จ",
-      products: user.products
+      products: user.products,
     });
 
   } catch (error) {
+    console.error(
+      "❌ REMOVE PRODUCT ERROR:",
+      error
+    );
 
-    console.error("เกิดข้อผิดพลาด:", error);
-
-    return res.status(500).json({ error: error.message });
-
+    return res.status(500).json({
+      error: error.message,
+    });
   }
-
 }
