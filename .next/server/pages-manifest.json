@@ -6,13 +6,13 @@
   "/profile": "pages/profile.js",
   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
   "/api/user": "pages/api/user.js",
-  "/api/user/user": "pages/api/user/user.js",
   "/api/user/fetch-products": "pages/api/user/fetch-products.js",
   "/products/[id]": "pages/products/[id].js",
-  "/api/user/points": "pages/api/user/points.js",
   "/": "pages/index.js",
   "/api/items": "pages/api/items.js",
   "/api/purchases/count": "pages/api/purchases/count.js",
   "/api/user/count": "pages/api/user/count.js",
-  "/api/purchase": "pages/api/purchase.js"
+  "/api/purchase": "pages/api/purchase.js",
+  "/api/user/purchase": "pages/api/user/purchase.js",
+  "/api/user/user": "pages/api/user/user.js"
 }
