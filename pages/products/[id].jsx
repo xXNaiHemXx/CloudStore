@@ -93,7 +93,7 @@ export default function ProductDetail() {
 
       setIsPurchasing(true);
 
-      const purchaseRes = await axios.post("/api/purchase", {
+      const purchaseRes = await axios.post("/api/user/purchase", {
         userId: session.user.discordId || session.user.id,
         productId: id,
         price: product?.itemsprice,
