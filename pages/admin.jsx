@@ -232,23 +232,71 @@ export default function Admin() {
   const [actionLoading, setActionLoading] = useState(false);
 
   // --- Fetch Dashboard Stats ---
-  useEffect(() => {
-    if (!session || activeTab !== "dashboard") return;
-    Promise.all([
-      axios.get("/api/items"),
-      axios.get("/api/user/count"),
-      axios.get("/api/user/purchase"),
-    ]).then(([itemsRes, usersRes, ordersRes]) => {
-      const items = itemsRes.data || [];
-      const orders = ordersRes.data || [];
+useEffect(() => {
+
+  if (!session || activeTab !== "dashboard") return;
+
+  const fetchDashboardStats = async () => {
+
+    try {
+
+      const [
+        itemsRes,
+        usersRes,
+        ordersRes
+      ] = await Promise.all([
+        axios.get("/api/items"),
+        axios.get("/api/user/count"),
+        axios.get("/api/user/purchase"),
+      ]);
+
+      const itemsData = Array.isArray(itemsRes.data)
+        ? itemsRes.data
+        : [];
+
+      const ordersData = Array.isArray(ordersRes.data)
+        ? ordersRes.data
+        : [];
+
+      const usersCount =
+        usersRes.data?.count ||
+        usersRes.data?.users ||
+        0;
+
+      const revenue = ordersData.reduce(
+        (sum, order) =>
+          sum + Number(order.price || 0),
+        0
+      );
+
       setStats({
-        products: items.length,
-        users: usersRes.data.count || 0,
-        orders: orders.length,
-        revenue: orders.reduce((sum, o) => sum + (o.price || 0), 0),
+        products: itemsData.length,
+        users: usersCount,
+        orders: ordersData.length,
+        revenue,
       });
-    }).catch(console.error);
-  }, [session, activeTab]);
+
+    } catch (error) {
+
+      console.error(
+        "Dashboard stats error:",
+        error
+      );
+
+      setStats({
+        products: 0,
+        users: 0,
+        orders: 0,
+        revenue: 0,
+      });
+
+    }
+
+  };
+
+  fetchDashboardStats();
+
+}, [session, activeTab]);
 
   // --- Fetch Orders ---
   useEffect(() => {
