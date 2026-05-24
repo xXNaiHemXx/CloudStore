@@ -65,13 +65,14 @@ export default async function handler(req, res) {
       if (!Array.isArray(user.products)) user.products = [];
       
       user.products.push({
-        productId: product._id.toString(),
+        productId: product._id,
         name: product.itemsname,
-        image: product.itemsimage,
         version: product.itemsversion,
         fileUrl: product.itemsfile,
         purchaseDate: new Date(),
-        discordRoleIds: product.discordRoleIds || [],
+
+        // ✅ เพิ่มตรงนี้
+        discordRoleIds: product.discordRoleIds || []
       });
 
       await user.save();
