@@ -3,6 +3,13 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/profile": "pages/profile.js",
+  "/products/[id]": "pages/products/[id].js",
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
+  "/api/user": "pages/api/user.js",
+  "/api/items": "pages/api/items.js",
   "/shop": "pages/shop.js",
-  "/products/[id]": "pages/products/[id].js"
+  "/api/user/count": "pages/api/user/count.js",
+  "/api/user/fetch-products": "pages/api/user/fetch-products.js",
+  "/api/user/purchase": "pages/api/user/purchase.js",
+  "/api/user/user": "pages/api/user/user.js"
 }

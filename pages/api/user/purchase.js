@@ -4,8 +4,8 @@ import Item from "@/models/items";
 import User from "@/models/User";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]"; // ✅ path นี้ถูกต้องแล้ว (อยู่ใน api เดียวกัน)
-import { addDiscordRoles } from "@/utils/discord";
+import { authOptions } from "../auth/[...nextauth]"; // ✅ path ถูกต้อง
+import { addDiscordRoles } from "@/utils/discord"; // ✅ ใช้ addDiscordRoles (plural)
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
