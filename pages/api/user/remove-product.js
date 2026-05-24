@@ -49,30 +49,29 @@ export default async function handler(req, res) {
     }
 
     const removedProduct = products[indexToRemove];
+    
+    // ✅ ดึง discordRoleIds (รองรับ undefined)
+    const roleIds = removedProduct.discordRoleIds || [];
+    
     console.log("📌 สินค้าที่จะลบ:", {
       name: removedProduct.name,
-      discordRoleIds: removedProduct.discordRoleIds
+      discordRoleIds: roleIds
     });
     
-    // ✅ ลบ Role ของ USER คนนี้ (ลบทุก Role ที่อยู่ในสินค้า)
-    if (removedProduct.discordRoleIds && removedProduct.discordRoleIds.length > 0) {
-      console.log(`📌 กำลังลบ Role ${removedProduct.discordRoleIds.join(", ")} ของผู้ใช้ ${userId}...`);
+    // ✅ ลบ Role ก็ต่อเมื่อมี Role IDs จริงๆ
+    if (roleIds.length > 0) {
+      console.log(`📌 กำลังลบ Role ${roleIds.join(", ")} ของผู้ใช้ ${userId}...`);
       
-      // ✅ เรียกใช้ removeDiscordRoles
-      const result = await removeDiscordRoles(userId, removedProduct.discordRoleIds);
-      
-      console.log("📌 ผลลัพธ์การลบ Role:", JSON.stringify(result, null, 2));
+      const result = await removeDiscordRoles(userId, roleIds);
       
       if (result.removed && result.removed.length > 0) {
         console.log(`✅ ลบ Role สำเร็จ: ${result.removed.join(", ")}`);
       }
       if (result.failed && result.failed.length > 0) {
         console.log(`❌ ลบ Role ไม่สำเร็จ: ${result.failed.join(", ")}`);
-        console.log("🔴 ตรวจสอบ: Bot Token, Bot Permission, ลำดับ Role");
       }
     } else {
-      console.log("⚠️ สินค้านี้ไม่มี Discord Role IDs ให้ลบ");
-      console.log("📌 removedProduct keys:", Object.keys(removedProduct));
+      console.log("⚠️ สินค้านี้ไม่มี Discord Role IDs ให้ลบ (อาจเป็นสินค้าที่ซื้อก่อนมีระบบ Role)");
     }
     
     // ลบสินค้าออกจาก array
