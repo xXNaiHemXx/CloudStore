@@ -358,59 +358,48 @@ export default function Admin() {
     else setProposedPoints(Math.max(0, current - amount));
   };
 
-  
+  const handleRemoveProduct = async (productId, index) => {
   // แสดงชื่อสินค้าเพื่อความชัดเจน
-  const [actionLoading, setActionLoading] = useState(false);
-
-const handleRemoveProduct = async (
-  productId,
-  index
-) => {
-
-  if (
-    !confirm(
-      "คุณต้องการลบสินค้านี้ออกจากบัญชีผู้ใช้ใช่หรือไม่?"
-    )
-  ) {
-    return;
-  }
-
-  try {
+  const productName = userProducts[index]?.name || "สินค้านี้";
+    
+    if (!confirm(`คุณต้องการลบ "${productName}" ออกจากบัญชีผู้ใช้ใช่หรือไม่?\n\n⚠️ คำเตือน: การลบจะทำให้ Role ใน Discord ถูกลบด้วย (ถ้าไม่มีคนอื่นใช้สินค้านี้อยู่)`)) {
+      return;
+    }
 
     setActionLoading(true);
-
-    const response = await axios.put(
-      "/api/user/remove-product",
-      {
+    try {
+      console.log("📌 Sending remove request:", { 
+        userId: selectedUser.id, 
+        productId, 
+        index 
+      });
+      
+      const res = await axios.put("/api/user/remove-product", {
         userId: selectedUser.id,
         productId,
         index,
+      });
+
+      console.log("📌 Remove response:", res.data);
+
+      if (res.data.success) {
+        // อัปเดตหน้าจอทันที
+        setUserProducts((prev) => prev.filter((_, i) => i !== index));
+        alert(`✅ ลบสินค้า "${productName}" สำเร็จ!`);
+        
+        // รีเฟรชข้อมูลผู้ใช้
+        await fetchUsers();
+        await refreshPoints();
+      } else {
+        alert("❌ ลบสินค้าไม่สำเร็จ: " + (res.data.error || "Unknown error"));
       }
-    );
-
-    setUserProducts((prev) =>
-      prev.filter((_, i) => i !== index)
-    );
-
-    alert("✅ ลบสินค้าสำเร็จ");
-
-    console.log(response.data);
-
-  } catch (error) {
-
-    console.error(error);
-
-    alert(
-      error.response?.data?.error ||
-      "ลบสินค้าไม่สำเร็จ"
-    );
-
-  } finally {
-
-    setActionLoading(false);
-
-  }
-};
+    } catch (err) {
+      console.error("REMOVE PRODUCT ERROR:", err);
+      alert("❌ ลบสินค้าไม่สำเร็จ: " + (err.response?.data?.error || err.message));
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleSavePoints = async () => {
     setActionLoading(true);
@@ -862,16 +851,12 @@ const handleRemoveProduct = async (
                             </div>
                           </div>
                           <button
-                            className="btn-red"
-                            onClick={() =>
-                              handleRemoveProduct(
-                                item.productId,
-                                index
-                              )
-                            }
+                            className={styles.purchasedProductRemoveBtn}
+                            onClick={() => handleRemoveProduct(item.productId, index)}
                             disabled={actionLoading}
+                            title="ลบสินค้านี้"
                           >
-                            {actionLoading ? "⏳" : "🗑 ลบ"}
+                            🗑️
                           </button>
                         </div>
                       ))
