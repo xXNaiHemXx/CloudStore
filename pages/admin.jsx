@@ -358,7 +358,7 @@ export default function Admin() {
     else setProposedPoints(Math.max(0, current - amount));
   };
 
-  const handleRemoveProduct = async (productId, index) => {
+  
   // แสดงชื่อสินค้าเพื่อความชัดเจน
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -862,17 +862,17 @@ const handleRemoveProduct = async (
                             </div>
                           </div>
                           <button
-                          className="btn-red"
-                          onClick={() =>
-                            handleRemoveProduct(
-                              item.productId,
-                              index
-                            )
-                          }
-                          disabled={actionLoading}
-                        >
-                          {actionLoading ? "⏳" : "🗑 ลบ"}
-                        </button>
+                            className="btn-red"
+                            onClick={() =>
+                              handleRemoveProduct(
+                                item.productId,
+                                index
+                              )
+                            }
+                            disabled={actionLoading}
+                          >
+                            {actionLoading ? "⏳" : "🗑 ลบ"}
+                          </button>
                         </div>
                       ))
                     ) : (
