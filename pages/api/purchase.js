@@ -98,4 +98,4 @@ export default async function handler(req, res) {
     console.error("Purchase API error:", error);
     return res.status(500).json({ error: error.message || "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
-}
+} 
