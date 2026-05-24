@@ -4,5 +4,7 @@
   "/_document": "pages/_document.js",
   "/admin": "pages/admin.js",
   "/": "pages/index.js",
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
+  "/api/user": "pages/api/user.js",
   "/products/[id]": "pages/products/[id].js"
 }

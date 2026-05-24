@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     }
 
   }
-  
+
   // =====================================================
   // POST = ซื้อสินค้า
   // =====================================================
@@ -168,6 +168,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         message: "Purchase successful"
+        remainingPoints: user.points  // ✅ ต้องมีบรรทัดนี้!
       });
 
     } catch (error) {
