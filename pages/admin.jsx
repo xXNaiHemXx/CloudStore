@@ -361,52 +361,52 @@ export default function Admin() {
   const handleRemoveProduct = async (
   productId,
   index
-) => {
+    ) => {
 
-  if (
-    !confirm(
-      "คุณต้องการลบสินค้านี้ออกจากบัญชีผู้ใช้ใช่หรือไม่?"
-    )
-  ) {
-    return;
-  }
-
-  try {
-
-    setActionLoading(true);
-
-    const response = await axios.put(
-      "/api/user/remove-product",
-      {
-        userId: selectedUser.id,
-        productId,
-        index,
+      if (
+        !confirm(
+          "คุณต้องการลบสินค้านี้ออกจากบัญชีผู้ใช้ใช่หรือไม่?"
+        )
+      ) {
+        return;
       }
-    );
 
-    setUserProducts((prev) =>
-      prev.filter((_, i) => i !== index)
-    );
+      try {
 
-    alert("✅ ลบสินค้าสำเร็จ");
+        setActionLoading(true);
 
-    console.log(response.data);
+        const response = await axios.put(
+          "/api/user/remove-product",
+          {
+            userId: selectedUser.id,
+            productId,
+            index,
+          }
+        );
 
-  } catch (error) {
+        setUserProducts((prev) =>
+          prev.filter((_, i) => i !== index)
+        );
 
-    console.error(error);
+        alert("✅ ลบสินค้าสำเร็จ");
 
-    alert(
-      error.response?.data?.error ||
-      "ลบสินค้าไม่สำเร็จ"
-    );
+        console.log(response.data);
 
-  } finally {
+      } catch (error) {
 
-    setActionLoading(false);
+        console.error(error);
 
-  }
-};
+        alert(
+          error.response?.data?.error ||
+          "ลบสินค้าไม่สำเร็จ"
+        );
+
+      } finally {
+
+        setActionLoading(false);
+
+      }
+    };
 
   const handleSavePoints = async () => {
     setActionLoading(true);
