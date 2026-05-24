@@ -167,7 +167,7 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         success: true,
-        message: "Purchase successful"
+        message: "Purchase successful",
         remainingPoints: user.points  // ✅ ต้องมีบรรทัดนี้!
       });
 
