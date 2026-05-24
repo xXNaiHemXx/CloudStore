@@ -358,8 +358,6 @@ export default function Admin() {
     else setProposedPoints(Math.max(0, current - amount));
   };
 
-  const handleRemoveProduct = async (productId, index) => {
-  // แสดงชื่อสินค้าเพื่อความชัดเจน
   const handleRemoveProduct = async (
   productId,
   index
