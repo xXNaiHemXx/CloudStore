@@ -1,101 +1,113 @@
-import { IncomingForm } from 'formidable';
-import fs from 'fs';
-import path from 'path';
+import formidable from "formidable";
+import fs from "fs";
+import path from "path";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]";
 
 export const config = {
   api: {
-    bodyParser: false, // ✅ ปิด bodyParser ใช้ formidable แทน
+    bodyParser: false,
   },
 };
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  // ตรวจสอบ method
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // ✅ เพิ่ม timeout สำหรับไฟล์ใหญ่
-  req.setTimeout(0); // ไม่มี timeout
-  res.setTimeout(0);
+  // ตรวจสอบสิทธิ์ Admin
+  const session = await getServerSession(req, res, authOptions);
+  if (!session) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const adminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
+  if (!adminIds.includes(session.user.id)) {
+    return res.status(403).json({ error: "Admin only" });
+  }
 
   try {
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'mods');
+    // กำหนดโฟลเดอร์สำหรับเก็บไฟล์
+    const uploadDir = path.join(process.cwd(), "public", "uploads");
     
-    // ✅ สร้างโฟลเดอร์ถ้ายังไม่มี
+    // สร้างโฟลเดอร์ถ้ายังไม่มี
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    const form = new IncomingForm({
+    // ✅ ตั้งค่า formidable (ไม่เพิ่ม timestamp)
+    const form = formidable({
       uploadDir: uploadDir,
       keepExtensions: true,
-      maxFileSize: 2000 * 1024 * 1024, // ✅ 2GB (2000MB)
-      maxFieldsSize: 2000 * 1024 * 1024,
-      maxTotalFileSize: 2000 * 1024 * 1024,
-      allowEmptyFiles: false,
+      maxFileSize: 2000 * 1024 * 1024, // 2GB
+      filename: (name, ext, part, form) => {
+        // ✅ คืนชื่อไฟล์เดิม ไม่เติมเลข
+        const originalName = part.originalFilename || "file";
+        // แทนที่ช่องว่างและอักขระพิเศษ
+        const safeName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
+        return safeName;
+      },
     });
 
-    // ✅ แสดง progress
-    form.on('progress', (bytesReceived, bytesExpected) => {
-      const percent = Math.round((bytesReceived / bytesExpected) * 100);
-      if (percent % 10 === 0) {
-        console.log(`📤 Upload: ${percent}% (${(bytesReceived / (1024*1024)).toFixed(0)}MB / ${(bytesExpected / (1024*1024)).toFixed(0)}MB)`);
-      }
-    });
-
-    // ✅ จัดการไฟล์
+    // parse form data
     const [fields, files] = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
-        if (err) {
-          console.error('Form parse error:', err);
-          reject(err);
-        }
+        if (err) reject(err);
         resolve([fields, files]);
       });
     });
 
+    // รับไฟล์
     const file = files.file?.[0] || files.file;
-
     if (!file) {
-      return res.status(400).json({ error: 'ไม่พบไฟล์ที่อัปโหลด' });
+      return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // ✅ สร้างชื่อไฟล์ที่ปลอดภัย
-    const originalName = file.originalFilename || 'file.zip';
-    const ext = path.extname(originalName);
-    const baseName = path.basename(originalName, ext);
-    const safeName = `${baseName}_${Date.now()}${ext}`;
-    const finalPath = path.join(uploadDir, safeName);
+    // ✅ ใช้ชื่อไฟล์เดิม (ไม่เปลี่ยน)
+    const originalName = file.originalFilename || path.basename(file.filepath);
+    const fileName = originalName;
+    const fileUrl = `/uploads/${fileName}`;
 
-    // ✅ ย้ายไฟล์
-    fs.renameSync(file.filepath, finalPath);
+    // ✅ ถ้าไฟล์ซ้ำ ให้เปลี่ยนชื่อ (เพิ่ม _1, _2)
+    let finalFileName = fileName;
+    let finalFilePath = path.join(uploadDir, finalFileName);
+    let counter = 1;
+    
+    while (fs.existsSync(finalFilePath)) {
+      const ext = path.extname(originalName);
+      const baseName = path.basename(originalName, ext);
+      finalFileName = `${baseName}_${counter}${ext}`;
+      finalFilePath = path.join(uploadDir, finalFileName);
+      counter++;
+    }
+    
+    // ✅ ย้ายไฟล์ไปยังชื่อใหม่ (ถ้าชื่อซ้ำ)
+    if (finalFileName !== fileName) {
+      fs.renameSync(file.filepath, finalFilePath);
+    }
 
-    const fileUrl = `/uploads/mods/${safeName}`;
-    const fileSize = fs.statSync(finalPath).size;
-    const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+    const finalFileUrl = `/uploads/${finalFileName}`;
 
-    console.log(`✅ Upload complete: ${safeName} (${fileSizeMB}MB)`);
+    console.log("✅ Upload success:", {
+      originalName,
+      fileName: finalFileName,
+      url: finalFileUrl,
+      size: file.size,
+    });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      url: fileUrl,
-      fileName: safeName,
-      originalName: originalName,
-      size: fileSize,
-      sizeMB: fileSizeMB,
+      message: "อัปโหลดสำเร็จ",
+      url: finalFileUrl,
+      originalName: finalFileName,
+      fileName: finalFileName,
+      size: file.size,
+      sizeMB: (file.size / (1024 * 1024)).toFixed(2),
     });
 
   } catch (error) {
-    console.error('Upload error:', error);
-    
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(413).json({ 
-        error: '❌ ไฟล์ใหญ่เกินไป (สูงสุด 2GB)' 
-      });
-    }
-    
-    res.status(500).json({ 
-      error: 'เกิดข้อผิดพลาดในการอัปโหลด',
-      message: error.message 
-    });
+    console.error("Upload error:", error);
+    return res.status(500).json({ error: error.message });
   }
 }
