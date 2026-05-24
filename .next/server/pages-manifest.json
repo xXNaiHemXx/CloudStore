@@ -4,13 +4,14 @@
   "/_document": "pages/_document.js",
   "/profile": "pages/profile.js",
   "/shop": "pages/shop.js",
-  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
   "/admin": "pages/admin.js",
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
   "/api/user": "pages/api/user.js",
-  "/api/items": "pages/api/items.js",
-  "/api/user/purchase": "pages/api/user/purchase.js",
-  "/api/user/count": "pages/api/user/count.js",
-  "/api/user/user": "pages/api/user/user.js",
   "/api/user/fetch-products": "pages/api/user/fetch-products.js",
-  "/api/user/remove-product": "pages/api/user/remove-product.js"
+  "/": "pages/index.js",
+  "/api/items": "pages/api/items.js",
+  "/api/user/count": "pages/api/user/count.js",
+  "/api/purchases/count": "pages/api/purchases/count.js",
+  "/products/[id]": "pages/products/[id].js",
+  "/api/purchase": "pages/api/purchase.js"
 }
