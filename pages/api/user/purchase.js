@@ -118,8 +118,8 @@ export default async function handler(req, res) {
         name: product.itemsname,
         version: product.itemsversion,
         fileUrl: product.itemsfile,
-        image: product.itemsimage?.[0] || "",
-        itemsimages: product.itemsimages || [],
+        image: product.itemsimages?.[0] || "",
+        itemsimage: product.itemsimage || [],
         discordRoleIds: product.discordRoleIds || [],
         purchasedAt: new Date(),
       });
