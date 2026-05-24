@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useState } from "react";
 
 export default function ProductVersions({ productId }) {
@@ -11,19 +9,24 @@ export default function ProductVersions({ productId }) {
         fetch(`/api/products/${productId}/versions`)
             .then(res => res.json())
             .then(data => {
-                setVersions(data.versions);
+                setVersions(data.versions || []);
             });
 
-    }, []);
+    }, [productId]);
 
     return (
-        <div className="space-y-4">
+
+        <div className="space-y-4 mt-8">
+
+            <h2 className="text-2xl font-bold">
+                Version History
+            </h2>
 
             {versions.map((v) => (
 
                 <div
                     key={v._id}
-                    className="bg-zinc-900 border border-zinc-800 p-4 rounded-xl"
+                    className="bg-zinc-900 border border-zinc-800 p-5 rounded-2xl"
                 >
 
                     <div className="flex items-center justify-between">
@@ -38,15 +41,15 @@ export default function ProductVersions({ productId }) {
                             </p>
                         </div>
 
-                        <span className="text-sm bg-blue-500 px-3 py-1 rounded-full">
+                        <div className="bg-blue-500 px-3 py-1 rounded-full text-sm">
                             {v.releaseType}
-                        </span>
+                        </div>
 
                     </div>
 
-                    <div className="mt-4 space-y-2">
+                    <div className="mt-5 space-y-2">
 
-                        {v.changelog.map((log, index) => (
+                        {v.changelog?.map((log, index) => (
 
                             <div
                                 key={index}
@@ -59,12 +62,12 @@ export default function ProductVersions({ productId }) {
 
                     </div>
 
-                    <div className="mt-4 flex gap-3">
+                    <div className="mt-5">
 
                         <a
                             href={v.downloadUrl}
                             target="_blank"
-                            className="bg-blue-500 px-4 py-2 rounded-lg"
+                            className="bg-blue-500 hover:bg-blue-600 transition px-4 py-2 rounded-xl inline-block"
                         >
                             Download
                         </a>
