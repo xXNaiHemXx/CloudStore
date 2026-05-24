@@ -21,8 +21,11 @@ export default function Profile() {
   const [topups, setTopups] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   
-  // ✅ เพิ่ม state สำหรับเก็บสินค้าแยก (เผื่อต้องการจัดการเอง)
+  // ✅ State สำหรับระบบอัปเดต
   const [myProducts, setMyProducts] = useState([]);
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [availableUpdates, setAvailableUpdates] = useState([]);
+  const [downloading, setDownloading] = useState(null);
 
   const adminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
 
@@ -40,11 +43,104 @@ export default function Profile() {
       .catch((err) => console.error("History load error:", err))
       .finally(() => setLoadingHistory(false));
   }, [session, activeTab]);
+
   useEffect(() => {
     if (session && activeTab === 'products') {
       refreshPoints();
     }
   }, [session, activeTab]);
+
+  // =====================================================
+  // ✅ ระบบอัปเดตเวอร์ชัน (Auto Update)
+  // =====================================================
+
+  // ฟังก์ชันตรวจสอบอัปเดต
+  const checkForUpdates = async (showAlert = false) => {
+    if (!session) return;
+    
+    setCheckingUpdates(true);
+    
+    try {
+      const res = await axios.post("/api/user/check-updates", {
+        userId: session.user.discordId || session.user.id
+      });
+      
+      if (res.data.hasUpdates) {
+        setAvailableUpdates(res.data.updates);
+        // ✅ แสดง alert เฉพาะเมื่อ showAlert = true (กดปุ่ม)
+        if (showAlert) {
+          alert(`📦 มีสินค้าที่อัปเดต ${res.data.updates.length} รายการ`);
+        }
+      } else {
+        // ✅ แสดง alert เฉพาะเมื่อ showAlert = true (กดปุ่ม)
+        if (showAlert) {
+          alert("✅ สินค้าทั้งหมดเป็นเวอร์ชันล่าสุดแล้ว");
+        }
+      }
+    } catch (error) {
+      console.error("Check updates error:", error);
+      if (showAlert) {
+        alert("ตรวจสอบอัปเดตไม่สำเร็จ");
+      }
+    } finally {
+      setCheckingUpdates(false);
+    }
+  };
+
+  // ✅ AUTO UPDATE: เมื่อโหลดหน้า Profile และเมื่อ refreshPoints ทำงาน
+  useEffect(() => {
+    if (session && activeTab === 'products') {
+      // รอให้โหลดข้อมูลเสร็จก่อน แล้วค่อยตรวจสอบอัปเดต
+      const timer = setTimeout(() => {
+        checkForUpdates(false); // false = ไม่แสดง alert
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [session, activeTab, myProducts]);
+
+  // ✅ Auto Update: เมื่อมีสินค้าใหม่ (หลังจากซื้อหรือรีเฟรช)
+  useEffect(() => {
+    if (session && activeTab === 'products' && myProducts.length > 0) {
+      checkForUpdates(false);
+    }
+  }, [myProducts.length]);
+
+  // ฟังก์ชันดาวน์โหลดอัปเดต
+  const downloadUpdate = async (productId, productName) => {
+  if (!confirm(`ดาวน์โหลดเวอร์ชันล่าสุดของ ${productName}?`)) return;
+  
+  setDownloading(productId);
+  
+  try {
+    const res = await axios.post("/api/user/download-update", {
+      userId: session.user.discordId || session.user.id,
+      productId
+    });
+    
+    if (res.data.success) {
+      window.open(res.data.downloadUrl, "_blank");
+      alert(`✅ ดาวน์โหลด ${productName} เวอร์ชัน ${res.data.version} สำเร็จ`);
+      
+      // ✅ รีเฟรชข้อมูลทั้งหมด (จะโหลด myProducts ใหม่)
+      await refreshPoints();
+      
+      // ✅ ล้าง availableUpdates เพื่อให้ไปโหลดใหม่
+      setAvailableUpdates([]);
+      
+      // ✅ ตรวจสอบอัปเดตอีกครั้ง (ไม่แสดง alert)
+      setTimeout(() => {
+        checkForUpdates(false);
+      }, 1000);
+    }
+  } catch (error) {
+    console.error("Download error:", error);
+    alert("ดาวน์โหลดไม่สำเร็จ");
+  } finally {
+    setDownloading(null);
+  }
+};
+
   // handleFileChange function
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -130,7 +226,7 @@ export default function Profile() {
       alert(`✅ ส่งคำขอเติมเงินสำเร็จ! กรุณารอการตรวจสอบ`);
       removeFile();
       setAmount("");
-      await refreshPoints(); // ✅ รีเฟรชแต้ม
+      await refreshPoints();
     } catch (error) {
       console.error("Top-up error:", error);
       alert("เกิดข้อผิดพลาดในการดำเนินการ");
@@ -183,6 +279,7 @@ export default function Profile() {
                 <span className={styles.pointsIcon}>💎</span>
                 {userPoints?.toLocaleString() || 0} Point
               </div>
+              
               {adminIds.includes(session.user.id) && (
                 <Link href="/admin" className={styles.btnAdmin}>
                   ⚙️ Admin Dashboard
@@ -236,6 +333,17 @@ export default function Profile() {
                   </div>
                 ) : (
                   <>
+                    {/* ✅ แสดงแถบแจ้งเตือนเมื่อมีอัปเดต */}
+                    {availableUpdates.length > 0 && (
+                      <div className={styles.updateAlert}>
+                        <div className={styles.updateAlertIcon}>📢</div>
+                        <div className={styles.updateAlertContent}>
+                          <strong>มีเวอร์ชันใหม่!</strong>
+                          <span>สินค้าที่คุณซื้อมีการอัปเดต {availableUpdates.length} รายการ</span>
+                        </div>
+                      </div>
+                    )}
+
                     <div className={styles.productCountHeader}>
                       <p className={styles.productCount}>
                         คุณมีสินค้า <span>{myProducts?.length || 0}</span> ชิ้น
@@ -255,43 +363,65 @@ export default function Profile() {
                       </div>
                     ) : (
                       <div className={styles.productGrid}>
-                        {myProducts.map((product, index) => (  // ✅ เพิ่ม index
-                          <div key={`${product.productId}-${index}`} className={styles.productCard}>
-                            <div className={styles.cardImageWrapper}>
-                              <img
-                                src={
-                                  product.itemsimage?.[0] ||
-                                  product.image ||
-                                  '/images/placeholder.png'
-                                }
-                                alt={product.name}
-                                loading="lazy"
-                                onError={(e) => {
-                                  e.target.src = '/images/placeholder.png';
-                                }}
-                              />
-                            </div>
-                            <div className={styles.cardBody}>
-                              <h3 className={styles.cardProductName}>{product.name}</h3>
-                              {product.version && (
-                                <span className={styles.cardVersion}>
-                                  📌 v{product.version}
-                                </span>
+                        {myProducts.map((product, index) => {
+                          // ✅ ตรวจสอบว่าสินค้านี้มีอัปเดตหรือไม่
+                          const hasUpdate = availableUpdates.some(u => u.productId === product.productId);
+                          
+                          return (
+                            <div key={`${product.productId}-${index}`} className={styles.productCard}>
+                              {/* ✅ Badge แจ้งเตือนอัปเดต */}
+                              {hasUpdate && (
+                                <div className={styles.updateBadge}>
+                                  🔄 มีอัปเดต!
+                                </div>
                               )}
+                              
+                              <div className={styles.cardImageWrapper}>
+                                <img
+                                  src={
+                                    product.itemsimage?.[0] ||
+                                    product.image ||
+                                    '/images/placeholder.png'
+                                  }
+                                  alt={product.name}
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.target.src = '/images/placeholder.png';
+                                  }}
+                                />
+                              </div>
+                              <div className={styles.cardBody}>
+                                <h3 className={styles.cardProductName}>{product.name}</h3>
+                                {product.version && (
+                                  <span className={styles.cardVersion}>
+                                    📌 v{product.version}
+                                  </span>
+                                )}
+                              </div>
+                              <div className={styles.cardFooter}>
+                                {hasUpdate ? (
+                                  <button
+                                    onClick={() => downloadUpdate(product.productId, product.name)}
+                                    disabled={downloading === product.productId}
+                                    className={styles.updateDownloadBtn}
+                                  >
+                                    {downloading === product.productId ? "⏳..." : "📥 อัปเดต"}
+                                  </button>
+                                ) : (
+                                  <a
+                                    href={product.fileUrl || '#'}
+                                    className={styles.downloadBtn}
+                                    download
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    📥 ดาวน์โหลด
+                                  </a>
+                                )}
+                              </div>
                             </div>
-                            <div className={styles.cardFooter}>
-                              <a
-                                href={product.fileUrl || '#'}
-                                className={styles.downloadBtn}
-                                download
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                📥 ดาวน์โหลด
-                              </a>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </>

@@ -1,19 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Image optimization for external URLs (Cloudinary, Discord, etc.)
-  images: {
-    unoptimized: true, // Allow all external image hosts without config
-  },
-  // Performance: enable React strict mode
   reactStrictMode: true,
-  // Bundle optimization
-  compiler: {
-    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
+  
+  // ✅ เพิ่มขนาด body parser
+  api: {
+    bodyParser: {
+      sizeLimit: '500mb', // ✅ 500MB
+    },
+    responseLimit: false, // ✅ ไม่จำกัด response
   },
-  // Let Next.js handle the body parser (enabled by default, disabled per-route)
-  // Disable x-powered-by header for security
-  poweredByHeader: false,
-  // Next.js 15 built-in turbopack is default, no special config needed
+  
+  // ✅ หรือใช้แบบนี้ (Next.js 13+)
+  experimental: {
+    // ...
+  },
 };
 
 module.exports = nextConfig;

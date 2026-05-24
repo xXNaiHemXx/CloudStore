@@ -42,7 +42,7 @@ export default function AdminUploads() {
   return (
     <div className="main-container">
       <Head>
-        <title>Admin Uploads | xCloud Store</title>
+        <title>Admin Uploads | xCloud Studio</title>
       </Head>
 
       <header className="header">
@@ -51,7 +51,7 @@ export default function AdminUploads() {
             <img src="/favicon.ico" className="icon" />
             <strong className="uppercase">
               <span className="tuppercase">xCloud</span>
-              Store
+              Studio
             </strong>
           </a>
           <div className="header-links">

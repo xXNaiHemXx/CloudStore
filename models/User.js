@@ -13,7 +13,11 @@ const UserSchema = new mongoose.Schema({
       image: { type: String },
       fileUrl: { type: String },
       discordRoleIds: { type: [String], default: [] },
-      purchaseDate: { type: Date, default: Date.now }
+      purchaseDate: { type: Date, default: Date.now },
+      currentVersion: { type: String },        // เวอร์ชันปัจจุบันที่ user มี
+      hasUpdate: { type: Boolean, default: false }, // มีอัปเดตใหม่หรือไม่
+      currentVersion: { type: String }  // ✅ ต้องมี
+      
     }
   ],
   loginAt: { type: Date, default: Date.now }

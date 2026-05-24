@@ -79,7 +79,7 @@ export default function Shop() {
             <span className={styles.heroTitleAccent}>Products</span>
           </h1>
           <p className={styles.heroSubtitle}>
-            ค้นพบโมเดลและรถสำหรับเกม ETS2 คุณภาพสูงจากทีมพัฒนา ALLNEWOKBUS
+            ค้นพบโมเดลและรถสำหรับเกม ETS2 คุณภาพสูงจากทีมพัฒนา xCloud-Studio 
           </p>
           <div className={styles.heroStats}>
             <div className={styles.heroStatItem}>

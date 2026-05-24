@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
@@ -6,23 +6,42 @@ if (!MONGODB_URI) {
     throw new Error("⚠️ กรุณาตั้งค่า MONGODB_URI ใน .env.local");
 }
 
-let cached = global.mongoose || { conn: null, promise: null };
+/**
+ * Global cache
+ */
+let cached = global.mongoose;
+
+if (!cached) {
+    cached = global.mongoose = {
+        conn: null,
+        promise: null,
+    };
+}
 
 export async function connectToDB() {
-    if (cached.conn) return cached.conn;
+    // ถ้ามี connection อยู่แล้ว
+    if (cached.conn) {
+        return cached.conn;
+    }
 
+    // ถ้ายังไม่มี promise ให้สร้างใหม่
     if (!cached.promise) {
         cached.promise = mongoose.connect(MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        }).then((mongoose) => {
-            console.log('✅ Connected to MongoDB at:', MONGODB_URI); // ✅ Log ว่าต่อ MongoDB สำเร็จ
-            return mongoose;
-        }).catch(error => {
-            console.error("❌ MongoDB connection error:", error);
+            dbName: "CloudStore",
         });
     }
 
-    cached.conn = await cached.promise;
-    return cached.conn;
+    try {
+        cached.conn = await cached.promise;
+
+        console.log("✅ Connected to MongoDB");
+
+        return cached.conn;
+    } catch (error) {
+        cached.promise = null;
+
+        console.error("❌ MongoDB connection error:", error);
+
+        throw error;
+    }
 }

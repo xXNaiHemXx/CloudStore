@@ -59,6 +59,13 @@ export default async function handler(req, res) {
           itemsfile,
           itemsversion,
           discordRoleIds: formattedRoleIds,
+          currentVersion: itemsversion,  // ✅ เพิ่ม: ใช้ version เดียวกับ itemsversion
+          latestUpdate: new Date(),       // ✅ เพิ่ม
+          versionStatus: "stable",       // ✅ เพิ่ม
+          totalDownloads: 0,             // ✅ เพิ่ม
+          totalUpdates: 0,               // ✅ เพิ่ม
+          tags: [],                      // ✅ เพิ่ม
+          versionHistory: []             // ✅ เพิ่ม
         });
 
         await newItem.save();
@@ -76,7 +83,7 @@ export default async function handler(req, res) {
         const { 
           id, itemsname, itemsprice, itemsimage, itemsimages, 
           itemsurlyoutube, itemsdesc, itemstitle, itemsfile, 
-          itemsversion, discordRoleIds
+          itemsversion, discordRoleIds, currentVersion  // ✅ เพิ่ม currentVersion
         } = req.body;
         
         if (!id) return res.status(400).json({ error: "Missing item ID" });
@@ -100,8 +107,9 @@ export default async function handler(req, res) {
           itemsdesc,
           itemstitle,
           itemsfile,
-          itemsversion,
           discordRoleIds: formattedRoleIds,
+          currentVersion: currentVersion || itemsversion,  // ✅ เพิ่ม
+          latestUpdate: new Date()  // ✅ เพิ่ม 
         }, { new: true });
 
         if (!updatedItem) return res.status(404).json({ error: "Item not found" });

@@ -20,7 +20,8 @@ export default function Home() {
         ]);
         const items = itemsRes.data;
         // เอา 6 ชิ้นล่าสุด
-        setProducts(items.slice(0, 6));
+        const sortedItems = items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setProducts(sortedItems.slice(0, 6));
         setStats({
           products: items.length,
           members: usersRes.data.count || 0,
@@ -62,11 +63,10 @@ export default function Home() {
             <h1 className={styles.heroTitle}>
               Modeling{' '}
               <span className={styles.heroTitleAccent}>xCloud</span>
-              {' '}Store
+              {' '}Studio
             </h1>
             <p className={styles.heroSubtitle}>
-              🏞️ โมเดลและรถสำหรับเกม ETS2 โดยทีมพัฒนา ALLNEWOKBUS 
-              ให้บริการมายาวนานพร้อมอัปเดตต่อเนื่อง
+              Models and mods for ETS2 by xCloud-Studio. Quality you can trust, straight from the source.
             </p>
             <div className={styles.heroButtons}>
               <a

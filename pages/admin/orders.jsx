@@ -76,7 +76,7 @@ export default function AdminOrders() {
                         <img src="/favicon.ico" class="icon"/>
                         <strong class="uppercase">
                             <span class="tuppercase">xCloud</span>
-                            Store
+                            Studio
                         </strong>
                     </a>      
                     <div className="header-links">

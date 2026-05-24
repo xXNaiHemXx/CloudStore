@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
 const itemSchema = new mongoose.Schema({
-  // ... fields เดิม
   itemsname: { type: String, required: true },
   itemsprice: { type: Number, required: true },
   itemsimage: { type: String, required: true },
@@ -13,8 +12,8 @@ const itemSchema = new mongoose.Schema({
   itemsversion: { type: String, required: true },
   discordRoleIds: { type: [String], default: [] },
   
-  // ✅ ระบบเวอร์ชันใหม่
-  currentVersion: { type: String, required: true },
+  // ✅ ระบบเวอร์ชันใหม่ (เปลี่ยน required เป็น false หรือลบ required)
+  currentVersion: { type: String, default: "" },  // ← เปลี่ยนจาก required: true เป็น default: ""
   latestUpdate: { type: Date, default: Date.now },
   versionStatus: { type: String, enum: ["stable", "beta", "alpha"], default: "stable" },
   
@@ -25,8 +24,7 @@ const itemSchema = new mongoose.Schema({
   // แท็ก
   tags: [{ type: String }],
   
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
+  versionHistory: { type: Array, default: [] }
+}, { timestamps: true });
 
 export default mongoose.models.Item || mongoose.model("Item", itemSchema);

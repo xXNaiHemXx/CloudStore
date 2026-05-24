@@ -18,7 +18,7 @@ export default function Layout({ children }) {
   return (
     <div className="main-container">
       <Head>
-        <title>xCloud Store - Mod ETS2</title>
+        <title>xCloud Studio - Mod ETS2</title>
       </Head>
 
       {/* ===== HEADER ===== */}
@@ -28,7 +28,7 @@ export default function Layout({ children }) {
             <img src="/favicon.ico" className="icon" alt="icon" />
             <strong className="uppercase">
               <span className="tuppercase">xCloud</span>
-              Store
+              Studio
             </strong>
           </Link>
 
@@ -75,7 +75,7 @@ export default function Layout({ children }) {
 
       {/* ===== FOOTER ===== */}
       <footer className="footer-b">
-        <p className="footer-bn">© 2025 xCloud Store. All rights reserved.</p>
+        <p className="footer-bn">© 2025 xCloud Studio. All rights reserved.</p>
       </footer>
     </div>
   );

@@ -14,26 +14,40 @@ export default async function handler(req, res) {
 
   if (req.method === "GET") {
 
-    try {
+  try {
 
-      const purchases = await Purchase.find({})
-        .sort({ purchaseDate: -1 });
+    const purchases = await Purchase.find({})
+      .sort({ purchaseDate: -1 });
 
-      return res.status(200).json(
-        purchases || []
-      );
+    // ✅ ดึงข้อมูลผู้ใช้เพิ่มเติมสำหรับแต่ละคำสั่งซื้อ
+    const purchasesWithUser = await Promise.all(
+      purchases.map(async (purchase) => {
+        const user = await User.findOne({ discordId: purchase.userId });
+        return {
+          _id: purchase._id,
+          productId: purchase.productId,
+          productName: purchase.productName,
+          price: purchase.price,
+          purchaseDate: purchase.purchaseDate,
+          buyerId: purchase.userId,
+          buyerName: user?.name || purchase.userName || "Unknown",  // ✅ เพิ่มชื่อผู้ซื้อ
+        };
+      })
+    );
 
-    } catch (error) {
+    return res.status(200).json(purchasesWithUser || []);
 
-      console.error("GET PURCHASE ERROR:", error);
+  } catch (error) {
 
-      return res.status(500).json({
-        error: error.message
-      });
+    console.error("GET PURCHASE ERROR:", error);
 
-    }
+    return res.status(500).json({
+      error: error.message
+    });
 
   }
+
+}
 
   // =====================================================
   // POST = ซื้อสินค้า

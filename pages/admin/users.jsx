@@ -149,7 +149,7 @@ export default function AdminUsers() {
             <img src="/favicon.ico" className="icon" alt="logo"/>
             <strong className="uppercase">
               <span className="tuppercase">xCloud</span>
-              Store
+              Studio
             </strong>
           </a>      
           <div className="header-links">
