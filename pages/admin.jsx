@@ -232,71 +232,23 @@ export default function Admin() {
   const [actionLoading, setActionLoading] = useState(false);
 
   // --- Fetch Dashboard Stats ---
-useEffect(() => {
-
-  if (!session || activeTab !== "dashboard") return;
-
-  const fetchDashboardStats = async () => {
-
-    try {
-
-      const [
-        itemsRes,
-        usersRes,
-        ordersRes
-      ] = await Promise.all([
-        axios.get("/api/items"),
-        axios.get("/api/user/count"),
-        axios.get("/api/user/purchase"),
-      ]);
-
-      const itemsData = Array.isArray(itemsRes.data)
-        ? itemsRes.data
-        : [];
-
-      const ordersData = Array.isArray(ordersRes.data)
-        ? ordersRes.data
-        : [];
-
-      const usersCount =
-        usersRes.data?.count ||
-        usersRes.data?.users ||
-        0;
-
-      const revenue = ordersData.reduce(
-        (sum, order) =>
-          sum + Number(order.price || 0),
-        0
-      );
-
+  useEffect(() => {
+    if (!session || activeTab !== "dashboard") return;
+    Promise.all([
+      axios.get("/api/items"),
+      axios.get("/api/user/count"),
+      axios.get("/api/user/purchase"),
+    ]).then(([itemsRes, usersRes, ordersRes]) => {
+      const items = itemsRes.data || [];
+      const orders = ordersRes.data || [];
       setStats({
-        products: itemsData.length,
-        users: usersCount,
-        orders: ordersData.length,
-        revenue,
+        products: items.length,
+        users: usersRes.data.count || 0,
+        orders: orders.length,
+        revenue: orders.reduce((sum, o) => sum + (o.price || 0), 0),
       });
-
-    } catch (error) {
-
-      console.error(
-        "Dashboard stats error:",
-        error
-      );
-
-      setStats({
-        products: 0,
-        users: 0,
-        orders: 0,
-        revenue: 0,
-      });
-
-    }
-
-  };
-
-  fetchDashboardStats();
-
-}, [session, activeTab]);
+    }).catch(console.error);
+  }, [session, activeTab]);
 
   // --- Fetch Orders ---
   useEffect(() => {
@@ -406,55 +358,48 @@ useEffect(() => {
     else setProposedPoints(Math.max(0, current - amount));
   };
 
-  const handleRemoveProduct = async (
-  productId,
-  index
-    ) => {
+  const handleRemoveProduct = async (productId, index) => {
+  // แสดงชื่อสินค้าเพื่อความชัดเจน
+  const productName = userProducts[index]?.name || "สินค้านี้";
+    
+    if (!confirm(`คุณต้องการลบ "${productName}" ออกจากบัญชีผู้ใช้ใช่หรือไม่?\n\n⚠️ คำเตือน: การลบจะทำให้ Role ใน Discord ถูกลบด้วย (ถ้าไม่มีคนอื่นใช้สินค้านี้อยู่)`)) {
+      return;
+    }
 
-      if (
-        !confirm(
-          "คุณต้องการลบสินค้านี้ออกจากบัญชีผู้ใช้ใช่หรือไม่?"
-        )
-      ) {
-        return;
+    setActionLoading(true);
+    try {
+      console.log("📌 Sending remove request:", { 
+        userId: selectedUser.id, 
+        productId, 
+        index 
+      });
+      
+      const res = await axios.put("/api/user/remove-product", {
+        userId: selectedUser.id,
+        productId,
+        index,
+      });
+
+      console.log("📌 Remove response:", res.data);
+
+      if (res.data.success) {
+        // อัปเดตหน้าจอทันที
+        setUserProducts((prev) => prev.filter((_, i) => i !== index));
+        alert(`✅ ลบสินค้า "${productName}" สำเร็จ!`);
+        
+        // รีเฟรชข้อมูลผู้ใช้
+        await fetchUsers();
+        await refreshPoints();
+      } else {
+        alert("❌ ลบสินค้าไม่สำเร็จ: " + (res.data.error || "Unknown error"));
       }
-
-      try {
-
-        setActionLoading(true);
-
-        const response = await axios.put(
-          "/api/user/remove-product",
-          {
-            userId: selectedUser.id,
-            productId,
-            index,
-          }
-        );
-
-        setUserProducts((prev) =>
-          prev.filter((_, i) => i !== index)
-        );
-
-        alert("✅ ลบสินค้าสำเร็จ");
-
-        console.log(response.data);
-
-      } catch (error) {
-
-        console.error(error);
-
-        alert(
-          error.response?.data?.error ||
-          "ลบสินค้าไม่สำเร็จ"
-        );
-
-      } finally {
-
-        setActionLoading(false);
-
-      }
-    };
+    } catch (err) {
+      console.error("REMOVE PRODUCT ERROR:", err);
+      alert("❌ ลบสินค้าไม่สำเร็จ: " + (err.response?.data?.error || err.message));
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const handleSavePoints = async () => {
     setActionLoading(true);
