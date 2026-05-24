@@ -1,6 +1,6 @@
 import { connectToDB } from "../../../utils/db";
 import User from "../../../models/User";
-import Item from "../../../models/Items";
+import Item from "../../../models/items";
 import Purchase from "../../../models/Purchase";
 import { addDiscordRoles } from "../../../utils/discord";
 
@@ -57,6 +57,10 @@ export default async function handler(req, res) {
 
       }
 
+      // =====================================================
+      // FIND USER
+      // =====================================================
+
       const user = await User.findOne({
         discordId: userId
       });
@@ -69,6 +73,10 @@ export default async function handler(req, res) {
 
       }
 
+      // =====================================================
+      // FIND PRODUCT
+      // =====================================================
+
       const product = await Item.findById(productId);
 
       if (!product) {
@@ -79,8 +87,15 @@ export default async function handler(req, res) {
 
       }
 
+      console.log("📌 PURCHASE DETAIL:", {
+        user: user.name,
+        product: product.itemsname,
+        price: price,
+        discordRoleIds: product.discordRoleIds
+      });
+
       // =====================================================
-      // เช็ค point
+      // CHECK POINTS
       // =====================================================
 
       if ((user.points || 0) < price) {
@@ -92,13 +107,13 @@ export default async function handler(req, res) {
       }
 
       // =====================================================
-      // หัก point
+      // DEDUCT POINTS
       // =====================================================
 
       user.points -= Number(price);
 
       // =====================================================
-      // เพิ่มสินค้าให้ user
+      // ADD PRODUCT TO USER (SNAPSHOT)
       // =====================================================
 
       if (!user.products) {
@@ -106,16 +121,20 @@ export default async function handler(req, res) {
       }
 
       user.products.push({
-        productId: product._id,
+        productId: product._id.toString(),
+        name: product.itemsname || "",
+        version: product.itemsversion || "",
+        image: product.itemsimage || "",
+        fileUrl: product.itemsfile || "",
+        discordRoleIds: product.discordRoleIds || [],
         purchaseDate: new Date()
       });
 
       user.markModified("products");
-
       await user.save();
 
       // =====================================================
-      // บันทึก purchase history
+      // SAVE PURCHASE HISTORY
       // =====================================================
 
       await Purchase.create({
@@ -128,32 +147,36 @@ export default async function handler(req, res) {
       });
 
       // =====================================================
-      // Discord Roles
+      // ADD DISCORD ROLES
       // =====================================================
 
-      if (
-        product.discordRoleIds &&
-        product.discordRoleIds.length > 0
-      ) {
+      if (product.discordRoleIds && product.discordRoleIds.length > 0) {
 
-        console.log(
-          `📌 กำลังเพิ่ม Role ${product.discordRoleIds.join(", ")} ให้ ${user.discordId}...`
-        );
+        console.log(`📌 กำลังเพิ่ม Role ${product.discordRoleIds.join(", ")} ให้ ${user.discordId}...`);
 
-        await addDiscordRoles(
+        const roleResult = await addDiscordRoles(
           user.discordId,
           product.discordRoleIds
         );
 
+        console.log("📌 ADD ROLE RESULT:", roleResult);
+
       }
 
+      console.log(`✅ Purchase success: ${product.itemsname} for ${user.name}`);
+
       return res.status(200).json({
-        success: true
+        success: true,
+        remainingPoints: user.points,
+        product: {
+          id: product._id,
+          name: product.itemsname
+        }
       });
 
     } catch (error) {
 
-      console.error(error);
+      console.error("❌ PURCHASE ERROR:", error);
 
       return res.status(500).json({
         error: error.message
