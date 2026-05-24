@@ -115,7 +115,13 @@ export default async function handler(req, res) {
 
       user.products.push({
         productId: product._id,
-        purchaseDate: new Date()
+        name: product.itemsname,
+        version: product.itemsversion,
+        fileUrl: product.itemsfile,
+        image: product.itemsimages?.[0] || "",
+        itemsimages: product.itemsimages || [],
+        discordRoleIds: product.discordRoleIds || [],
+        purchasedAt: new Date(),
       });
 
       user.markModified("products");
