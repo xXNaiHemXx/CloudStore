@@ -25,9 +25,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
-  const [versionInfo, setVersionInfo] = useState(null);
-  const [showFullChangelog, setShowFullChangelog] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
+
   // ==================== IMAGES ====================
   const images = product?.itemsimages?.filter(Boolean) || [];
 
