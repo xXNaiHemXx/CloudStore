@@ -9,5 +9,10 @@
   "/api/user/count": "pages/api/user/count.js",
   "/": "pages/index.js",
   "/api/purchases/count": "pages/api/purchases/count.js",
-  "/products/[id]": "pages/products/[id].js"
+  "/api/user/purchase": "pages/api/user/purchase.js",
+  "/products/[id]": "pages/products/[id].js",
+  "/api/uploads": "pages/api/uploads.js",
+  "/profile": "pages/profile.js",
+  "/api/user/user": "pages/api/user/user.js",
+  "/shop": "pages/shop.js"
 }
