@@ -1,30 +1,29 @@
-import { NextResponse } from "next/server";
-import connectDB from "@/lib/connectDB";
+import dbConnect from "@/lib/dbConnect";
 
 import ProductVersion from "@/models/ProductVersion";
 
-export async function GET(req, { params }) {
+export default async function handler(req, res) {
 
     try {
 
-        await connectDB();
+        await dbConnect();
 
         const versions = await ProductVersion
             .find({
-                productId: params.id
+                productId: req.query.id
             })
             .sort({ createdAt: -1 });
 
-        return NextResponse.json({
+        return res.status(200).json({
             success: true,
             versions
         });
 
     } catch (err) {
 
-        return NextResponse.json({
+        return res.status(500).json({
             success: false,
             message: err.message
-        }, { status: 500 });
+        });
     }
 }
