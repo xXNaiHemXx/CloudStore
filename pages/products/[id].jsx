@@ -78,15 +78,19 @@ export default function ProductDetail() {
         return;
       }
 
-      if (userPoints < (product?.itemsprice || 0)) {
-        alert(
-          `แต้มไม่เพียงพอ! คุณมี ${userPoints} แต้ม แต่สินค้าราคา ${product?.itemsprice} แต้ม`
-        );
+      // ✅ ตรวจสอบแต้มก่อน
+      const currentPoints = Number(userPoints || 0);
+      const productPrice = Number(product?.itemsprice || 0);
+
+      console.log("💰 PURCHASE CHECK:", { currentPoints, productPrice });
+
+      if (currentPoints < productPrice) {
+        alert(`❌ แต้มไม่เพียงพอ! คุณมี ${currentPoints.toLocaleString()} แต้ม แต่ต้องใช้ ${productPrice.toLocaleString()} แต้ม`);
         return;
       }
 
       const confirmed = confirm(
-        `ยืนยันการซื้อ ${product?.itemsname} ราคา ${product?.itemsprice?.toLocaleString()} Points?`
+        `ยืนยันการซื้อ ${product?.itemsname} ราคา ${productPrice.toLocaleString()} Points?`
       );
 
       if (!confirmed) return;
@@ -96,29 +100,28 @@ export default function ProductDetail() {
       const purchaseRes = await axios.post("/api/user/purchase", {
         userId: session.user.discordId || session.user.id,
         productId: id,
-        price: product?.itemsprice,
+        price: productPrice,
       });
 
-      if (purchaseRes.status === 200) {
-        await refreshPoints();
+      console.log("📌 PURCHASE RESPONSE:", purchaseRes.data);
 
-        alert(
-          `✅ ซื้อสินค้าสำเร็จ! คงเหลือ ${purchaseRes.data.remainingPoints?.toLocaleString()} Points`
-        );
-
-        setTimeout(() => {
-          setIsPurchasing(false);
-        }, 1000);
+      if (purchaseRes.status === 200 && purchaseRes.data.success) {
+        // ✅ อัปเดตแต้ม
+        const newPoints = purchaseRes.data.remainingPoints;
+        await refreshPoints(); // รีเฟรชจาก Context
+        
+        alert(`✅ ซื้อสินค้าสำเร็จ! คงเหลือ ${newPoints?.toLocaleString() || 0} Points`);
+        
+        // ✅ รีเฟรชหน้าเพื่อแสดงสินค้าใหม่
+        router.push("/profile");
       }
     } catch (error) {
       console.error("Purchase failed:", error);
-
-      const errorMsg =
-        error.response?.data?.error ||
-        "เกิดข้อผิดพลาด กรุณาลองใหม่";
-
+      
+      // ✅ แสดง error จาก API
+      const errorMsg = error.response?.data?.error || "เกิดข้อผิดพลาด กรุณาลองใหม่";
       alert(`❌ ${errorMsg}`);
-
+    } finally {
       setIsPurchasing(false);
     }
   };
