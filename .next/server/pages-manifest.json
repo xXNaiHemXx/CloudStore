@@ -10,10 +10,12 @@
   "/api/items": "pages/api/items.js",
   "/api/user/purchase": "pages/api/user/purchase.js",
   "/api/user/count": "pages/api/user/count.js",
-  "/api/user/user": "pages/api/user/user.js",
   "/api/uploads": "pages/api/uploads.js",
+  "/api/user/user": "pages/api/user/user.js",
   "/api/user/fetch-products": "pages/api/user/fetch-products.js",
-  "/": "pages/index.js",
   "/api/user/remove-product": "pages/api/user/remove-product.js",
-  "/api/purchases/count": "pages/api/purchases/count.js"
+  "/": "pages/index.js",
+  "/api/purchases/count": "pages/api/purchases/count.js",
+  "/api/topups": "pages/api/topups.js",
+  "/shop": "pages/shop.js"
 }
