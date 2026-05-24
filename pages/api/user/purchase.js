@@ -96,13 +96,16 @@ export default async function handler(req, res) {
     // =========================
     // SAVE PRODUCT
     // =========================
-    user.products.push({
-      productId: product._id,
-      name: product.itemsname,
-      version: product.itemsversion,
-      fileUrl: product.itemsfile,
-      purchaseDate: new Date(),
-    });
+      user.products.push({
+        productId: product._id,
+        name: product.itemsname,
+        version: product.itemsversion,
+        fileUrl: product.itemsfile,
+        image: product.itemsimages?.[0] || "",
+        itemsimages: product.itemsimages || [],
+        discordRoleIds: product.discordRoleIds || [],
+        purchasedAt: new Date(),
+      });
 
     // =========================
     // ADD DISCORD ROLES
