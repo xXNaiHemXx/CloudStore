@@ -12,7 +12,7 @@
   "/api/user/user": "pages/api/user/user.js",
   "/api/user/fetch-products": "pages/api/user/fetch-products.js",
   "/api/user/remove-product": "pages/api/user/remove-product.js",
-  "/": "pages/index.js",
   "/api/purchases/count": "pages/api/purchases/count.js",
+  "/": "pages/index.js",
   "/products/[id]": "pages/products/[id].js"
 }
