@@ -666,3 +666,281 @@
     height: 34px;
   }
 }
+/* Update Banner */
+.updateBanner {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.updateIcon {
+  font-size: 2rem;
+}
+
+.updateContent h4 {
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+
+.updateContent p {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.updateNowBtn {
+  background: white;
+  color: #2563eb;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.updateNowBtn:hover {
+  transform: scale(1.02);
+  background: #f8fafc;
+}
+
+/* Force Update Warning */
+.forceUpdateWarning {
+  background: rgba(239, 68, 68, 0.15);
+  border-left: 4px solid #ef4444;
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.forceUpdateWarning span:first-child {
+  font-size: 1.3rem;
+}
+
+.forceUpdateWarning strong {
+  color: #ef4444;
+}
+
+.forceUpdateWarning p {
+  font-size: 0.85rem;
+  color: #fca5a5;
+  margin-top: 4px;
+}
+
+/* Version Box */
+.versionBox {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.versionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.versionBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+.versionIcon {
+  font-size: 1rem;
+}
+
+.versionNumber {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.betaBadge {
+  background: #f59e0b;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+}
+
+.updateBadge {
+  background: #ef4444;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.versionDate {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* Changelog Section */
+.changelogSection {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #334155;
+}
+
+.changelogTitle {
+  font-size: 0.9rem;
+  margin-bottom: 12px;
+  color: #cbd5e1;
+}
+
+.changelogContent {
+  margin-bottom: 8px;
+}
+
+.changelogItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 0.85rem;
+}
+
+.changelogBullet {
+  color: #10b981;
+  font-weight: bold;
+}
+
+.viewMoreBtn {
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-top: 8px;
+  padding: 4px 0;
+}
+
+.viewMoreBtn:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+}
+
+.fullChangelog {
+  margin-top: 8px;
+}
+
+/* Version History */
+.versionHistory {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #334155;
+}
+
+.historySummary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  padding: 8px 0;
+  list-style: none;
+}
+
+.historySummary::-webkit-details-marker {
+  display: none;
+}
+
+.historySummary::before {
+  content: "▶ ";
+  font-size: 0.7rem;
+}
+
+details[open] .historySummary::before {
+  content: "▼ ";
+}
+
+.historyList {
+  margin-top: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.historyItem {
+  background: #0f172a;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.historyHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+}
+
+.historyVersion {
+  font-weight: bold;
+  color: #818cf8;
+}
+
+.historyDate {
+  color: #64748b;
+}
+
+.historyChangelog {
+  padding-left: 20px;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.historyChangelog li {
+  margin: 4px 0;
+}
+
+/* Download Button */
+.downloadBtn {
+  width: 100%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: bold;
+  margin-top: 16px;
+  transition: all 0.2s;
+}
+
+.downloadBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.downloadBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hasUpdateBtn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  animation: pulse 1.5s infinite;
+}
+
+.fileInfo {
+  text-align: center;
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 10px;
+}
