@@ -102,7 +102,7 @@ export default async function handler(req, res) {
         version: product.itemsversion,
         fileUrl: product.itemsfile,
         image: product.itemsimages?.[0] || "",
-        itemsimages: product.itemsimages || [],
+        itemsimages: product.itemsimage || [],
         discordRoleIds: product.discordRoleIds || [],
         purchasedAt: new Date(),
       });

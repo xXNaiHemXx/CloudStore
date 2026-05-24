@@ -260,7 +260,7 @@ export default function Profile() {
                             <div className={styles.cardImageWrapper}>
                               <img
                                 src={
-                                  product.itemsimages?.[0] ||
+                                  product.itemsimage?.[0] ||
                                   product.image ||
                                   '/images/placeholder.png'
                                 }
