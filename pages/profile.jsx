@@ -259,9 +259,16 @@ export default function Profile() {
                           <div key={`${product.productId}-${index}`} className={styles.productCard}>
                             <div className={styles.cardImageWrapper}>
                               <img
-                                src={product.image || '/images/placeholder.png'}
+                                src={
+                                  product.itemsimages?.[0] ||
+                                  product.image ||
+                                  '/images/placeholder.png'
+                                }
                                 alt={product.name}
                                 loading="lazy"
+                                onError={(e) => {
+                                  e.target.src = '/images/placeholder.png';
+                                }}
                               />
                             </div>
                             <div className={styles.cardBody}>
