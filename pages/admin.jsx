@@ -862,17 +862,17 @@ const handleRemoveProduct = async (
                             </div>
                           </div>
                           <button
-  className="btn-red"
-  onClick={() =>
-    handleRemoveProduct(
-      item.productId,
-      index
-    )
-  }
-  disabled={actionLoading}
->
-  {actionLoading ? "⏳" : "🗑 ลบ"}
-</button>
+                          className="btn-red"
+                          onClick={() =>
+                            handleRemoveProduct(
+                              item.productId,
+                              index
+                            )
+                          }
+                          disabled={actionLoading}
+                        >
+                          {actionLoading ? "⏳" : "🗑 ลบ"}
+                        </button>
                         </div>
                       ))
                     ) : (
