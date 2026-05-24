@@ -5,8 +5,11 @@
   "/shop": "pages/shop.js",
   "/products/[id]": "pages/products/[id].js",
   "/admin": "pages/admin.js",
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
+  "/api/user": "pages/api/user.js",
   "/api/items": "pages/api/items.js",
-  "/api/user/count": "pages/api/user/count.js",
   "/api/user/purchase": "pages/api/user/purchase.js",
-  "/api/uploads": "pages/api/uploads.js"
+  "/api/user/count": "pages/api/user/count.js",
+  "/": "pages/index.js",
+  "/api/purchases/count": "pages/api/purchases/count.js"
 }
