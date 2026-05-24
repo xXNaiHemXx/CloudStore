@@ -7,12 +7,13 @@
   "/api/user": "pages/api/user.js",
   "/admin": "pages/admin.js",
   "/api/items": "pages/api/items.js",
-  "/api/user/purchase": "pages/api/user/purchase.js",
-  "/api/user/count": "pages/api/user/count.js",
-  "/api/user/user": "pages/api/user/user.js",
   "/api/user/fetch-products": "pages/api/user/fetch-products.js",
+  "/api/user/count": "pages/api/user/count.js",
+  "/api/user/purchase": "pages/api/user/purchase.js",
+  "/api/user/user": "pages/api/user/user.js",
+  "/api/user/remove-product": "pages/api/user/remove-product.js",
   "/": "pages/index.js",
   "/api/purchases/count": "pages/api/purchases/count.js",
-  "/api/user/remove-product": "pages/api/user/remove-product.js",
+  "/api/uploads": "pages/api/uploads.js",
   "/products/[id]": "pages/products/[id].js"
 }
