@@ -1,165 +1,174 @@
 import { connectToDB } from "../../../utils/db";
 import User from "../../../models/User";
-import Items from "../../../models/items";
-
+import Item from "../../../models/Items";
+import Purchase from "../../../models/Purchase";
 import { addDiscordRoles } from "../../../utils/discord";
 
 export default async function handler(req, res) {
 
-  if (req.method !== "POST") {
-    return res.status(405).json({
-      error: "Method not allowed",
-    });
+  await connectToDB();
+
+  // =====================================================
+  // GET = ดึงรายการคำสั่งซื้อทั้งหมด
+  // =====================================================
+
+  if (req.method === "GET") {
+
+    try {
+
+      const purchases = await Purchase.find({})
+        .sort({ purchaseDate: -1 });
+
+      return res.status(200).json(
+        purchases || []
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      return res.status(500).json({
+        error: error.message
+      });
+
+    }
+
   }
 
-  try {
+  // =====================================================
+  // POST = ซื้อสินค้า
+  // =====================================================
 
-    await connectToDB();
+  if (req.method === "POST") {
 
-    const {
-      userId,
-      productId,
-      price,
-    } = req.body;
+    try {
 
-    console.log("📌 PURCHASE:", {
-      userId,
-      productId,
-      price,
-    });
+      const {
+        userId,
+        productId,
+        price
+      } = req.body;
 
-    // =========================
-    // FIND USER
-    // =========================
-    const user = await User.findOne({
-      discordId: String(userId),
-    });
+      if (!userId || !productId) {
 
-    if (!user) {
-      return res.status(404).json({
-        error: "User not found",
+        return res.status(400).json({
+          error: "Missing required fields"
+        });
+
+      }
+
+      const user = await User.findOne({
+        discordId: userId
       });
-    }
 
-    // =========================
-    // FIND PRODUCT
-    // =========================
-    const product = await Items.findById(productId);
+      if (!user) {
 
-    if (!product) {
-      return res.status(404).json({
-        error: "Product not found",
-      });
-    }
+        return res.status(404).json({
+          error: "User not found"
+        });
 
-    console.log("📌 PRODUCT:", {
-      name: product.itemsname,
-      discordRoleIds:
-        product.discordRoleIds,
-    });
+      }
 
-    // =========================
-    // CHECK POINTS
-    // =========================
-    if (
-      Number(user.points || 0) <
-      Number(price || 0)
-    ) {
-      return res.status(400).json({
-        error: "แต้มไม่เพียงพอ",
-      });
-    }
+      const product = await Item.findById(productId);
 
-    // =========================
-    // CHECK DUPLICATE
-    // =========================
-    const alreadyPurchased =
-      (user.products || []).some(
-        (p) =>
-          String(p.productId) ===
-          String(productId)
-      );
+      if (!product) {
 
-    if (alreadyPurchased) {
-      return res.status(400).json({
-        error: "คุณซื้อสินค้านี้แล้ว",
-      });
-    }
+        return res.status(404).json({
+          error: "Product not found"
+        });
 
-    // =========================
-    // REMOVE POINTS
-    // =========================
-    user.points =
-      Number(user.points || 0) -
-      Number(price || 0);
+      }
 
-    // =========================
-    // SAVE PRODUCT
-    // =========================
+      // =====================================================
+      // เช็ค point
+      // =====================================================
+
+      if ((user.points || 0) < price) {
+
+        return res.status(400).json({
+          error: "Point ไม่เพียงพอ"
+        });
+
+      }
+
+      // =====================================================
+      // หัก point
+      // =====================================================
+
+      user.points -= Number(price);
+
+      // =====================================================
+      // เพิ่มสินค้าให้ user
+      // =====================================================
+
+      if (!user.products) {
+        user.products = [];
+      }
+
       user.products.push({
         productId: product._id,
-        name: product.itemsname,
-        version: product.itemsversion,
-        fileUrl: product.itemsfile,
-        image: product.itemsimage || "",
-        itemsimage: product.itemsimage || [],
-        discordRoleIds: product.discordRoleIds || [],
-        purchasedAt: new Date(),
+        purchaseDate: new Date()
       });
 
-    // =========================
-    // ADD DISCORD ROLES
-    // =========================
-    if (
-      product.discordRoleIds &&
-      product.discordRoleIds.length > 0
-    ) {
+      user.markModified("products");
 
-      console.log(
-        "📌 Adding Discord Roles..."
-      );
+      await user.save();
 
-      const roleResult =
+      // =====================================================
+      // บันทึก purchase history
+      // =====================================================
+
+      await Purchase.create({
+        buyerId: user.discordId,
+        buyerName: user.name,
+        productId: product._id,
+        productName: product.itemsname,
+        price: Number(price),
+        purchaseDate: new Date()
+      });
+
+      // =====================================================
+      // Discord Roles
+      // =====================================================
+
+      if (
+        product.discordRoleIds &&
+        product.discordRoleIds.length > 0
+      ) {
+
+        console.log(
+          `📌 กำลังเพิ่ม Role ${product.discordRoleIds.join(", ")} ให้ ${user.discordId}...`
+        );
+
         await addDiscordRoles(
-          userId,
+          user.discordId,
           product.discordRoleIds
         );
 
-      console.log(
-        "📌 ADD ROLE RESULT:",
-        roleResult
-      );
+      }
+
+      return res.status(200).json({
+        success: true
+      });
+
+    } catch (error) {
+
+      console.error(error);
+
+      return res.status(500).json({
+        error: error.message
+      });
+
     }
 
-    // =========================
-    // SAVE USER
-    // =========================
-    user.markModified("products");
-
-    await user.save();
-
-    console.log(
-      `✅ Purchase success: ${product.itemsname}`
-    );
-
-    return res.status(200).json({
-      success: true,
-      remainingPoints: user.points,
-      product: {
-        id: product._id,
-        name: product.itemsname,
-      },
-    });
-
-  } catch (error) {
-
-    console.error(
-      "❌ PURCHASE ERROR:",
-      error
-    );
-
-    return res.status(500).json({
-      error: error.message,
-    });
   }
+
+  // =====================================================
+  // METHOD NOT ALLOWED
+  // =====================================================
+
+  return res.status(405).json({
+    error: "Method not allowed"
+  });
+
 }
