@@ -36,15 +36,15 @@ export default async function handler(req, res) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    // ✅ ตั้งค่า formidable (ไม่เพิ่ม timestamp)
+    // ✅ ตั้งค่า formidable (ไม่เพิ่ม timestamp และไม่เปลี่ยนชื่อ)
     const form = formidable({
       uploadDir: uploadDir,
       keepExtensions: true,
       maxFileSize: 2000 * 1024 * 1024, // 2GB
       filename: (name, ext, part, form) => {
-        // ✅ คืนชื่อไฟล์เดิม ไม่เติมเลข
+        // ✅ ใช้ชื่อไฟล์เดิมทุกประการ
         const originalName = part.originalFilename || "file";
-        // แทนที่ช่องว่างและอักขระพิเศษ
+        // แทนที่เฉพาะช่องว่างและอักขระพิเศษ (ถ้าต้องการ)
         const safeName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
         return safeName;
       },
@@ -64,41 +64,33 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // ✅ ใช้ชื่อไฟล์เดิม (ไม่เปลี่ยน)
+    // ✅ ใช้ชื่อไฟล์เดิม
     const originalName = file.originalFilename || path.basename(file.filepath);
-    const fileName = originalName;
-    const fileUrl = `/uploads/${fileName}`;
-
-    // ✅ ถ้าไฟล์ซ้ำ ให้เปลี่ยนชื่อ (เพิ่ม _1, _2)
-    let finalFileName = fileName;
-    let finalFilePath = path.join(uploadDir, finalFileName);
-    let counter = 1;
-    
-    while (fs.existsSync(finalFilePath)) {
-      const ext = path.extname(originalName);
-      const baseName = path.basename(originalName, ext);
-      finalFileName = `${baseName}_${counter}${ext}`;
-      finalFilePath = path.join(uploadDir, finalFileName);
-      counter++;
-    }
-    
-    // ✅ ย้ายไฟล์ไปยังชื่อใหม่ (ถ้าชื่อซ้ำ)
-    if (finalFileName !== fileName) {
-      fs.renameSync(file.filepath, finalFilePath);
-    }
-
+    const finalFileName = originalName;
+    const finalFilePath = path.join(uploadDir, finalFileName);
     const finalFileUrl = `/uploads/${finalFileName}`;
 
-    console.log("✅ Upload success:", {
+    // ✅ ถ้าไฟล์มีอยู่แล้ว ให้ลบไฟล์เก่าก่อน แล้วเขียนทับ
+    if (fs.existsSync(finalFilePath)) {
+      fs.unlinkSync(finalFilePath);
+      console.log(`📌 ลบไฟล์เก่า: ${finalFileName}`);
+    }
+
+    // ✅ ย้ายไฟล์ไปยังตำแหน่งสุดท้าย (เขียนทับ)
+    fs.renameSync(file.filepath, finalFilePath);
+
+    console.log("✅ Upload success (overwrite):", {
       originalName,
       fileName: finalFileName,
       url: finalFileUrl,
       size: file.size,
+      sizeMB: (file.size / (1024 * 1024)).toFixed(2),
+      overwritten: true
     });
 
     return res.status(200).json({
       success: true,
-      message: "อัปโหลดสำเร็จ",
+      message: "อัปโหลดสำเร็จ (เขียนทับไฟล์เดิม)",
       url: finalFileUrl,
       originalName: finalFileName,
       fileName: finalFileName,
