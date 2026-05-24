@@ -21,7 +21,15 @@ function ProductModal({ editingItem, onClose, onSaved }) {
   const [discordRoleIdsText, setDiscordRoleIdsText] = useState("");
   const [previewImage, setPreviewImage] = useState("");
   const [saving, setSaving] = useState(false);
+  const roleIds = discordRoleIdsText
+    .split(/[ ,\n]+/)
+    .filter(r => r && r.trim() !== "")
+    .map(r => r.trim());
 
+  const payload = {
+    // ... fields อื่นๆ
+    discordRoleIds: roleIds, // ✅ ส่งเป็น Array
+  };
   useEffect(() => {
     if (editingItem) {
       setItemsname(editingItem.itemsname || "");
