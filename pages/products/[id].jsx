@@ -67,64 +67,50 @@ export default function ProductDetail() {
 
   // ==================== PURCHASE ====================
   const handlePurchase = async () => {
-    if (isPurchasing) {
-      alert("กำลังดำเนินการ กรุณารอสักครู่...");
+  if (isPurchasing) {
+    alert("กำลังดำเนินการ กรุณารอสักครู่...");
+    return;
+  }
+
+  try {
+    if (!session) {
+      alert("กรุณาเข้าสู่ระบบก่อนซื้อสินค้า");
       return;
     }
 
-    try {
-      if (!session) {
-        alert("กรุณาเข้าสู่ระบบก่อนซื้อสินค้า");
-        return;
-      }
+    const currentPoints = Number(userPoints || 0);
+    const productPrice = Number(product?.itemsprice || 0);
 
-      // ✅ ตรวจสอบแต้มก่อน
-      const currentPoints = Number(userPoints || 0);
-      const productPrice = Number(product?.itemsprice || 0);
-
-      console.log("💰 PURCHASE CHECK:", { currentPoints, productPrice });
-
-      if (currentPoints < productPrice) {
-        alert(`❌ แต้มไม่เพียงพอ! คุณมี ${currentPoints.toLocaleString()} แต้ม แต่ต้องใช้ ${productPrice.toLocaleString()} แต้ม`);
-        return;
-      }
-
-      const confirmed = confirm(
-        `ยืนยันการซื้อ ${product?.itemsname} ราคา ${productPrice.toLocaleString()} Points?`
-      );
-
-      if (!confirmed) return;
-
-      setIsPurchasing(true);
-
-      const purchaseRes = await axios.post("/api/user/purchase", {
-        userId: session.user.discordId || session.user.id,
-        productId: id,
-        price: productPrice,
-      });
-
-      console.log("📌 PURCHASE RESPONSE:", purchaseRes.data);
-
-      if (purchaseRes.status === 200 && purchaseRes.data.success) {
-        // ✅ อัปเดตแต้ม
-        const newPoints = purchaseRes.data.remainingPoints;
-        await refreshPoints(); // รีเฟรชจาก Context
-        
-        alert(`✅ ซื้อสินค้าสำเร็จ! คงเหลือ ${newPoints?.toLocaleString() || 0} Points`);
-        
-        // ✅ รีเฟรชหน้าเพื่อแสดงสินค้าใหม่
-        router.push("/profile");
-      }
-    } catch (error) {
-      console.error("Purchase failed:", error);
-      
-      // ✅ แสดง error จาก API
-      const errorMsg = error.response?.data?.error || "เกิดข้อผิดพลาด กรุณาลองใหม่";
-      alert(`❌ ${errorMsg}`);
-    } finally {
-      setIsPurchasing(false);
+    if (currentPoints < productPrice) {
+      alert(`❌ แต้มไม่เพียงพอ! คุณมี ${currentPoints.toLocaleString()} แต้ม แต่ต้องใช้ ${productPrice.toLocaleString()} แต้ม`);
+      return;
     }
-  };
+
+    const confirmed = confirm(`ยืนยันการซื้อ ${product?.itemsname}?`);
+    if (!confirmed) return;
+
+    setIsPurchasing(true);
+
+    const purchaseRes = await axios.post("/api/user/purchase", {
+      userId: session.user.discordId || session.user.id,
+      productId: id,
+      price: productPrice,
+    });
+
+    if (purchaseRes.data.success) {
+      // ✅ รีเฟรชแต้มจาก Context
+      await refreshPoints();
+      
+      alert(`✅ ซื้อสินค้าสำเร็จ! คงเหลือ ${purchaseRes.data.remainingPoints?.toLocaleString()} Points`);
+      router.push("/profile");
+    }
+  } catch (error) {
+    const errorMsg = error.response?.data?.error || "เกิดข้อผิดพลาด";
+    alert(`❌ ${errorMsg}`);
+  } finally {
+    setIsPurchasing(false);
+  }
+};
 
   // ==================== LOADING ====================
   if (loading) {
