@@ -1,3 +1,66 @@
+export async function addDiscordRoles(
+  discordUserId,
+  roleIds
+) {
+  console.log("📌 [addDiscordRoles]");
+
+  const results = {
+    added: [],
+    failed: [],
+  };
+
+  for (const roleId of roleIds) {
+    try {
+
+      const response = await fetch(
+        `https://discord.com/api/v10/guilds/${process.env.DISCORD_GUILD_ID}/members/${discordUserId}/roles/${roleId}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text();
+
+        console.error(
+          `❌ Failed add role ${roleId}:`,
+          text
+        );
+
+        results.failed.push({
+          roleId,
+          error: text,
+        });
+
+        continue;
+      }
+
+      console.log(
+        `✅ Added role ${roleId} to ${discordUserId}`
+      );
+
+      results.added.push(roleId);
+
+    } catch (error) {
+
+      console.error(
+        `❌ Error adding role ${roleId}:`,
+        error.message
+      );
+
+      results.failed.push({
+        roleId,
+        error: error.message,
+      });
+    }
+  }
+
+  return results;
+}
+
 export async function removeDiscordRoles(
   discordUserId,
   roleIds
