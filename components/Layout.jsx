@@ -2,11 +2,11 @@ import { useSession, signIn } from "next-auth/react";
 import { useState } from "react";
 import Link from "next/link";
 import Head from "next/head";
-import { useUser } from "../context/UserContext"; // ✅ import useUser
+import { useUser } from "../context/UserContext";
 
 export default function Layout({ children }) {
   const { data: session } = useSession();
-  const { userPoints, isLoading } = useUser(); // ✅ ใช้ points จาก Context
+  const { userPoints, isLoading } = useUser();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -38,10 +38,11 @@ export default function Layout({ children }) {
             <a href="https://discord.gg/G6Up8VDa5t" className="headertext" target="_blank" rel="noopener noreferrer">Discord</a>
           </div>
 
+          {/* ✅ Profile + Arrow */}
           <div className="profile-container">
             {session ? (
-              <div className="items-centerpics">
-                <Link href="/profile">
+              <div className="profile-wrapper">
+                <Link href="/profile" className="profile-link-wrapper">
                   <img
                     src={session.user.image}
                     alt="Profile"
@@ -49,12 +50,32 @@ export default function Layout({ children }) {
                   />
                   <span className="profile-text">
                     {isLoading ? (
-                      <span className="animate-pulse" style={{ opacity: 0.5 }}>⏳</span>
+                      <span className="animate-pulse">⏳</span>
                     ) : (
                       `${userPoints?.toLocaleString() || 0} Point`
                     )}
                   </span>
                 </Link>
+
+                {/* ✅ ลูกศรชี้เตือนให้เติมพ้อยท์ (แสดงเมื่อ points < 100) */}
+                {true && (
+                  <Link href="/profile?tab=topup" className="topup-arrow">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      className="arrow-icon" 
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18"
+                      />
+                    </svg>
+                    <span>เติมพ้อยท์</span>
+                  </Link>
+                )}
               </div>
             ) : (
               <button onClick={() => signIn("discord")} className="header-discord-login">

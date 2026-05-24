@@ -67,7 +67,7 @@ export default function AdminDashboard() {
         <h1 className="text-2xl font-bold mb-6">📊 Admin Dashboard</h1>
         <div className="admin-menu-grid">
           <Link href="/admin/products" className="admin-menu-button">🧱 จัดการสินค้า (MOD)</Link>
-          <Link href="/admin/uploads" className="admin-menu-button">🖼 จัดการรูปภาพ</Link>
+          <Link href="/admin/uploads" className="admin-menu-button">📁 จัดการรูปภาพ</Link>
           <Link href="/admin/categories" className="admin-menu-button">📁 หมวดหมู่</Link>
           <Link href="/admin/orders" className="admin-menu-button">🧾 คำสั่งซื้อ</Link>
           <Link href="/admin/users" className="admin-menu-button">👥 ผู้ใช้งาน</Link>

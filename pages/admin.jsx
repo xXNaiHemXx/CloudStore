@@ -5,7 +5,7 @@ import Link from "next/link";
 import Head from "next/head";
 import styles from "../styles/Admin.module.css";
 import { useUser } from "../context/UserContext";
-
+import { groupFilesByCategory, isImageFile } from "../utils/fileCategories";
 // ==================== PRODUCT MODAL ====================
 function ProductModal({ editingItem, onClose, onSaved }) {
   const isEdit = !!editingItem;
@@ -15,11 +15,13 @@ function ProductModal({ editingItem, onClose, onSaved }) {
   const [itemsimages, setItemsimages] = useState([""]);
   const [itemsdesc, setItemsdesc] = useState("");
   const [itemstitle, setItemstitle] = useState("");
+ 
   const [itemsfile, setItemsfile] = useState("");
   const [itemsurlyoutube, setItemsurlyoutube] = useState("");
   const [itemsversion, setItemsversion] = useState("");
   const [discordRoleIdsText, setDiscordRoleIdsText] = useState("");
   const [previewImage, setPreviewImage] = useState("");
+
   const [saving, setSaving] = useState(false);
   // ใน ProductModal function
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -38,7 +40,10 @@ function ProductModal({ editingItem, onClose, onSaved }) {
       setPreviewImage(editingItem.itemsimage || "");
     }
   }, [editingItem]);
+  
 
+  // ฟังก์ชันลบไฟล์
+  
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -57,7 +62,7 @@ function ProductModal({ editingItem, onClose, onSaved }) {
       alert("Upload error");
     }
   };
-
+  
   const handleImageChange = (index, value) => {
     const newImages = [...itemsimages];
     newImages[index] = value.trim();
@@ -70,16 +75,18 @@ function ProductModal({ editingItem, onClose, onSaved }) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // ✅ ตรวจสอบขนาดไฟล์ (500MB สำหรับ Mod)
-    const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
-    
-    if (file.size > MAX_FILE_SIZE) {
-      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      alert(`❌ ไฟล์ใหญ่เกินไป!\n\nขนาดไฟล์: ${fileSizeMB}MB\nขนาดสูงสุด: 500MB\n\n💡 แนะนำ:\n- แบ่งไฟล์เป็นส่วนๆ\n- บีบอัดไฟล์ให้เล็กลง\n- ใช้ลิงก์ภายนอกแทน (Google Drive, Dropbox)`);
+    // ✅ ตรวจสอบขนาดไฟล์ (2GB)
+    const MAX_SIZE = 2000 * 1024 * 1024; // 2000MB
+    if (file.size > MAX_SIZE) {
+      const sizeGB = (file.size / (1024 * 1024 * 1024)).toFixed(2);
+      alert(`❌ ไฟล์ใหญ่เกินไป: ${sizeGB}GB\nขนาดสูงสุด: 2GB`);
       return;
     }
 
-    // ✅ แสดง progress
+    // ✅ แสดงขนาดไฟล์
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    console.log(`📦 กำลังอัปโหลด: ${file.name} (${sizeMB}MB)`);
+
     setUploadingFile(true);
 
     const formData = new FormData();
@@ -88,30 +95,31 @@ function ProductModal({ editingItem, onClose, onSaved }) {
     try {
       const res = await axios.post("/api/admin/upload-file", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 300000, // ✅ 5 นาที timeout
+        timeout: 0, // ✅ ไม่มี timeout
         onUploadProgress: (progressEvent) => {
           const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          console.log(`📤 อัปโหลด: ${percent}%`);
-          // คุณสามารถเพิ่ม progress bar ได้ที่นี่
+          console.log(`📤 Upload progress: ${percent}%`);
         },
       });
 
       if (res.data.success) {
         setItemsfile(res.data.url);
-        alert("✅ อัปโหลดไฟล์สำเร็จ!");
+        alert(`✅ อัปโหลดสำเร็จ!\n\n📦 ${res.data.originalName}\n📏 ${res.data.sizeMB}MB`);
       }
     } catch (error) {
       console.error(error);
       
-      if (error.code === 'ECONNABORTED') {
-        alert("❌ การอัปโหลดใช้เวลานานเกินไป (เกิน 5 นาที)\n\n💡 แนะนำ: ใช้ลิงก์ภายนอกแทน");
+      if (error.response?.status === 413) {
+        alert('❌ ไฟล์ใหญ่เกินไป (สูงสุด 2GB)');
       } else {
-        alert("❌ อัปโหลดไม่สำเร็จ: " + (error.response?.data?.error || error.message));
+        alert('❌ อัปโหลดไม่สำเร็จ: ' + (error.response?.data?.error || error.message));
       }
     } finally {
       setUploadingFile(false);
     }
   };
+
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!itemsname || !itemsprice) {
@@ -201,46 +209,62 @@ function ProductModal({ editingItem, onClose, onSaved }) {
             <label className={styles.modalLabel}>ลิ้งไฟล์ *</label>
             <input value={itemsfile} onChange={(e) => setItemsfile(e.target.value)} className={styles.modalInput} type="text" required />
           </div>
-          {/* ✅ เพิ่มส่วนอัปโหลดไฟล์ */}
+          {/* ✅ ส่วนอัปโหลดไฟล์ตรง */}
           <div className={styles.modalRow}>
-            <label className={styles.modalLabel}>หรืออัปโหลดไฟล์ (zip, rar, 7z)</label>
-            <input 
-              type="file" 
-              accept=".zip,.rar,.7z,.exe,.msi" 
-              onChange={handleFileUpload}
-              disabled={uploadingFile}
-              className={styles.modalFileInput}
-            />
+            <label className={styles.modalLabel}>หรืออัปโหลดไฟล์จากเครื่อง</label>
+            
+            <label className={`custom-file-upload ${uploadingFile ? 'uploading' : ''} ${itemsfile && !uploadingFile ? 'has-file' : ''}`}>
+              {uploadingFile ? (
+                <>
+                  <span>⏳ กำลังอัปโหลด...</span>
+                  <div className={styles.uploadProgressBar}>
+                    <div className={styles.uploadProgressFill}></div>
+                  </div>
+                </>
+              ) : itemsfile ? (
+                <span>✅ อัปโหลดแล้ว - คลิกเพื่อเปลี่ยนไฟล์</span>
+              ) : (
+                <span>📦 อัปโหลดไฟล์ Mod (สูงสุด 2GB)</span>
+              )}
+              <input 
+                type="file" 
+                accept=".zip,.rar,.7z,.scs,.exe,.msi" 
+                onChange={handleFileUpload}
+                disabled={uploadingFile}
+              />
+            </label>
+            
             {uploadingFile && (
-              <div style={{ marginTop: "8px", color: "#f59e0b" }}>
-                ⏳ กำลังอัปโหลด... กรุณารอสักครู่
-              </div>
+              <small style={{ color: '#f59e0b', marginTop: '4px' }}>
+                ⏳ กำลังอัปโหลดไฟล์ขนาดใหญ่ กรุณารอสักครู่...
+              </small>
             )}
+            
             {itemsfile && !uploadingFile && (
-              <div style={{ marginTop: "8px", fontSize: "0.8rem", color: "#10b981" }}>
-                ✅ ไฟล์อัปโหลดแล้ว: <a href={itemsfile} target="_blank" rel="noopener noreferrer">ดูไฟล์</a>
-              </div>
+              <small style={{ color: '#10b981', marginTop: '4px' }}>
+                ✅ ไฟล์พร้อมให้ดาวน์โหลดจากเซิร์ฟเวอร์
+              </small>
             )}
-            <small style={{ color: "#6b7280", fontSize: "0.7rem", display: "block", marginTop: "4px" }}>
-              💡 รองรับไฟล์ .zip, .rar, .7z ขนาดสูงสุด 100MB
+            
+            <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px' }}>
+              💡 รองรับ .zip, .rar, .7z, .scs, .exe, .msi | สูงสุด 2GB
             </small>
-          </div>
-          <div className={styles.modalRow}>
-            <label className={styles.modalLabel}>ราคาสินค้า *</label>
-            <input value={itemsprice} onChange={(e) => setItemsprice(e.target.value)} className={styles.modalInput} type="number" required />
-          </div>
-          <div className={styles.modalRow}>
-            <label className={styles.modalLabel}>Discord Role IDs (สำหรับ Auto Role)</label>
-            <textarea 
-              value={discordRoleIdsText} 
-              onChange={(e) => setDiscordRoleIdsText(e.target.value)} 
-              className={styles.modalTextarea} 
-              rows="3"
-              placeholder="ใส่ Role IDs โดยคั่นด้วยคอมม่า หรือเว้นวรรค"
-            />
-            <small className={styles.modalHint}>
-              💡 ใส่ Role IDs หลายตัวได้ (คั่นด้วยคอมม่า หรือเว้นวรรค) ระบบจะเพิ่ม Role อัตโนมัติเมื่อซื้อสินค้า
-            </small>
+            {/* ✅ เพิ่มช่องราคาสินค้า (หายไป) */}
+            <div className={styles.modalRow}>
+              <label className={styles.modalLabel}>ราคาสินค้า *</label>
+              <input 
+                value={itemsprice} 
+                onChange={(e) => setItemsprice(e.target.value)} 
+                className={styles.modalInput} 
+                type="number" 
+                required 
+                min="0"
+                step="1"
+              />
+              <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}>
+                💰 ราคาในหน่วย Point
+              </small>
+            </div>
           </div>
           <div className={styles.modalActions}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>Close</button>
@@ -260,19 +284,75 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
   const [newFileUrl, setNewFileUrl] = useState("");
   const [changelog, setChangelog] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+
+  // ✅ ฟังก์ชันอัปโหลดไฟล์ (ได้ URL เต็ม automatics)
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const MAX_SIZE = 2000 * 1024 * 1024; // 2GB
+    if (file.size > MAX_SIZE) {
+      alert(`❌ ไฟล์ใหญ่เกินไป (สูงสุด 2GB)`);
+      return;
+    }
+
+    setUploadingFile(true);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await axios.post("/api/admin/upload-file", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (res.data.success) {
+        // ✅ สร้าง URL แบบเต็ม
+        const baseUrl = window.location.origin;
+        const fullUrl = `${baseUrl}${res.data.url}`;
+        setNewFileUrl(fullUrl);
+        alert(`✅ อัปโหลดสำเร็จ! URL: ${fullUrl}`);
+      }
+    } catch (error) {
+      console.error(error);
+      alert("อัปโหลดไม่สำเร็จ");
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  // ✅ แปลง relative path เป็น full URL
+  const handleFileUrlChange = (value) => {
+    if (value.startsWith('/uploads/')) {
+      const baseUrl = window.location.origin;
+      setNewFileUrl(`${baseUrl}${value}`);
+    } else {
+      setNewFileUrl(value);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newVersion || !newFileUrl) {
+    
+    // ✅ ตรวจสอบ URL
+    let finalUrl = newFileUrl;
+    if (finalUrl.startsWith('/uploads/')) {
+      const baseUrl = window.location.origin;
+      finalUrl = `${baseUrl}${finalUrl}`;
+    }
+    
+    if (!newVersion || !finalUrl) {
       alert("กรุณากรอกเวอร์ชันใหม่และลิงก์ไฟล์");
       return;
     }
+    
     setLoading(true);
     try {
       const res = await axios.post("/api/admin/update-version", {
         productId: product._id,
         newVersion,
-        newFileUrl,
+        newFileUrl: finalUrl,
         changelog
       });
       if (res.data.success) {
@@ -297,18 +377,63 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
             <label className={styles.modalLabel}>เวอร์ชันปัจจุบัน</label>
             <input type="text" value={product.itemsversion} disabled className={styles.modalInput} />
           </div>
+          
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>เวอร์ชันใหม่ *</label>
-            <input type="text" value={newVersion} onChange={(e) => setNewVersion(e.target.value)} className={styles.modalInput} placeholder="เช่น 2.0.0" required />
+            <input 
+              type="text" 
+              value={newVersion} 
+              onChange={(e) => setNewVersion(e.target.value)} 
+              className={styles.modalInput} 
+              placeholder="เช่น 2.0.0" 
+              required 
+            />
           </div>
+          
+          {/* ✅ อัปโหลดไฟล์ */}
+          <div className={styles.modalRow}>
+            <label className={styles.modalLabel}>อัปโหลดไฟล์ใหม่</label>
+            <label className={`custom-file-upload ${uploadingFile ? 'uploading' : ''}`}>
+              {uploadingFile ? (
+                <span>⏳ กำลังอัปโหลด...</span>
+              ) : (
+                <span>📦 คลิกเพื่อเลือกไฟล์ (สูงสุด 2GB)</span>
+              )}
+              <input 
+                type="file" 
+                accept=".zip,.rar,.7z,.scs" 
+                onChange={handleFileUpload}
+                disabled={uploadingFile}
+              />
+            </label>
+          </div>
+
+          {/* ✅ ช่องลิงก์ไฟล์ใหม่ (ใส่เองได้ หรือได้จากอัปโหลด) */}
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>ลิงก์ไฟล์ใหม่ *</label>
-            <input type="url" value={newFileUrl} onChange={(e) => setNewFileUrl(e.target.value)} className={styles.modalInput} placeholder="https://..." required />
+            <input 
+              type="text" 
+              value={newFileUrl} 
+              onChange={(e) => handleFileUrlChange(e.target.value)} 
+              className={styles.modalInput} 
+              placeholder="https://yourdomain.com/uploads/ไฟล์.scs"
+            />
+            <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}>
+              💡 ใส่ URL แบบเต็ม หรือ /uploads/ชื่อไฟล์.scs (ระบบจะแปลงให้อัตโนมัติ)
+            </small>
           </div>
+
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>รายการอัปเดต (Changelog)</label>
-            <textarea value={changelog} onChange={(e) => setChangelog(e.target.value)} className={styles.modalTextarea} rows="4" placeholder="- แก้ไขบัค XYZ&#10;- เพิ่มฟีเจอร์ใหม่" />
+            <textarea 
+              value={changelog} 
+              onChange={(e) => setChangelog(e.target.value)} 
+              className={styles.modalTextarea} 
+              rows="4" 
+              placeholder="- แก้ไขบัค XYZ&#10;- เพิ่มฟีเจอร์ใหม่" 
+            />
           </div>
+          
           <div className={styles.modalActions}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>ยกเลิก</button>
             <button type="submit" className={styles.submitBtn} disabled={loading}>
@@ -347,7 +472,7 @@ export default function Admin() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [images, setImages] = useState([]);
-
+  const [deletingFile, setDeletingFile] = useState(null); // ✅ เพิ่มตรงนี้!
   // --- Users State ---
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -498,6 +623,32 @@ export default function Admin() {
     } catch { alert("เกิดข้อผิดพลาดในการอัปโหลดรูป"); }
     finally { setUploading(false); }
   };
+  const handleDeleteFile = async (fileName) => {
+  if (!confirm(`ต้องการลบ "${fileName}"?`)) return;
+
+  setDeletingFile(fileName);
+
+  try {
+    const res = await fetch('/api/upload', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fileName }),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert('✅ ลบไฟล์สำเร็จ!');
+      fetchImages();
+    } else {
+      throw new Error(data.error || 'ลบไม่สำเร็จ');
+    }
+  } catch (error) {
+    alert('❌ ' + error.message);
+  } finally {
+    setDeletingFile(null);
+  }
+};
 
   // --- Fetch Users ---
   const fetchUsers = async () => {
@@ -568,7 +719,7 @@ export default function Admin() {
   const tabs = [
     { key: "dashboard", label: "📊 Dashboard" },
     { key: "orders", label: "🧾 Orders" },
-    { key: "products", label: "🧱 Products" },
+    { key: "products", label: "📦 Products" },
     { key: "topups", label: "💰 เติมเงิน" },  // ✅ เพิ่ม Tab ใหม่
     { key: "uploads", label: "📁 Uploads" },
     { key: "users", label: "👥 Users" },
@@ -586,7 +737,7 @@ export default function Admin() {
           <Link href="/" className="headersca">
             <img src="/favicon.ico" className="icon" alt="logo" />
             <strong className="uppercase">
-              <span className="tuppercase">xCloud</span> Store
+              <span className="tuppercase">xCloud</span>Studio
             </strong>
           </Link>
           <div className="header-links">
@@ -786,7 +937,7 @@ export default function Admin() {
         {activeTab === "products" && (
           <>
             <section className={styles.header}>
-              <h1 className={styles.headerTitle}>🧱 จัดการสินค้า (MOD)</h1>
+              <h1 className={styles.headerTitle}>📦 จัดการสินค้า (MOD)</h1>
               <div className={styles.headerButtons}>
                 <button onClick={() => { setEditingItem(null); setShowModal(true); }} className={styles.addButton}>
                   + เพิ่มสินค้า
@@ -842,142 +993,125 @@ export default function Admin() {
         {activeTab === "uploads" && (
           <>
             <section className={styles.header}>
-              <h1 className={styles.headerTitle}>🖼 อัปโหลดรูป / ไฟล์</h1>
+              <h1 className={styles.headerTitle}>📁 อัปโหลดไฟล์</h1>
             </section>
 
-            {/* Upload Area */}
-            <div className={styles.uploadArea}>
-              
-              {/* Upload Box */}
-              <div className={styles.uploadBoxContainer}>
-                <label className={`${styles.uploadDropZone} ${uploading ? styles.uploading : ''} ${selectedFile ? styles.hasFile : ''}`}>
-                  {uploading ? (
-                    <>
-                      <span className={styles.uploadIcon}>⏳</span>
-                      <span className={styles.uploadText}>กำลังอัปโหลด...</span>
-                      <div className={styles.uploadProgressBar}>
-                        <div className={styles.uploadProgressFill}></div>
-                      </div>
-                    </>
-                  ) : selectedFile ? (
-                    <>
-                      <span className={styles.uploadIcon}>✅</span>
-                      <span className={styles.uploadText}>ไฟล์พร้อมอัปโหลด</span>
-                      <span className={styles.uploadFileName}>{selectedFile.name}</span>
-                      <span className={styles.uploadFileSize}>
-                        ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className={styles.uploadIcon}>📤</span>
-                      <span className={styles.uploadText}>ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</span>
-                      <span className={styles.uploadHint}>รองรับไฟล์รูปภาพ, zip, rar, 7z (สูงสุด 500MB)</span>
-                    </>
-                  )}
-                  <input 
-                    type="file" 
-                    onChange={(e) => setSelectedFile(e.target.files[0])}
-                    disabled={uploading}
-                    accept="image/*,.zip,.rar,.7z,.exe,.msi"
-                  />
-                </label>
-              </div>
-
-              {/* Action Buttons */}
-              <div className={styles.uploadActions}>
-                <button 
-                  onClick={handleUpload} 
-                  disabled={!selectedFile || uploading} 
-                  className={styles.uploadBtn}
-                >
-                  {uploading ? '⏳ กำลังอัปโหลด...' : '🚀 อัปโหลดไฟล์'}
-                </button>
-                
-                {selectedFile && !uploading && (
-                  <button 
-                    onClick={() => setSelectedFile(null)} 
-                    className={styles.uploadCancelBtn}
-                  >
-                    ✕ ยกเลิก
-                  </button>
+            <div className={styles.uploadSection}>
+              <label className={`custom-file-upload ${uploading ? 'uploading' : ''} ${selectedFile ? 'has-file' : ''}`}>
+                {uploading ? (
+                  <>
+                    <span>⏳ กำลังอัปโหลด...</span>
+                    <div className={styles.uploadProgressBar}>
+                      <div className={styles.uploadProgressFill}></div>
+                    </div>
+                  </>
+                ) : selectedFile ? (
+                  <>
+                    <span>✅ {selectedFile.name}</span>
+                    <small style={{ color: '#9ca3af' }}>
+                      ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+                    </small>
+                  </>
+                ) : (
+                  <>
+                    <span>📤 คลิกเพื่อเลือกไฟล์</span>
+                    <small style={{ color: '#6b7280' }}>รองรับทุกประเภทไฟล์ (สูงสุด 2GB)</small>
+                  </>
                 )}
-              </div>
-
-              {/* Upload Info */}
-              <div className={styles.uploadInfo}>
-                <span>💡 <strong>เคล็ดลับ:</strong> สำหรับไฟล์ขนาดใหญ่ (&gt;500MB) แนะนำให้ใช้ลิงก์ภายนอก เช่น Google Drive, Dropbox, MEGA</span>
-              </div>
+                <input 
+                  type="file" 
+                  onChange={(e) => setSelectedFile(e.target.files[0])}
+                  disabled={uploading}
+                />
+              </label>
+              
+              {selectedFile && !uploading && (
+                <button onClick={() => setSelectedFile(null)} className={styles.cancelBtn} style={{ padding: '0.5rem 1rem' }}>
+                  ✕ ยกเลิก
+                </button>
+              )}
+              
+              <button onClick={handleUpload} disabled={!selectedFile || uploading} className={styles.addButton}>
+                {uploading ? "⏳ กำลังอัปโหลด..." : "🚀 อัปโหลด"}
+              </button>
             </div>
 
-            {/* Gallery Grid */}
+            {/* Gallery - จัดหมวดหมู่ */}
             {images.length > 0 && (
-              <>
-                <div className={styles.sectionDivider}>
-                  <span>📁 ไฟล์ที่อัปโหลด ({images.length})</span>
-                </div>
-                
-                <div className={styles.galleryGrid}>
-                  {images.map((url) => {
-                    const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
-                    const fileName = url.split('/').pop();
+              <div className={styles.galleryContainer}>
+                {groupFilesByCategory(images).map((category) => (
+                  <div key={category.key} className={styles.galleryCategory}>
+                    <div className={styles.galleryCategoryHeader}>
+                      <span className={styles.galleryCategoryIcon}>{category.icon}</span>
+                      <span className={styles.galleryCategoryLabel}>{category.label}</span>
+                      <span className={styles.galleryCategoryCount}>{category.files.length} ไฟล์</span>
+                    </div>
                     
-                    return (
-                      <div key={url} className={styles.galleryItem}>
-                        {isImage ? (
-                          <div className={styles.galleryImageWrapper}>
-                            <img src={url} alt={fileName} className={styles.galleryThumb} loading="lazy" />
-                          </div>
-                        ) : (
-                          <div className={styles.galleryFileWrapper}>
-                            <span className={styles.galleryFileIcon}>📦</span>
-                            <span className={styles.galleryFileName}>{fileName}</span>
-                          </div>
-                        )}
-                        
-                        <div className={styles.galleryItemInfo}>
-                          <input 
-                            type="text" 
-                            value={url} 
-                            readOnly 
-                            className={styles.galleryUrl} 
-                            onClick={(e) => e.target.select()} 
-                          />
-                          <div className={styles.galleryActions}>
-                            <button 
-                              onClick={() => {
-                                navigator.clipboard.writeText(url);
-                                alert('✅ คัดลอกลิงก์แล้ว!');
-                              }}
-                              className={styles.galleryCopyBtn}
-                              title="คัดลอกลิงก์"
-                            >
-                              📋
-                            </button>
-                            <a 
-                              href={url} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className={styles.galleryOpenBtn}
-                              title="เปิดในแท็บใหม่"
-                            >
-                              🔗
-                            </a>
+                    <div className={styles.galleryGrid}>
+                      {category.files.map((file) => (
+                        <div key={file.url} className={styles.galleryItem}>
+                          {isImageFile(file.fileName) ? (
+                            <div className={styles.galleryImageWrapper}>
+                              <img src={file.url} alt={file.fileName} className={styles.galleryThumb} loading="lazy" />
+                            </div>
+                          ) : (
+                            <div className={styles.galleryFileWrapper}>
+                              <span className={styles.galleryFileIcon}>{category.icon}</span>
+                              <span className={styles.galleryFileName}>{file.fileName}</span>
+                            </div>
+                          )}
+                          
+                          <div className={styles.galleryItemInfo}>
+                            <input 
+                              type="text" 
+                              value={file.url} 
+                              readOnly 
+                              className={styles.galleryUrl} 
+                              onClick={(e) => e.target.select()} 
+                            />
+                            <div className={styles.galleryActions}>
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(file.url);
+                                  alert('✅ คัดลอกลิงก์แล้ว!');
+                                }}
+                                className={styles.galleryCopyBtn}
+                                title="คัดลอกลิงก์"
+                              >
+                                📋
+                              </button>
+                              <a 
+                                href={file.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className={styles.galleryOpenBtn}
+                                title="เปิดในแท็บใหม่"
+                              >
+                                🔗
+                              </a>
+                              <button 
+                                onClick={() => handleDeleteFile(file.fileName)}
+                                disabled={deletingFile === file.fileName}
+                                className={styles.galleryDeleteBtn}
+                                title="ลบไฟล์"
+                              >
+                                {deletingFile === file.fileName ? '⏳' : '🗑️'}
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
 
-            {/* Empty State */}
             {images.length === 0 && !uploading && (
               <div className={styles.emptyState}>
                 <span className={styles.emptyIcon}>📁</span>
                 <p className={styles.emptyTitle}>ยังไม่มีไฟล์ที่อัปโหลด</p>
-                <p className={styles.emptyText}>เลือกไฟล์แล้วคลิกอัปโหลดเพื่อเริ่มต้น</p>
+                <p className={styles.emptyText}>เลือกไฟล์แล้วคลิกอัปโหลด</p>
               </div>
             )}
           </>

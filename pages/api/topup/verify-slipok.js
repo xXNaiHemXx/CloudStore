@@ -11,6 +11,17 @@ import TopupHistory from "@/models/TopupHistory";
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 const BASE_URL = process.env.BASE_URL;
 
+// ✅ ชื่อบัญชีที่ถูกต้อง (ใช้ตรวจสอบแบบ contains)
+const EXPECTED_ACCOUNT_NAMES = ["อิบรอเหม", "Ibrohem", "อุสมา", "Usama"];
+
+function isNameMatch(receivedName) {
+  if (!receivedName) return false;
+  const lowerName = receivedName.toLowerCase();
+  return EXPECTED_ACCOUNT_NAMES.some(name => 
+    lowerName.includes(name.toLowerCase())
+  );
+}
+
 async function notifyDiscord(title, description, color = 16776960, imageUrl = null) {
   try {
     const embed = {
@@ -82,8 +93,10 @@ export default async function handler(req, res) {
     );
 
     const slipData = await slipRes.json();
+    console.log("📌 SlipOK Response:", JSON.stringify(slipData, null, 2));
 
-    if (!slipRes.ok || !slipData?.data?.transRef) {
+    // ✅ ตรวจสอบว่ามี data หรือไม่
+    if (!slipData?.data?.transRef) {
       await notifyDiscord("❌ ตรวจสอบสลิปล้มเหลว", slipData?.message || "ไม่สามารถตรวจสอบสลิปได้", 16711680, imageUrl);
 
       await connectToDB();
@@ -97,8 +110,54 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: slipData?.message || "ไม่สามารถตรวจสอบสลิปได้" });
     }
 
-    const { transRef, amount: slipAmount } = slipData.data;
+    const { 
+      transRef, 
+      amount: slipAmount,
+      receiver
+    } = slipData.data;
 
+    console.log("📌 ข้อมูลผู้รับ:", { 
+      displayName: receiver?.displayName,
+      name: receiver?.name,
+      accountValue: receiver?.account?.value
+    });
+
+    // ✅ ตรวจสอบชื่อผู้รับ
+    let receiverName = receiver?.displayName || receiver?.name || "";
+    let isValidTransfer = false;
+    
+    if (receiverName) {
+      isValidTransfer = isNameMatch(receiverName);
+      console.log(`📌 ตรวจสอบชื่อ "${receiverName}": ${isValidTransfer ? "✅ ผ่าน" : "❌ ไม่ผ่าน"}`);
+    }
+    
+    // ✅ ถ้าชื่อผ่าน -> อนุมัติเลย
+    if (!isValidTransfer) {
+      const errorMsg = `ชื่อบัญชีผู้รับไม่ตรง: "${receiverName}"`;
+      
+      await notifyDiscord(
+        "⚠️ ชื่อบัญชีผู้รับไม่ตรง",
+        `คาดว่า: ${EXPECTED_ACCOUNT_NAMES.join(", ")}\nรับได้: ${receiverName || "ไม่พบข้อมูล"}`,
+        16776960,
+        imageUrl
+      );
+      
+      await connectToDB();
+      await TopupHistory.create({
+        userId,
+        amount: parseFloat(amount),
+        status: "error",
+        transRef,
+        slipUrl: imageUrl,
+        errorDetail: `ชื่อไม่ตรง: ${receiverName}`,
+      });
+      
+      return res.status(400).json({ 
+        error: errorMsg
+      });
+    }
+
+    // ✅ ตรวจสอบสลิปซ้ำ
     await connectToDB();
 
     const duplicate = await SlipLog.findOne({ transRef });
@@ -124,12 +183,14 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: "สลิปนี้ถูกใช้งานไปแล้ว" });
     }
 
-
     await SlipLog.create({ transRef, userId });
 
+    // ✅ เติมเงิน
+    const finalAmount = parseFloat(slipAmount) || parseFloat(amount);
+    
     const updated = await User.findOneAndUpdate(
       { discordId: userId },
-      { $inc: { points: parseFloat(slipAmount) } },
+      { $inc: { points: finalAmount } },
       { new: true }
     );
 
@@ -138,7 +199,7 @@ export default async function handler(req, res) {
 
       await TopupHistory.create({
         userId,
-        amount: parseFloat(slipAmount),
+        amount: finalAmount,
         status: "error",
         transRef,
         slipUrl: imageUrl,
@@ -149,14 +210,14 @@ export default async function handler(req, res) {
 
     await notifyDiscord(
       "✅ เติมเงินสำเร็จ",
-      `👤 ผู้ใช้: ${userId}\n💰 จำนวน: ${slipAmount} บาท\n🎯 พ้อยท์ใหม่: ${updated.points}\n🔁 Ref: ${transRef}`,
+      `👤 ผู้ใช้: ${userId}\n💰 จำนวน: ${finalAmount} บาท\n🎯 พ้อยท์ใหม่: ${updated.points}\n🔁 Ref: ${transRef}`,
       65280,
       imageUrl
     );
 
     await TopupHistory.create({
       userId,
-      amount: parseFloat(slipAmount),
+      amount: finalAmount,
       status: "success",
       transRef,
       slipUrl: imageUrl,
@@ -164,7 +225,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       message: "เติมเงินสำเร็จ",
-      amount: slipAmount,
+      amount: finalAmount,
       newPoints: updated.points,
     });
   } catch (err) {

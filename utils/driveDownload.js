@@ -1,45 +1,62 @@
 /**
+ * ==================== DOWNLOAD UTILITY ====================
+ * รองรับ: Discord CDN, Google Drive (bypass virus warning), Dropbox, Direct Links
+ */
+
+/**
+ * ตรวจสอบว่าเป็น Discord CDN URL หรือไม่
+ */
+export function isDiscordCdnUrl(url) {
+  if (!url) return false;
+  return url.includes('cdn.discordapp.com') || 
+         url.includes('discord.com/attachments') ||
+         url.includes('media.discordapp.net');
+}
+
+/**
+ * ตรวจสอบว่าเป็น Google Drive URL หรือไม่
+ */
+export function isGoogleDriveUrl(url) {
+  if (!url) return false;
+  return url.includes('drive.google.com');
+}
+
+/**
+ * ตรวจสอบว่าเป็น Direct Link หรือไม่
+ */
+export function isDirectFileUrl(url) {
+  if (!url) return false;
+  return /\.(zip|rar|7z|exe|msi|dmg|pkg|iso|scs|zipx)$/i.test(url);
+}
+
+/**
  * แปลง Google Drive URL เป็น Direct Download Link
- * @param {string} url - Google Drive URL
- * @returns {string} Direct download URL
+ * ✅ เพิ่ม confirm=XXX เพื่อ bypass virus warning
  */
 export function convertGoogleDriveUrl(url) {
-  if (!url) return url;
-  
-  // ถ้าไม่ใช่ Google Drive URL ให้ return เดิม
-  if (!url.includes('drive.google.com')) return url;
-  
-  // รูปแบบ Google Drive URL:
-  // https://drive.google.com/file/d/FILE_ID/view?usp=sharing
-  // https://drive.google.com/file/d/FILE_ID/view
-  // https://drive.google.com/open?id=FILE_ID
-  // https://drive.google.com/uc?id=FILE_ID&export=download
+  if (!url || !url.includes('drive.google.com')) return url;
   
   let fileId = null;
   
   // Pattern 1: /file/d/FILE_ID/
   const fileIdMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-  if (fileIdMatch) {
-    fileId = fileIdMatch[1];
-  }
+  if (fileIdMatch) fileId = fileIdMatch[1];
   
   // Pattern 2: ?id=FILE_ID
   if (!fileId) {
     const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (idMatch) {
-      fileId = idMatch[1];
-    }
+    if (idMatch) fileId = idMatch[1];
   }
   
-  // Pattern 3: /folders/FILE_ID (โฟลเดอร์ - ไม่รองรับ direct download)
-  if (url.includes('/folders/')) {
-    console.warn('⚠️ Google Drive folders ไม่รองรับ direct download');
-    return url;
+  // Pattern 3: /open?id=FILE_ID
+  if (!fileId) {
+    const openIdMatch = url.match(/\/open\?id=([a-zA-Z0-9_-]+)/);
+    if (openIdMatch) fileId = openIdMatch[1];
   }
   
   if (fileId) {
-    // ✅ Direct download link
-    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+    // ✅ วิธีที่ 1: ใช้ confirm=t (ข้ามหน้าไวรัส) + export=download
+    return `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
   }
   
   return url;
@@ -50,63 +67,127 @@ export function convertGoogleDriveUrl(url) {
  */
 export function convertDropboxUrl(url) {
   if (!url || !url.includes('dropbox.com')) return url;
-  
-  // เปลี่ยน ?dl=0 เป็น ?dl=1 (direct download)
   return url.replace('?dl=0', '?dl=1');
 }
 
 /**
- * แปลง MEGA URL เป็น Direct Download (ถ้าเป็นไปได้)
- */
-export function convertMegaUrl(url) {
-  if (!url || !url.includes('mega.nz')) return url;
-  
-  // MEGA URL มักจะ direct download ได้อยู่แล้ว
-  return url;
-}
-
-/**
- * แปลงลิงก์ Cloud Storage ต่างๆ เป็น Direct Download
+ * แปลงเป็น Direct Download URL
  */
 export function getDirectDownloadUrl(url) {
   if (!url) return url;
   
-  // Google Drive
-  if (url.includes('drive.google.com')) {
+  // Discord CDN & Direct Files → ไม่ต้องแปลง
+  if (isDiscordCdnUrl(url) || isDirectFileUrl(url)) {
+    return url;
+  }
+  
+  // Google Drive → แปลง + bypass virus warning
+  if (isGoogleDriveUrl(url)) {
     return convertGoogleDriveUrl(url);
   }
   
-  // Dropbox
+  // Dropbox → แปลง
   if (url.includes('dropbox.com')) {
     return convertDropboxUrl(url);
-  }
-  
-  // MEGA
-  if (url.includes('mega.nz')) {
-    return convertMegaUrl(url);
-  }
-  
-  // ถ้าเป็น direct link อยู่แล้ว (.zip, .rar, .7z, .exe)
-  if (/\.(zip|rar|7z|exe|msi|dmg|pkg|iso)$/i.test(url)) {
-    return url;
   }
   
   return url;
 }
 
 /**
- * ตรวจสอบว่าเป็นลิงก์ Cloud Storage หรือไม่
+ * ดาวน์โหลดไฟล์จาก Google Drive ผ่าน API Proxy (ข้ามทุกข้อจำกัด)
+ * @param {string} fileId - Google Drive File ID
+ * @param {string} fileName - ชื่อไฟล์
  */
-export function isCloudStorageUrl(url) {
-  if (!url) return false;
+export async function downloadGoogleDriveFile(fileId, fileName) {
+  try {
+    // ✅ ใช้ API Proxy ของเราเอง
+    const proxyUrl = `/api/download/drive?fileId=${fileId}`;
+    
+    const link = document.createElement('a');
+    link.href = proxyUrl;
+    link.download = fileName || 'download';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Google Drive download error:', error);
+    
+    // ✅ Fallback: ใช้ direct URL
+    const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
+    window.open(directUrl, '_blank');
+    return false;
+  }
+}
+
+/**
+ * ดึง File ID จาก Google Drive URL
+ */
+export function getGoogleDriveFileId(url) {
+  if (!url) return null;
   
-  const cloudProviders = [
-    'drive.google.com',
-    'dropbox.com',
-    'mega.nz',
-    'mediafire.com',
-    'onedrive.live.com',
-  ];
+  const fileIdMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (fileIdMatch) return fileIdMatch[1];
   
-  return cloudProviders.some(provider => url.includes(provider));
+  const idMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (idMatch) return idMatch[1];
+  
+  return null;
+}
+
+/**
+ * ดาวน์โหลดไฟล์ (Smart Version)
+ */
+export async function downloadFile(url, fileName) {
+  if (!url) {
+    throw new Error('URL is required');
+  }
+  
+  // ✅ Google Drive: ใช้วิธีพิเศษ
+  if (isGoogleDriveUrl(url)) {
+    const fileId = getGoogleDriveFileId(url);
+    
+    if (fileId) {
+      // ✅ วิธีที่ 1: ใช้ iframe invisible (ข้ามทุกหน้า)
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
+      document.body.appendChild(iframe);
+      
+      // ✅ วิธีที่ 2: ใช้ <a> tag พร้อม confirm=t
+      setTimeout(() => {
+        const link = document.createElement('a');
+        link.href = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
+        link.download = fileName || 'download';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // ลบ iframe
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 2000);
+      }, 500);
+      
+      return true;
+    }
+  }
+  
+  // ✅ ประเภทอื่น: ใช้ <a> tag
+  const directUrl = getDirectDownloadUrl(url);
+  
+  const link = document.createElement('a');
+  link.href = directUrl;
+  link.download = fileName || '';
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  return true;
 }

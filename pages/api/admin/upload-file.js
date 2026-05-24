@@ -4,8 +4,7 @@ import path from 'path';
 
 export const config = {
   api: {
-    bodyParser: false, // ✅ ปิด bodyParser เพื่อใช้ formidable
-    responseLimit: false, // ✅ ไม่จำกัด response size
+    bodyParser: false, // ✅ ปิด bodyParser ใช้ formidable แทน
   },
 };
 
@@ -14,9 +13,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // ✅ เพิ่ม timeout สำหรับไฟล์ใหญ่
+  req.setTimeout(0); // ไม่มี timeout
+  res.setTimeout(0);
+
   try {
-    // ✅ สร้างโฟลเดอร์ uploads ถ้ายังไม่มี
     const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'mods');
+    
+    // ✅ สร้างโฟลเดอร์ถ้ายังไม่มี
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -24,16 +28,18 @@ export default async function handler(req, res) {
     const form = new IncomingForm({
       uploadDir: uploadDir,
       keepExtensions: true,
-      maxFileSize: 500 * 1024 * 1024, // ✅ 500MB
-      maxFieldsSize: 500 * 1024 * 1024, // ✅ 500MB
-      maxTotalFileSize: 500 * 1024 * 1024, // ✅ 500MB
+      maxFileSize: 2000 * 1024 * 1024, // ✅ 2GB (2000MB)
+      maxFieldsSize: 2000 * 1024 * 1024,
+      maxTotalFileSize: 2000 * 1024 * 1024,
       allowEmptyFiles: false,
     });
 
-    // ✅ แสดง progress (optional)
+    // ✅ แสดง progress
     form.on('progress', (bytesReceived, bytesExpected) => {
-      const percent = Math.round((bytesReceived * 100) / bytesExpected);
-      console.log(`📤 Upload progress: ${percent}%`);
+      const percent = Math.round((bytesReceived / bytesExpected) * 100);
+      if (percent % 10 === 0) {
+        console.log(`📤 Upload: ${percent}% (${(bytesReceived / (1024*1024)).toFixed(0)}MB / ${(bytesExpected / (1024*1024)).toFixed(0)}MB)`);
+      }
     });
 
     // ✅ จัดการไฟล์
@@ -53,45 +59,43 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'ไม่พบไฟล์ที่อัปโหลด' });
     }
 
-    // ✅ สร้าง URL สำหรับไฟล์
-    const fileName = file.newFilename || file.originalFilename;
-    const fileUrl = `/uploads/mods/${fileName}`;
+    // ✅ สร้างชื่อไฟล์ที่ปลอดภัย
+    const originalName = file.originalFilename || 'file.zip';
+    const ext = path.extname(originalName);
+    const baseName = path.basename(originalName, ext);
+    const safeName = `${baseName}_${Date.now()}${ext}`;
+    const finalPath = path.join(uploadDir, safeName);
 
-    // ✅ ตรวจสอบว่าไฟล์ถูกย้ายไปยัง public/uploads/mods
-    const targetPath = path.join(uploadDir, fileName);
-    
-    if (file.filepath !== targetPath) {
-      fs.renameSync(file.filepath, targetPath);
-    }
+    // ✅ ย้ายไฟล์
+    fs.renameSync(file.filepath, finalPath);
 
-    console.log(`✅ File uploaded: ${fileName} (${(file.size / (1024 * 1024)).toFixed(2)}MB)`);
+    const fileUrl = `/uploads/mods/${safeName}`;
+    const fileSize = fs.statSync(finalPath).size;
+    const fileSizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+
+    console.log(`✅ Upload complete: ${safeName} (${fileSizeMB}MB)`);
 
     res.status(200).json({
       success: true,
       url: fileUrl,
-      fileName: file.originalFilename,
-      size: file.size,
+      fileName: safeName,
+      originalName: originalName,
+      size: fileSize,
+      sizeMB: fileSizeMB,
     });
 
   } catch (error) {
     console.error('Upload error:', error);
     
-    // ✅ ตรวจสอบ error ประเภทต่างๆ
-    if (error.httpCode === 413 || error.code === 'LIMIT_FILE_SIZE') {
+    if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({ 
-        error: '❌ ไฟล์ใหญ่เกิน 500MB\n\n💡 แนะนำ:\n- บีบอัดไฟล์\n- แบ่งไฟล์เป็นส่วนๆ\n- ใช้ลิงก์ภายนอก (Google Drive, Dropbox)' 
+        error: '❌ ไฟล์ใหญ่เกินไป (สูงสุด 2GB)' 
       });
     }
     
-    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-      return res.status(408).json({ 
-        error: '❌ อัปโหลดใช้เวลานานเกินไป\n\n💡 แนะนำ: ใช้ลิงก์ภายนอกแทน' 
-      });
-    }
-
     res.status(500).json({ 
       error: 'เกิดข้อผิดพลาดในการอัปโหลด',
-      detail: error.message 
+      message: error.message 
     });
   }
 }

@@ -1,6 +1,6 @@
-import formidable from "formidable";
-import fs from "fs";
-import path from "path";
+import { IncomingForm } from 'formidable';
+import fs from 'fs';
+import path from 'path';
 
 export const config = {
   api: {
@@ -9,31 +9,126 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  // ✅ จัดการ DELETE ก่อน
+  if (req.method === 'DELETE') {
+    return handleDelete(req, res);
   }
 
-  const uploadDir = path.join(process.cwd(), "public/uploads");
-  fs.mkdirSync(uploadDir, { recursive: true });
+  // ✅ POST สำหรับอัปโหลด
+  if (req.method === 'POST') {
+    return handleUpload(req, res);
+  }
 
-  const form = formidable({
-    uploadDir,
-    keepExtensions: true,
-    filename: (name, ext, part) => `${Date.now()}_${part.originalFilename}`,
-  });
+  return res.status(405).json({ error: 'Method not allowed' });
+}
 
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      console.error("Upload error:", err);
-      return res.status(500).json({ error: "Upload failed" });
+// ✅ ฟังก์ชันอัปโหลด
+async function handleUpload(req, res) {
+  try {
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    const file = files.file?.[0];
-    if (!file) return res.status(400).json({ error: "No file uploaded" });
+    const form = new IncomingForm({
+      uploadDir: uploadDir,
+      keepExtensions: true,
+      maxFileSize: 2000 * 1024 * 1024,
+      allowEmptyFiles: false,
+    });
 
-    const filename = path.basename(file.filepath);
-    const url = `/uploads/${filename}`;
+    const [fields, files] = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        resolve([fields, files]);
+      });
+    });
 
-    return res.status(200).json({ success: true, url });
-  });
+    const file = files.file?.[0] || files.file;
+
+    if (!file) {
+      return res.status(400).json({ error: 'ไม่พบไฟล์ที่อัปโหลด' });
+    }
+
+    const originalName = file.originalFilename || 'file';
+    const ext = path.extname(originalName);
+    const baseName = path.basename(originalName, ext);
+    
+    const cleanName = baseName
+      .replace(/[^a-zA-Z0-9ก-๙_\- ]/g, '')
+      .replace(/\s+/g, '_')
+      .substring(0, 100);
+    
+    let safeName = `${cleanName}${ext}`;
+    let finalPath = path.join(uploadDir, safeName);
+    
+    let counter = 1;
+    while (fs.existsSync(finalPath)) {
+      safeName = `${cleanName}(${counter})${ext}`;
+      finalPath = path.join(uploadDir, safeName);
+      counter++;
+    }
+
+    fs.renameSync(file.filepath, finalPath);
+
+    const fileUrl = `/uploads/${safeName}`;
+
+    console.log(`✅ Uploaded: ${safeName}`);
+
+    res.status(200).json({
+      success: true,
+      url: fileUrl,
+      fileName: safeName,
+      originalName: originalName,
+    });
+
+  } catch (error) {
+    console.error('Upload error:', error);
+    
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(413).json({ error: '❌ ไฟล์ใหญ่เกินไป (สูงสุด 2GB)' });
+    }
+    
+    res.status(500).json({ error: error.message || 'อัปโหลดไม่สำเร็จ' });
+  }
+}
+
+// ✅ ฟังก์ชันลบไฟล์
+async function handleDelete(req, res) {
+  try {
+    // ✅ อ่าน body แบบ manual (เพราะ bodyParser ถูกปิด)
+    const chunks = [];
+    for await (const chunk of req) {
+      chunks.push(chunk);
+    }
+    const body = JSON.parse(Buffer.concat(chunks).toString());
+    const { fileName } = body;
+
+    console.log('🗑️ Delete request:', fileName);
+
+    if (!fileName) {
+      return res.status(400).json({ error: 'Missing fileName' });
+    }
+
+    // ✅ ป้องกัน path traversal
+    const safeName = path.basename(fileName);
+    const filePath = path.join(process.cwd(), 'public', 'uploads', safeName);
+
+    console.log('📁 File path:', filePath);
+
+    if (!fs.existsSync(filePath)) {
+      console.log('❌ File not found:', filePath);
+      return res.status(404).json({ error: 'ไม่พบไฟล์: ' + safeName });
+    }
+
+    fs.unlinkSync(filePath);
+    console.log('✅ Deleted:', safeName);
+
+    res.status(200).json({ success: true, message: 'ลบไฟล์สำเร็จ' });
+
+  } catch (error) {
+    console.error('Delete error:', error);
+    res.status(500).json({ error: error.message || 'ลบไฟล์ไม่สำเร็จ' });
+  }
 }

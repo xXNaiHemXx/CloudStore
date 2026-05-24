@@ -348,15 +348,9 @@ input[type="file"] {
   color: #10b981;
 }
 
-/* File upload icon */
-.custom-file-upload::before {
-  content: '📁';
-  font-size: 1.1rem;
-}
 
-.custom-file-upload.has-file::before {
-  content: '✅';
-}
+
+
 
 /* File name display */
 .file-name-display {
@@ -412,4 +406,83 @@ input[type="file"] {
 @keyframes uploadingPulse {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 0.4; }
+}
+/* ==================== PROFILE WRAPPER + TOPUP ARROW ==================== */
+
+.profile-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-link-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.8rem;
+  background: rgba(30, 35, 50, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.profile-link-wrapper:hover {
+  background: rgba(40, 48, 70, 0.8);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* ลูกศรชี้เติมพ้อยท์ */
+.topup-arrow {
+  position: absolute;
+  right: -98px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: #eff8ff;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: bounceX 1.5s ease-in-out infinite;
+  pointer-events: auto;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+
+.topup-arrow:hover {
+  color: #757575;
+  text-decoration: underline;
+}
+
+.arrow-icon {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  flex-shrink: 0;
+}
+
+/* Animation */
+@keyframes bounceX {
+  0%, 100% {
+    transform: translateY(-50%) translateX(0);
+  }
+  50% {
+    transform: translateY(-50%) translateX(-8px);
+  }
+}
+
+/* ซ่อนบนมือถือ */
+@media (max-width: 1023px) {
+  .topup-arrow {
+    display: none;
+  }
+}
+
+/* แสดงเฉพาะจอใหญ่ */
+@media (min-width: 1024px) {
+  .topup-arrow {
+    display: flex;
+  }
 }

@@ -76,7 +76,7 @@ export default function AdminUploads() {
           <div className="flex items-center gap-6"></div>
         </section>
 
-        <h1 className="text-2xl font-bold mb-4">🖼 อัปโหลดรูป / ไฟล์</h1>
+        <h1 className="text-2xl font-bold mb-4">📁 อัปโหลดรูป / ไฟล์</h1>
 
         <div className="mb-4">
           <input
