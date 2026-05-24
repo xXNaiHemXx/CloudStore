@@ -6,5 +6,11 @@
   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
   "/api/user": "pages/api/user.js",
   "/": "pages/index.js",
-  "/shop": "pages/shop.js"
+  "/shop": "pages/shop.js",
+  "/admin": "pages/admin.js",
+  "/api/items": "pages/api/items.js",
+  "/api/user/purchase": "pages/api/user/purchase.js",
+  "/api/user/count": "pages/api/user/count.js",
+  "/api/user/user": "pages/api/user/user.js",
+  "/api/user/fetch-products": "pages/api/user/fetch-products.js"
 }
