@@ -4,9 +4,10 @@
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
   "/profile": "pages/profile.js",
-  "/admin": "pages/admin.js",
   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
   "/api/user": "pages/api/user.js",
   "/shop": "pages/shop.js",
-  "/api/items": "pages/api/items.js"
+  "/api/items": "pages/api/items.js",
+  "/products/[id]": "pages/products/[id].js",
+  "/api/products/[id]/version": "pages/api/products/[id]/version.js"
 }
