@@ -27,7 +27,7 @@ export default function ProductDetail() {
   const [isPurchasing, setIsPurchasing] = useState(false);
 
   // ==================== IMAGES ====================
-  const images = product?.itemsimages?.filter(Boolean) || [];
+  const images = product?.itemsimage?.filter(Boolean) || [];
 
   // ==================== SLIDESHOW ====================
   const nextSlide = () => {

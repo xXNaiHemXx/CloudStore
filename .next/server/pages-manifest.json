@@ -2,10 +2,6 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/api/items": "pages/api/items.js",
-  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
-  "/": "pages/index.js",
-  "/api/user": "pages/api/user.js",
   "/products/[id]": "pages/products/[id].js",
   "/shop": "pages/shop.js",
   "/profile": "pages/profile.js"
