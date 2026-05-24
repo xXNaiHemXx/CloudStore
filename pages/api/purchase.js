@@ -53,8 +53,6 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "ไม่พบข้อมูลสินค้า" });
       }
 
-      console.log("📌 Product Discord Role IDs:", product.discordRoleIds);
-
       // หักแต้ม
       user.points = currentPoints - productPrice;
 
@@ -68,18 +66,14 @@ export default async function handler(req, res) {
         version: product.itemsversion,
         fileUrl: product.itemsfile,
         purchaseDate: new Date(),
-        discordRoleIds: product.discordRoleIds || [],
+        discordRoleIds: product.discordRoleIds || [], // ✅ เก็บเป็น Array
       });
 
       await user.save();
 
       // ✅ เพิ่มหลาย Role ใน Discord
       if (product.discordRoleIds && product.discordRoleIds.length > 0) {
-        console.log("📌 กำลังเพิ่ม Role ใน Discord...");
-        const result = await addDiscordRoles(userId, product.discordRoleIds);
-        console.log("📌 ผลการเพิ่ม Role:", result);
-      } else {
-        console.log("⚠️ สินค้านี้ไม่มี Discord Role IDs ให้เพิ่ม");
+        await addDiscordRoles(userId, product.discordRoleIds);
       }
 
       await Purchase.create({

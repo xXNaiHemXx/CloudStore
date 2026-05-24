@@ -103,5 +103,4 @@ export async function getUserRoles(discordUserId) {
     return [];
   }
 }
-export { addDiscordRoles, removeDiscordRoles, getUserRoles };
-export default { addDiscordRoles, removeDiscordRoles, getUserRoles };
+    
