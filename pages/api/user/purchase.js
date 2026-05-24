@@ -1,108 +1,162 @@
-import { connectToDB } from "@/utils/db";
-import Purchase from "@/models/Purchase";
-import Item from "@/models/items";
-import User from "@/models/User";
-import mongoose from "mongoose";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]"; // ✅ path ถูกต้อง
-import { addDiscordRoles } from "@/utils/discord"; // ✅ ใช้ addDiscordRoles (plural)
+import { connectToDB } from "../../../utils/db";
+import User from "../../../models/User";
+import Items from "../../../models/items";
+
+import { addDiscordRoles } from "../../../utils/discord";
 
 export default async function handler(req, res) {
+
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({
+      error: "Method not allowed",
+    });
   }
 
   try {
-    const session = await getServerSession(req, res, authOptions);
-    
-    if (!session) {
-      return res.status(401).json({ error: "กรุณาเข้าสู่ระบบ" });
-    }
 
     await connectToDB();
-    const { userId, productId, price } = req.body;
 
-    if (!userId || !productId || !price) {
-      return res.status(400).json({ error: "ข้อมูลไม่ครบถ้วน" });
+    const {
+      userId,
+      productId,
+      price,
+    } = req.body;
+
+    console.log("📌 PURCHASE:", {
+      userId,
+      productId,
+      price,
+    });
+
+    // =========================
+    // FIND USER
+    // =========================
+    const user = await User.findOne({
+      discordId: String(userId),
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
     }
 
-    const sessionUserId = session.user.discordId || session.user.id;
-    if (sessionUserId !== userId) {
-      return res.status(403).json({ error: "ไม่มีสิทธิ์ทำรายการ" });
+    // =========================
+    // FIND PRODUCT
+    // =========================
+    const product = await Items.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({
+        error: "Product not found",
+      });
     }
 
-    try {
-      let user = await User.findOne({ discordId: userId });
-      if (!user && mongoose.Types.ObjectId.isValid(userId)) {
-        user = await User.findById(userId);
-      }
-      
-      if (!user) {
-        return res.status(404).json({ error: "ไม่พบข้อมูลผู้ใช้" });
-      }
+    console.log("📌 PRODUCT:", {
+      name: product.itemsname,
+      discordRoleIds:
+        product.discordRoleIds,
+    });
 
-      const currentPoints = Number(user.points) || 0;
-      const productPrice = Number(price);
-      
-      if (currentPoints < productPrice) {
-        return res.status(400).json({ error: `Point ไม่เพียงพอ (มี ${currentPoints} ต้องการ ${productPrice})` });
-      }
+    // =========================
+    // CHECK POINTS
+    // =========================
+    if (
+      Number(user.points || 0) <
+      Number(price || 0)
+    ) {
+      return res.status(400).json({
+        error: "แต้มไม่เพียงพอ",
+      });
+    }
 
-      const product = await Item.findById(productId);
-      if (!product) {
-        return res.status(404).json({ error: "ไม่พบข้อมูลสินค้า" });
-      }
+    // =========================
+    // CHECK DUPLICATE
+    // =========================
+    const alreadyPurchased =
+      (user.products || []).some(
+        (p) =>
+          String(p.productId) ===
+          String(productId)
+      );
 
-      console.log("📌 สินค้าที่ซื้อ:", {
+    if (alreadyPurchased) {
+      return res.status(400).json({
+        error: "คุณซื้อสินค้านี้แล้ว",
+      });
+    }
+
+    // =========================
+    // REMOVE POINTS
+    // =========================
+    user.points =
+      Number(user.points || 0) -
+      Number(price || 0);
+
+    // =========================
+    // SAVE PRODUCT
+    // =========================
+    user.products.push({
+      productId: product._id,
+      name: product.itemsname,
+      version: product.itemsversion,
+      fileUrl: product.itemsfile,
+      purchaseDate: new Date(),
+    });
+
+    // =========================
+    // ADD DISCORD ROLES
+    // =========================
+    if (
+      product.discordRoleIds &&
+      product.discordRoleIds.length > 0
+    ) {
+
+      console.log(
+        "📌 Adding Discord Roles..."
+      );
+
+      const roleResult =
+        await addDiscordRoles(
+          userId,
+          product.discordRoleIds
+        );
+
+      console.log(
+        "📌 ADD ROLE RESULT:",
+        roleResult
+      );
+    }
+
+    // =========================
+    // SAVE USER
+    // =========================
+    user.markModified("products");
+
+    await user.save();
+
+    console.log(
+      `✅ Purchase success: ${product.itemsname}`
+    );
+
+    return res.status(200).json({
+      success: true,
+      remainingPoints: user.points,
+      product: {
+        id: product._id,
         name: product.itemsname,
-        discordRoleIds: product.discordRoleIds
-      });
+      },
+    });
 
-      // หักแต้ม
-      user.points = currentPoints - productPrice;
-
-      // เพิ่มสินค้าให้ผู้ใช้
-      if (!Array.isArray(user.products)) user.products = [];
-      
-      user.products.push({
-        productId: product._id,
-        name: product.itemsname,
-        version: product.itemsversion,
-        fileUrl: product.itemsfile,
-        purchaseDate: new Date(),
-
-        // ✅ เพิ่มตรงนี้
-        discordRoleIds: product.discordRoleIds || []
-      });
-
-      await user.save();
-
-      // ✅ เพิ่ม Role ใน Discord
-      if (product.discordRoleIds && product.discordRoleIds.length > 0) {
-        console.log(`📌 กำลังเพิ่ม Role ${product.discordRoleIds.join(", ")} ให้ ${userId}...`);
-        await addDiscordRoles(userId, product.discordRoleIds);
-      }
-
-      await Purchase.create({
-        userId: user.discordId || user._id.toString(),
-        userName: user.name,
-        productId: product._id.toString(),
-        productName: product.itemsname,
-        price: productPrice,
-        purchaseDate: new Date(),
-      });
-
-      return res.status(200).json({ 
-        message: "ซื้อสินค้าสำเร็จ!", 
-        remainingPoints: user.points 
-      });
-      
-    } catch (error) {
-      console.error("Purchase error:", error);
-      return res.status(500).json({ error: error.message || "เกิดข้อผิดพลาดในการซื้อสินค้า" });
-    }
   } catch (error) {
-    console.error("Purchase API error:", error);
-    return res.status(500).json({ error: error.message || "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
+
+    console.error(
+      "❌ PURCHASE ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      error: error.message,
+    });
   }
 }
