@@ -4,7 +4,7 @@ import Item from "@/models/items";
 import User from "@/models/User";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]";
+import { authOptions } from "./auth/[...nextauth]"; // ✅ path นี้ถูกต้องแล้ว (อยู่ใน api เดียวกัน)
 import { addDiscordRoles } from "@/utils/discord";
 
 export default async function handler(req, res) {
@@ -53,6 +53,11 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "ไม่พบข้อมูลสินค้า" });
       }
 
+      console.log("📌 สินค้าที่ซื้อ:", {
+        name: product.itemsname,
+        discordRoleIds: product.discordRoleIds
+      });
+
       // หักแต้ม
       user.points = currentPoints - productPrice;
 
@@ -66,13 +71,14 @@ export default async function handler(req, res) {
         version: product.itemsversion,
         fileUrl: product.itemsfile,
         purchaseDate: new Date(),
-        discordRoleIds: product.discordRoleIds || [], // ✅ เก็บเป็น Array
+        discordRoleIds: product.discordRoleIds || [],
       });
 
       await user.save();
 
-      // ✅ เพิ่มหลาย Role ใน Discord
+      // ✅ เพิ่ม Role ใน Discord
       if (product.discordRoleIds && product.discordRoleIds.length > 0) {
+        console.log(`📌 กำลังเพิ่ม Role ${product.discordRoleIds.join(", ")} ให้ ${userId}...`);
         await addDiscordRoles(userId, product.discordRoleIds);
       }
 
@@ -98,4 +104,4 @@ export default async function handler(req, res) {
     console.error("Purchase API error:", error);
     return res.status(500).json({ error: error.message || "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
   }
-} 
+}
