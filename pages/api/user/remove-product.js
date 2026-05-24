@@ -1,7 +1,6 @@
 import { connectToDB } from "../../../utils/db";
 import User from "../../../models/User";
-// ❌ ลบ import Item เพราะไม่จำเป็นต้องใช้ใน remove-product
-import { removeDiscordRoles } from "../../../utils/discord";
+import { removeDiscordRoles, testDiscordConnection } from "../../../utils/discord";
 
 export default async function handler(req, res) {
   if (req.method !== "PUT") {
@@ -20,6 +19,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "ขาด userId หรือ productId" });
     }
 
+    // ✅ ทดสอบการเชื่อมต่อ Discord ก่อน
+    await testDiscordConnection();
+
     const user = await User.findOne({ discordId: userId });
     if (!user) {
       return res.status(404).json({ error: "ไม่พบผู้ใช้" });
@@ -29,7 +31,6 @@ export default async function handler(req, res) {
 
     const products = user.products || [];
     
-    // หาสินค้าที่ต้องการลบ
     const matchedIndexes = products.reduce((acc, p, i) => {
       if (String(p.productId) === String(productId)) {
         acc.push(i);
@@ -56,7 +57,7 @@ export default async function handler(req, res) {
       discordRoleIds: removedProduct.discordRoleIds
     });
     
-    // ✅ ลบ Role ของ USER คนนี้ทันที
+    // ✅ ลบ Role ของ USER คนนี้
     if (removedProduct.discordRoleIds && removedProduct.discordRoleIds.length > 0) {
       console.log(`📌 กำลังลบ Role ${removedProduct.discordRoleIds.join(", ")} ของผู้ใช้ ${userId}...`);
       
@@ -67,6 +68,7 @@ export default async function handler(req, res) {
       }
       if (result.failed && result.failed.length > 0) {
         console.log(`❌ ลบ Role ไม่สำเร็จ: ${result.failed.join(", ")}`);
+        console.log("🔴 สาเหตุ: ตรวจสอบว่า Bot มีสิทธิ์ Manage Roles และ Role อยู่ต่ำกว่า Bot");
       }
     } else {
       console.log("⚠️ สินค้านี้ไม่มี Discord Role IDs ให้ลบ");

@@ -81,7 +81,29 @@ export async function removeDiscordRoles(discordUserId, roleIds) {
 
   return results;
 }
-
+// utils/discord.js (เพิ่มฟังก์ชันทดสอบ)
+export async function testDiscordConnection() {
+  console.log("🔍 Testing Discord Connection...");
+  console.log("Bot Token exists:", !!DISCORD_BOT_TOKEN);
+  console.log("Guild ID exists:", !!DISCORD_GUILD_ID);
+  
+  if (!DISCORD_BOT_TOKEN || !DISCORD_GUILD_ID) {
+    console.error("❌ Missing Discord config");
+    return false;
+  }
+  
+  try {
+    const url = `https://discord.com/api/v10/guilds/${DISCORD_GUILD_ID}`;
+    const response = await axios.get(url, {
+      headers: { 'Authorization': `Bot ${DISCORD_BOT_TOKEN}` }
+    });
+    console.log("✅ Discord connection successful:", response.data.name);
+    return true;
+  } catch (error) {
+    console.error("❌ Discord connection failed:", error.response?.data || error.message);
+    return false;
+  }
+}
 // ดึง Role ทั้งหมดที่ผู้ใช้มี
 export async function getUserRoles(discordUserId) {
   if (!DISCORD_BOT_TOKEN || !DISCORD_GUILD_ID) {
