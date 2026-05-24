@@ -4,8 +4,8 @@ import Item from "@/models/items";
 import User from "@/models/User";
 import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
-import { authOptions } from "./auth/[...nextauth]"; // ✅ path นี้ถูกต้องแล้ว (อยู่ใน api เดียวกัน)
-import { addDiscordRoles } from "@/utils/discord";
+import { authOptions } from "./auth/[...nextauth]";
+import { addDiscordRole } from "@/utils/discord"; // ✅ เพิ่ม
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -32,6 +32,7 @@ export default async function handler(req, res) {
     }
 
     try {
+      // ค้นหา user
       let user = await User.findOne({ discordId: userId });
       if (!user && mongoose.Types.ObjectId.isValid(userId)) {
         user = await User.findById(userId);
@@ -53,17 +54,13 @@ export default async function handler(req, res) {
         return res.status(404).json({ error: "ไม่พบข้อมูลสินค้า" });
       }
 
-      console.log("📌 สินค้าที่ซื้อ:", {
-        name: product.itemsname,
-        discordRoleIds: product.discordRoleIds
-      });
-
       // หักแต้ม
       user.points = currentPoints - productPrice;
 
       // เพิ่มสินค้าให้ผู้ใช้
       if (!Array.isArray(user.products)) user.products = [];
       
+      // ✅ เก็บ discordRoleId ไว้ด้วย
       user.products.push({
         productId: product._id.toString(),
         name: product.itemsname,
@@ -71,17 +68,17 @@ export default async function handler(req, res) {
         version: product.itemsversion,
         fileUrl: product.itemsfile,
         purchaseDate: new Date(),
-        discordRoleIds: product.discordRoleIds || [],
+        discordRoleId: product.discordRoleId || "", // ✅ เพิ่ม role id
       });
 
       await user.save();
 
-      // ✅ เพิ่ม Role ใน Discord
-      if (product.discordRoleIds && product.discordRoleIds.length > 0) {
-        console.log(`📌 กำลังเพิ่ม Role ${product.discordRoleIds.join(", ")} ให้ ${userId}...`);
-        await addDiscordRoles(userId, product.discordRoleIds);
+      // ✅ เพิ่ม Role ใน Discord (ถ้ามีการตั้งค่า)
+      if (product.discordRoleId && product.discordRoleId !== "") {
+        await addDiscordRole(userId, product.discordRoleId);
       }
 
+      // บันทึกประวัติการซื้อ
       await Purchase.create({
         userId: user.discordId || user._id.toString(),
         userName: user.name,
