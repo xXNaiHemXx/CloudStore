@@ -557,7 +557,7 @@ export default function Admin() {
     const files = res.data || [];
     console.log("📁 Raw files:", files);
     
-    // ✅ แปลงให้เป็นรูปแบบที่ใช้ได้
+    //  แปลงให้เป็นรูปแบบที่ใช้ได้
     const formattedFiles = files.map(file => {
       if (typeof file === 'string') {
         // ถ้าเป็น string: "/uploads/filename.jpg"
@@ -576,7 +576,7 @@ export default function Admin() {
     setImages(formattedFiles);
   } catch (err) { 
     console.error("❌ Error:", err);
-    setImages([]); // ✅ เซ็ตเป็น array เปล่า
+    setImages([]); //  เซ็ตเป็น array เปล่า
   }
 };
   useEffect(() => {
@@ -775,7 +775,7 @@ const handleR2Upload = async (file) => {
     { key: "products", label: "Products", icon: "product" },
     { key: "topups", label: "เติมเงิน", icon: "money" },
     { key: "uploads", label: "Uploads", icon: "upload" },
-    { key: "r2", label: "R2 Files", icon: "cloud" }, // ✅ เพิ่ม tab ใหม่
+    { key: "r2", label: "R2 Files", icon: "cloud" }, //  เพิ่ม tab ใหม่
     { key: "users", label: "Users", icon: "users" },
   ];
 
@@ -1119,7 +1119,7 @@ const handleR2Upload = async (file) => {
             <div className={styles.r2FilesSection}>
               <div className={styles.r2FilesHeader}>
                 <h3>
-                  <Icon name="folder" size="1rem" />
+                  <Icon name="cloud" size="1rem" />
                   <span style={{ marginLeft: '0.5rem' }}>ไฟล์ใน R2 ({r2Files.length})</span>
                 </h3>
                 <button onClick={fetchR2Files} className={styles.r2RefreshBtn}>
