@@ -29,6 +29,7 @@ export default function Profile() {
   
   const [myProducts, setMyProducts] = useState([]);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
+  const [lastCheckTime, setLastCheckTime] = useState(0);
   const [availableUpdates, setAvailableUpdates] = useState([]);
   const [downloading, setDownloading] = useState(null);
 
@@ -49,13 +50,34 @@ export default function Profile() {
 
   const checkForUpdates = async (showAlert = false) => {
     if (!session) return;
+    
+    // ✅ ป้องกันเรียกซ้ำภายใน 5 วิ
+    const now = Date.now();
+    if (now - lastCheckTime < 5000 && !showAlert) {
+      console.log('⏭️ Skipping check (too soon)');
+      return;
+    }
+    
     setCheckingUpdates(true);
+    setLastCheckTime(now);
+    
     try {
-      const res = await axios.post("/api/user/check-updates", { userId: session.user.discordId || session.user.id });
-      if (res.data.hasUpdates) { setAvailableUpdates(res.data.updates); if (showAlert) info(`มีสินค้าที่อัปเดต ${res.data.updates.length} รายการ`); }
-      else { if (showAlert) success("สินค้าทั้งหมดเป็นเวอร์ชันล่าสุดแล้ว"); }
-    } catch (err) { if (showAlert) error("ตรวจสอบอัปเดตไม่สำเร็จ"); }
-    finally { setCheckingUpdates(false); }
+      const res = await axios.post("/api/user/check-updates", {
+        userId: session.user.discordId || session.user.id
+      });
+      
+      if (res.data.hasUpdates) {
+        setAvailableUpdates(res.data.updates);
+        if (showAlert) info(`มีสินค้าที่อัปเดต ${res.data.updates.length} รายการ`);
+      } else {
+        if (showAlert) success("สินค้าทั้งหมดเป็นเวอร์ชันล่าสุดแล้ว");
+      }
+    } catch (err) {
+      console.error("Check updates error:", err);
+      if (showAlert) error("ตรวจสอบอัปเดตไม่สำเร็จ");
+    } finally {
+      setCheckingUpdates(false);
+    }
   };
 
   useEffect(() => {
