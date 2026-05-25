@@ -7,16 +7,19 @@ import { authOptions } from "../auth/[...nextauth]";
 export const config = {
   api: {
     bodyParser: false,
+    // ✅ เพิ่ม timeout และ size limit
+    responseLimit: false,
   },
 };
 
 export default async function handler(req, res) {
-  // ตรวจสอบ method
+  // ✅ ตั้ง timeout สูงสุด (10 นาที)
+  req.setTimeout(10 * 60 * 1000); // 10 นาที
+  
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // ตรวจสอบสิทธิ์ Admin
   const session = await getServerSession(req, res, authOptions);
   if (!session) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -28,30 +31,37 @@ export default async function handler(req, res) {
   }
 
   try {
-    // กำหนดโฟลเดอร์สำหรับเก็บไฟล์
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     
-    // สร้างโฟลเดอร์ถ้ายังไม่มี
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    // ✅ ตั้งค่า formidable (รองรับ 2GB)
     const form = formidable({
       uploadDir: uploadDir,
       keepExtensions: true,
-      maxFileSize: 2000 * 1024 * 1024, // 2000MB = 2GB
+      maxFileSize: 2000 * 1024 * 1024, // 2GB
       multiples: false,
+      // ✅ เพิ่ม timeout และ event handlers
+      allowEmptyFiles: false,
+      // ✅ ไม่ต้องเปลี่ยนชื่อไฟล์
       filename: (name, ext, part, form) => {
-        // ✅ ใช้ชื่อไฟล์เดิม
-        const originalName = part.originalFilename || "file";
-        // แทนที่อักขระพิเศษ
-        const safeName = originalName.replace(/[^a-zA-Z0-9._-]/g, "_");
-        return safeName;
+        return part.originalFilename || "file";
       },
     });
 
-    // parse form data
+    // ✅ เพิ่ม progress event
+    let progress = 0;
+    form.on('progress', (bytesReceived, bytesExpected) => {
+      progress = (bytesReceived / bytesExpected) * 100;
+      console.log(`📤 Upload progress: ${progress.toFixed(2)}%`);
+    });
+
+    // ✅ เพิ่ม error handling
+    form.on('error', (err) => {
+      console.error("Formidable error:", err);
+    });
+
     const [fields, files] = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
@@ -59,43 +69,33 @@ export default async function handler(req, res) {
       });
     });
 
-    // รับไฟล์
     const file = files.file?.[0] || files.file;
     if (!file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // ✅ ตรวจสอบขนาดไฟล์อีกครั้ง
     const fileSizeMB = file.size / (1024 * 1024);
+    
     if (file.size > 2000 * 1024 * 1024) {
-      // ลบไฟล์ชั่วคราว
       fs.unlinkSync(file.filepath);
       return res.status(413).json({ 
         error: `ไฟล์ใหญ่เกินไป: ${fileSizeMB.toFixed(2)}MB (สูงสุด 2048MB / 2GB)` 
       });
     }
 
-    // ✅ ใช้ชื่อไฟล์เดิม
     const originalName = file.originalFilename || path.basename(file.filepath);
     const finalFileName = originalName;
     const finalFilePath = path.join(uploadDir, finalFileName);
     const finalFileUrl = `/uploads/${finalFileName}`;
 
-    // ✅ ถ้าไฟล์มีอยู่แล้ว ให้ลบไฟล์เก่าก่อน แล้วเขียนทับ
     if (fs.existsSync(finalFilePath)) {
       fs.unlinkSync(finalFilePath);
       console.log(`📌 ลบไฟล์เก่า: ${finalFileName}`);
     }
 
-    // ✅ ย้ายไฟล์ไปยังตำแหน่งสุดท้าย
     fs.renameSync(file.filepath, finalFilePath);
 
-    console.log("✅ Upload success:", {
-      originalName,
-      fileName: finalFileName,
-      url: finalFileUrl,
-      sizeMB: fileSizeMB.toFixed(2),
-    });
+    console.log(`✅ Upload success: ${finalFileName} (${fileSizeMB.toFixed(2)}MB)`);
 
     return res.status(200).json({
       success: true,
@@ -110,7 +110,6 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("Upload error:", error);
     
-    // ✅ จัดการ error กรณีไฟล์ใหญ่เกิน
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(413).json({ error: "❌ ไฟล์ใหญ่เกินไป (สูงสุด 2GB)" });
     }

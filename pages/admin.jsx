@@ -103,10 +103,12 @@ function ProductModal({ editingItem, onClose, onSaved }) {
     try {
       const res = await axios.post("/api/admin/upload-file", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 0,
+        timeout: 10 * 60 * 1000, // ✅ 10 minutes timeout
         onUploadProgress: (progressEvent) => {
           const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           console.log(`📤 Upload progress: ${percent}%`);
+          // ✅ แสดง progress ให้ user เห็น
+          setUploadProgress(percent);
         },
       });
 
@@ -116,13 +118,16 @@ function ProductModal({ editingItem, onClose, onSaved }) {
       }
     } catch (err) {
       console.error(err);
-      if (err.response?.status === 413) {
+      if (err.code === 'ECONNABORTED') {
+        error("การอัปโหลดใช้เวลานานเกินไป กรุณาลองใหม่");
+      } else if (err.response?.status === 413) {
         error("ไฟล์ใหญ่เกินไป (สูงสุด 2GB)");
       } else {
         error("อัปโหลดไม่สำเร็จ: " + (err.response?.data?.error || err.message));
       }
     } finally {
       setUploadingFile(false);
+      setUploadProgress(0);
     }
   };
 
@@ -287,38 +292,7 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
   const [uploadingFile, setUploadingFile] = useState(false);
   const { success, error } = useToast();
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const MAX_SIZE = 2000 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-      error("ไฟล์ใหญ่เกินไป (สูงสุด 2GB)");
-      return;
-    }
-
-    setUploadingFile(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const res = await axios.post("/api/admin/upload-file", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (res.data.success) {
-        const baseUrl = window.location.origin;
-        const fullUrl = `${baseUrl}${res.data.url}`;
-        setNewFileUrl(fullUrl);
-        success("อัปโหลดสำเร็จ!");
-      }
-    } catch (err) {
-      console.error(err);
-      error("อัปโหลดไม่สำเร็จ");
-    } finally {
-      setUploadingFile(false);
-    }
-  };
+  
 
   const handleFileUrlChange = (value) => {
     if (value.startsWith('/uploads/')) {

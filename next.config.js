@@ -1,11 +1,10 @@
-// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   
-  // ✅ เพิ่มการตั้งค่า bodyParser size limit
-  experimental: {
-    serverComponentsExternalPackages: ['formidable'],
+  // ✅ เพิ่มการตั้งค่าสำหรับไฟล์ใหญ่
+  serverRuntimeConfig: {
+    // จะใช้ได้เฉพาะ server-side
   },
   
   // ✅ สำหรับ API routes
@@ -14,6 +13,14 @@ const nextConfig = {
       sizeLimit: '2gb',
     },
     responseLimit: false,
+  },
+  
+  // ✅ เพิ่ม timeout สำหรับ server
+  staticPageGenerationTimeout: 600,
+  
+  // ✅ เพิ่ม experimental
+  experimental: {
+    serverComponentsExternalPackages: ['formidable'],
   },
 };
 
