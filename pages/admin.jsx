@@ -105,7 +105,7 @@ function ProductModal({ editingItem, onClose, onSaved }) {
     try {
       const res = await axios.post("/api/admin/upload-file", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 10 * 60 * 1000,
+        timeout: 30 * 60 * 1000, // ✅ 30 minutes timeout
         onUploadProgress: (progressEvent) => {
           const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percent);
@@ -314,7 +314,7 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
     try {
       const res = await axios.post("/api/admin/upload-file", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 10 * 60 * 1000,
+        timeout: 30 * 60 * 1000, // ✅ 30 minutes timeout
         onUploadProgress: (progressEvent) => {
           const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percent);

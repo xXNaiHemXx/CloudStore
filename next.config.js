@@ -3,14 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   
   // ✅ เพิ่มการตั้งค่าสำหรับไฟล์ใหญ่
-  serverRuntimeConfig: {
-    // จะใช้ได้เฉพาะ server-side
-  },
-  
-  // ✅ สำหรับ API routes
   api: {
     bodyParser: {
-      sizeLimit: '2gb',
+      sizeLimit: '2gb',  // 2GB
     },
     responseLimit: false,
   },
@@ -22,6 +17,9 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['formidable'],
   },
+  
+  // ✅ เพิ่ม poweredByHeader: false (optional)
+  poweredByHeader: false,
 };
 
 module.exports = nextConfig;
