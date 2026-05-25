@@ -1,18 +1,19 @@
+// next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   
-  // ✅ เพิ่มขนาด body parser
-  api: {
-    bodyParser: {
-      sizeLimit: '2000mb', // ✅ 500MB
-    },
-    responseLimit: false, // ✅ ไม่จำกัด response
+  // ✅ เพิ่มการตั้งค่า bodyParser size limit
+  experimental: {
+    serverComponentsExternalPackages: ['formidable'],
   },
   
-  // ✅ หรือใช้แบบนี้ (Next.js 13+)
-  experimental: {
-    // ...
+  // ✅ สำหรับ API routes
+  api: {
+    bodyParser: {
+      sizeLimit: '2gb',
+    },
+    responseLimit: false,
   },
 };
 
