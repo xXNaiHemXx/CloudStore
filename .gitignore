@@ -1,4 +1,5 @@
 public/uploads
+public/uploads/mods
 *.scs
 .next
 node_modules
