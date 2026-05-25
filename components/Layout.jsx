@@ -1,18 +1,34 @@
-import { useSession, signIn } from "next-auth/react";
-import { useState } from "react";
+import { useSession, signIn, signOut as nextAuthSignOut } from "next-auth/react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Head from "next/head";
 import { useUser } from "../context/UserContext";
+import { addLog, LOG_TYPES } from "../utils/logger";
+import { useToast } from "../context/ToastContext";
 
 export default function Layout({ children }) {
   const { data: session } = useSession();
   const { userPoints, isLoading } = useUser();
+  const { success } = useToast();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
     const links = document.querySelector(".header-links");
     if (links) links.classList.toggle("active");
+  };
+
+  // ✅ Custom Logout พร้อม Log
+  const handleLogout = async () => {
+    if (session?.user) {
+      await addLog(
+        LOG_TYPES.LOGOUT,
+        "ล็อคเอาท์",
+        `${session.user.name} ออกจากระบบ`,
+        session.user.name
+      ).catch(() => {});
+    }
+    nextAuthSignOut({ callbackUrl: "/" });
   };
 
   return (
@@ -57,8 +73,8 @@ export default function Layout({ children }) {
                   </span>
                 </Link>
 
-                {/* ✅ ลูกศรชี้เตือนให้เติมพ้อยท์ (แสดงเมื่อ points < 100) */}
-                {true && (
+                {/* ✅ ลูกศรชี้เตือนให้เติมพ้อยท์ */}
+                {(userPoints || 0) < 100 && (
                   <Link href="/profile?tab=topup" className="topup-arrow">
                     <svg 
                       xmlns="http://www.w3.org/2000/svg" 

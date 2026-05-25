@@ -8,6 +8,7 @@ import { useUser } from "../context/UserContext";
 import { useConfirm } from "../context/ConfirmContext";
 import { useToast } from "../context/ToastContext";
 import { groupFilesByCategory, isImageFile } from "../utils/fileCategories";
+import { addLog, LOG_TYPES } from "../utils/logger";
 import Icon from "../components/Icon";
 import R2Uploader from "../components/R2Uploader";
 
@@ -25,6 +26,7 @@ function ProductModal({ editingItem, onClose, onSaved }) {
   const [itemsversion, setItemsversion] = useState("");
   const [discordRoleIdsText, setDiscordRoleIdsText] = useState("");
   const [previewImage, setPreviewImage] = useState("");
+  const { data: session } = useSession();
   const { success, error } = useToast();
   const [saving, setSaving] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -72,8 +74,15 @@ function ProductModal({ editingItem, onClose, onSaved }) {
       const filteredImages = itemsimages.filter((img) => img.trim() !== "");
       const roleIds = discordRoleIdsText.split(/[ ,\n]+/).filter(r => r && r.trim() !== "").map(r => r.trim());
       const payload = { itemsname, itemsprice: parseFloat(itemsprice), itemsimage, itemsimages: filteredImages, itemsdesc, itemstitle, itemsfile, itemsurlyoutube: itemsurlyoutube.trim() || "", itemsversion, discordRoleIds: roleIds };
-      if (isEdit) { await axios.put("/api/items", { id: editingItem._id, ...payload }); success("แก้ไขสินค้าสำเร็จ!"); }
-      else { await axios.post("/api/items", payload); success("เพิ่มสินค้าสำเร็จ!"); }
+      if (isEdit) {
+        await axios.put("/api/items", { id: editingItem._id, ...payload });
+        success("แก้ไขสินค้าสำเร็จ!");
+        await addLog(LOG_TYPES.PRODUCT_EDIT, "แก้ไขสินค้า", `แก้ไข "${itemsname}"`, session?.user?.name || "Admin").catch(() => {});
+      } else {
+        await axios.post("/api/items", payload);
+        success("เพิ่มสินค้าสำเร็จ!");
+        await addLog(LOG_TYPES.PRODUCT_ADD, "เพิ่มสินค้า", `เพิ่ม "${itemsname}"`, session?.user?.name || "Admin").catch(() => {});
+      }
       onSaved();
     } catch (err) { error(`เกิดข้อผิดพลาด: ${err.response?.data?.error || err.message}`); }
     finally { setSaving(false); }
@@ -114,6 +123,7 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
   const [newFileUrl, setNewFileUrl] = useState("");
   const [changelog, setChangelog] = useState("");
   const [loading, setLoading] = useState(false);
+  const { data: session } = useSession();
   const { success, error } = useToast();
 
   const handleFileUrlChange = (value) => {
@@ -129,7 +139,11 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
     setLoading(true);
     try {
       const res = await axios.post("/api/admin/update-version", { productId: product._id, newVersion, newFileUrl: finalUrl, changelog });
-      if (res.data.success) { success(`อัปเดตเวอร์ชันสำเร็จ! แจ้งเตือนผู้ใช้ ${res.data.notifiedUsers} คน`); onUpdated(); onClose(); }
+      if (res.data.success) {
+        success(`อัปเดตเวอร์ชันสำเร็จ! แจ้งเตือนผู้ใช้ ${res.data.notifiedUsers} คน`);
+        await addLog('product_update', "อัปเดตเวอร์ชัน", `อัปเดต "${product.itemsname}" เป็น v${newVersion}`, session?.user?.name || "Admin").catch(() => {});
+        onUpdated(); onClose();
+      }
     } catch (err) { error("อัปเดตไม่สำเร็จ: " + (err.response?.data?.error || err.message)); }
     finally { setLoading(false); }
   };
@@ -141,12 +155,7 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
         <form onSubmit={handleSubmit} className={styles.modalForm}>
           <div className={styles.modalRow}><label className={styles.modalLabel}>เวอร์ชันปัจจุบัน</label><input type="text" value={product.itemsversion} disabled className={styles.modalInput} /></div>
           <div className={styles.modalRow}><label className={styles.modalLabel}>เวอร์ชันใหม่ *</label><input type="text" value={newVersion} onChange={(e) => setNewVersion(e.target.value)} className={styles.modalInput} placeholder="เช่น 2.0.0" required /></div>
-          <div className={styles.modalRow}>
-            <label className={styles.modalLabel}>อัปโหลดไฟล์ใหม่ (Cloudflare R2)</label>
-            <R2Uploader onUploadComplete={(publicUrl) => { setNewFileUrl(publicUrl); success("อัปโหลดไฟล์ไป R2 สำเร็จ!"); }} accept=".zip,.rar,.7z,.scs,.exe,.msi" maxSize={5000} />
-            {newFileUrl && <small style={{ color: "#10b981", marginTop: "4px", display: "block" }}><Icon name="check" size="0.7rem" /> ไฟล์ใหม่พร้อมดาวน์โหลดแล้ว</small>}
-            <small style={{ color: "#6b7280", fontSize: "0.7rem", marginTop: "4px", display: "block" }}><Icon name="info" size="0.6rem" /> อัปโหลดตรงไป Cloudflare R2 รองรับไฟล์ใหญ่หลาย GB</small>
-          </div>
+          <div className={styles.modalRow}><label className={styles.modalLabel}>อัปโหลดไฟล์ใหม่ (Cloudflare R2)</label><R2Uploader onUploadComplete={(publicUrl) => { setNewFileUrl(publicUrl); success("อัปโหลดไฟล์ไป R2 สำเร็จ!"); }} accept=".zip,.rar,.7z,.scs,.exe,.msi" maxSize={5000} />{newFileUrl && <small style={{ color: "#10b981", marginTop: "4px", display: "block" }}><Icon name="check" size="0.7rem" /> ไฟล์ใหม่พร้อมดาวน์โหลดแล้ว</small>}<small style={{ color: "#6b7280", fontSize: "0.7rem", marginTop: "4px", display: "block" }}><Icon name="info" size="0.6rem" /> อัปโหลดตรงไป Cloudflare R2 รองรับไฟล์ใหญ่หลาย GB</small></div>
           <div className={styles.modalRow}><label className={styles.modalLabel}>ลิงก์ไฟล์ใหม่ *</label><input type="text" value={newFileUrl} onChange={(e) => handleFileUrlChange(e.target.value)} className={styles.modalInput} placeholder="https://yourdomain.com/uploads/ไฟล์.scs" /><small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}><Icon name="info" size="0.6rem" /> ใส่ URL แบบเต็ม หรือ /uploads/ชื่อไฟล์.scs</small></div>
           <div className={styles.modalRow}><label className={styles.modalLabel}>รายการอัปเดต (Changelog)</label><textarea value={changelog} onChange={(e) => setChangelog(e.target.value)} className={styles.modalTextarea} rows="4" placeholder="- แก้ไขบัค XYZ&#10;- เพิ่มฟีเจอร์ใหม่" /></div>
           <div className={styles.modalActions}><button type="button" className={styles.cancelBtn} onClick={onClose}>ยกเลิก</button><button type="submit" className={styles.submitBtn} disabled={loading}>{loading ? "กำลังอัปเดต..." : <><Icon name="upload" size="0.8rem" /> อัปเดตเวอร์ชัน</>}</button></div>
@@ -223,14 +232,27 @@ export default function Admin() {
 
   const fetchItems = async () => { const res = await axios.get("/api/items"); setItems(res.data || []); };
   useEffect(() => { if (activeTab === "products") fetchItems(); }, [activeTab]);
+  
   const handleEdit = (item) => { setEditingItem(item); setShowModal(true); };
-  const handleDelete = async (id, productName) => { const confirmed = await confirm({ title: "ยืนยันการลบ", message: `คุณต้องการลบ "${productName}"?`, confirmText: "ลบเลย", cancelText: "ยกเลิก", type: "danger" }); if (!confirmed) return; try { await axios.delete(`/api/items?id=${id}`); success("ลบสินค้าสำเร็จ!"); fetchItems(); } catch { error("ลบสินค้าไม่สำเร็จ"); } };
+  
+  const handleDelete = async (id, productName) => {
+    const confirmed = await confirm({ title: "ยืนยันการลบ", message: `คุณต้องการลบ "${productName}"?`, confirmText: "ลบเลย", cancelText: "ยกเลิก", type: "danger" });
+    if (!confirmed) return;
+    try { 
+      await axios.delete(`/api/items?id=${id}`); 
+      success("ลบสินค้าสำเร็จ!"); 
+      await addLog(LOG_TYPES.PRODUCT_DELETE, "ลบสินค้า", `ลบ "${productName}"`, session?.user?.name || "Admin").catch(() => {});
+      fetchItems(); 
+    } catch { error("ลบสินค้าไม่สำเร็จ"); }
+  };
+  
   const handleSaved = () => { setShowModal(false); setEditingItem(null); fetchItems(); };
   const handleVersionUpdate = (item) => { setSelectedProductForVersion(item); setShowVersionModal(true); };
   const handleVersionUpdated = () => { fetchItems(); };
 
   const fetchTopups = async () => { setLoadingTopups(true); try { const res = await axios.get("/api/admin/topups"); setTopups(res.data || []); } catch { error("โหลดประวัติเติมเงินไม่สำเร็จ"); } finally { setLoadingTopups(false); } };
   useEffect(() => { if (activeTab === "topups") fetchTopups(); }, [activeTab]);
+  
   const getStatusBadge = (status) => {
     switch (status) {
       case "success": return { class: "statusSuccess", text: "สำเร็จ", icon: "success" };
@@ -243,25 +265,68 @@ export default function Admin() {
 
   const fetchImages = async () => { try { const res = await axios.get("/api/upload"); const files = res.data || []; setImages(files.map(file => typeof file === 'string' ? { url: file, fileName: file.split('/').pop() } : { url: file.url || '', fileName: file.fileName || '' })); } catch { setImages([]); } };
   useEffect(() => { if (activeTab === "uploads") fetchImages(); }, [activeTab]);
-  const handleUpload = async () => { if (!selectedFile) return; const formData = new FormData(); formData.append("file", selectedFile); setUploading(true); try { await axios.post("/api/upload", formData); success("อัปโหลดสำเร็จ"); setSelectedFile(null); fetchImages(); } catch { error("เกิดข้อผิดพลาด"); } finally { setUploading(false); } };
-  const handleDeleteFile = async (fileName) => { const confirmed = await confirm({ title: "ยืนยันการลบ", message: `ต้องการลบ "${fileName}"?`, confirmText: "ลบ", cancelText: "ยกเลิก", type: "danger" }); if (!confirmed) return; setDeletingFile(fileName); try { const res = await fetch('/api/upload', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileName }) }); const data = await res.json(); if (res.ok) { success("ลบไฟล์สำเร็จ!"); fetchImages(); } else throw new Error(data.error); } catch (err) { error(err.message); } finally { setDeletingFile(null); } };
+  
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+    const formData = new FormData(); formData.append("file", selectedFile);
+    setUploading(true);
+    try { 
+      await axios.post("/api/upload", formData); 
+      success("อัปโหลดสำเร็จ"); 
+      await addLog('file_upload', "อัปโหลดไฟล์", `อัปโหลด "${selectedFile.name}"`, session?.user?.name || "Admin").catch(() => {});
+      setSelectedFile(null); fetchImages(); 
+    } catch { error("เกิดข้อผิดพลาด"); } finally { setUploading(false); }
+  };
+  
+  const handleDeleteFile = async (fileName) => {
+    const confirmed = await confirm({ title: "ยืนยันการลบ", message: `ต้องการลบ "${fileName}"?`, confirmText: "ลบ", cancelText: "ยกเลิก", type: "danger" });
+    if (!confirmed) return;
+    setDeletingFile(fileName);
+    try {
+      const res = await fetch('/api/upload', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileName }) });
+      const data = await res.json();
+      if (res.ok) { 
+        success("ลบไฟล์สำเร็จ!"); 
+        await addLog('file_delete', "ลบไฟล์", `ลบ "${fileName}"`, session?.user?.name || "Admin").catch(() => {});
+        fetchImages(); 
+      } else throw new Error(data.error);
+    } catch (err) { error(err.message); } finally { setDeletingFile(null); }
+  };
 
   const fetchUsers = async () => { try { const res = await axios.get("/api/user/user"); setUsers(res.data || []); } catch { error("โหลดข้อมูลผู้ใช้ล้มเหลว"); } };
   useEffect(() => { if (activeTab === "users") fetchUsers(); }, [activeTab]);
+  
   const fetchUserProducts = async (userId) => { try { const res = await axios.get(`/api/user/fetch-products?userId=${userId}`); setUserProducts(res.data || []); } catch { setUserProducts([]); } };
+  
   const applyPointChange = (type) => { const current = Number(selectedUser.points || 0); const amount = Number(changeAmount || 0); if (isNaN(amount) || amount < 0) return error("กรุณากรอกจำนวนแต้มที่ถูกต้อง"); if (type === "add") setProposedPoints(current + amount); else setProposedPoints(Math.max(0, current - amount)); };
+  
   const handleRemoveProduct = async (productId, index, productName) => { const confirmed = await confirm({ title: "ยืนยันการลบ", message: `ลบ "${productName}"?`, confirmText: "ลบเลย", cancelText: "ยกเลิก", type: "danger" }); if (!confirmed) return; setActionLoading(true); try { await axios.put("/api/user/remove-product", { userId: selectedUser.id, productId, index }); setUserProducts(prev => prev.filter((_, i) => i !== index)); success("ลบสินค้าสำเร็จ"); } catch (err) { error(err.response?.data?.error || "ลบไม่สำเร็จ"); } finally { setActionLoading(false); } };
-  const handleSavePoints = async () => { setActionLoading(true); try { await axios.put("/api/user/points", { userId: selectedUser.id, points: Number(proposedPoints) }); success("บันทึกแต้มสำเร็จ!"); fetchUsers(); await refreshPoints(); setSelectedUser(null); setProposedPoints(0); setChangeAmount(1); } catch (err) { error("ไม่สามารถบันทึกแต้มได้"); } finally { setActionLoading(false); } };
+  
+  const handleSavePoints = async () => {
+    setActionLoading(true);
+    try { 
+      await axios.put("/api/user/points", { userId: selectedUser.id, points: Number(proposedPoints) }); 
+      success("บันทึกแต้มสำเร็จ!"); 
+      await addLog('user_edit', "แก้ไขแต้มผู้ใช้", `ปรับแต้ม ${selectedUser.name} จาก ${selectedUser.points} เป็น ${proposedPoints}`, session?.user?.name || "Admin").catch(() => {});
+      fetchUsers(); await refreshPoints(); setSelectedUser(null); setProposedPoints(0); setChangeAmount(1); 
+    } catch (err) { error("ไม่สามารถบันทึกแต้มได้"); } finally { setActionLoading(false); }
+  };
+  
   const handleSelectUser = async (user) => { setSelectedUser(user); setProposedPoints(user.points || 0); setChangeAmount(1); await fetchUserProducts(user.id); };
 
   const fetchR2Files = async () => { setLoadingR2Files(true); try { const res = await axios.get("/api/admin/r2-files"); setR2Files(res.data.files || []); } catch { error("ไม่สามารถโหลดไฟล์จาก R2 ได้"); } finally { setLoadingR2Files(false); } };
+  
   const handleDeleteR2File = async (fileKey) => { const fileName = fileKey.split('/').pop(); const confirmed = await confirm({ title: "ยืนยันการลบ", message: `ลบ "${fileName}" จาก R2?`, confirmText: "ลบเลย", cancelText: "ยกเลิก", type: "danger" }); if (!confirmed) return; setDeletingR2File(fileKey); try { await axios.delete(`/api/admin/r2-files?key=${encodeURIComponent(fileKey)}`); success("ลบไฟล์จาก R2 สำเร็จ!"); fetchR2Files(); } catch (err) { error("ลบไฟล์ไม่สำเร็จ"); } finally { setDeletingR2File(null); } };
   useEffect(() => { if (activeTab === "r2") fetchR2Files(); }, [activeTab]);
 
   const fetchLogs = async () => { setLoadingLogs(true); try { const res = await axios.get(`/api/admin/logs?type=${logFilter}&limit=${logLimit}`); setLogs(res.data.logs || []); } catch { error("โหลด logs ไม่สำเร็จ"); } finally { setLoadingLogs(false); } };
+  
   const handleClearLogs = async () => { const confirmed = await confirm({ title: "ยืนยันการลบ", message: "ต้องการลบประวัติทั้งหมด?", confirmText: "ลบทั้งหมด", cancelText: "ยกเลิก", type: "danger" }); if (!confirmed) return; try { await axios.delete('/api/admin/logs'); success("ลบประวัติทั้งหมดแล้ว"); fetchLogs(); } catch { error("ลบไม่สำเร็จ"); } };
+  
   const fetchWebhookConfig = async () => { try { const res = await axios.get('/api/admin/webhook'); setWebhookConfig(res.data); } catch {} };
+  
   const handleSaveWebhook = async () => { setSavingWebhook(true); try { await axios.put('/api/admin/webhook', webhookConfig); success("บันทึก Webhook แล้ว!"); } catch { error("บันทึกไม่สำเร็จ"); } finally { setSavingWebhook(false); } };
+  
   const handleTestWebhook = async () => { if (!webhookConfig.discordWebhook) return error("กรุณากรอก Discord Webhook URL"); setTestingWebhook(true); try { await axios.post(webhookConfig.discordWebhook, { embeds: [{ title: "🧪 ทดสอบ Webhook", description: "ข้อความทดสอบจาก xCloud Studio", color: 0x6366f1, timestamp: new Date().toISOString(), footer: { text: "xCloud Studio" } }] }); success("ส่งข้อความทดสอบไป Discord แล้ว!"); } catch (err) { error("ส่งไม่สำเร็จ: " + err.message); } finally { setTestingWebhook(false); } };
   useEffect(() => { if (activeTab === "logs") { fetchLogs(); fetchWebhookConfig(); } }, [activeTab, logFilter]);
 
@@ -338,7 +403,7 @@ export default function Admin() {
         {/* R2 FILES */}
         {activeTab === "r2" && (<>
           <section className={styles.header}><h1 className={styles.headerTitle}><Icon name="cloud" size="1.2rem" /><span style={{ marginLeft: "0.5rem" }}>จัดการไฟล์ Cloudflare R2</span></h1></section>
-          <div className={styles.r2UploadArea}><h3 style={{ margin: '0 0 1rem', fontSize: '0.95rem', color: '#e4e6f0' }}><Icon name="cloud" size="1rem" /> อัปโหลดไฟล์ไป R2</h3><R2Uploader onUploadComplete={() => { success("อัปโหลดไฟล์ไป R2 สำเร็จ!"); fetchR2Files(); }} accept="*/*" maxSize={5000} /><small style={{ color: '#6b7280', fontSize: '0.75rem', display: 'block', marginTop: '0.5rem' }}><Icon name="info" size="0.6rem" /> รองรับทุกไฟล์ สูงสุด 5GB ไฟล์จะถูกเก็บใน Cloudflare R2</small></div>
+          <div className={styles.r2UploadArea}><h3 style={{ margin: '0 0 1rem', fontSize: '0.95rem', color: '#e4e6f0' }}><Icon name="cloud" size="1rem" /> อัปโหลดไฟล์ไป R2</h3><R2Uploader onUploadComplete={() => { success("อัปโหลดไฟล์ไป R2 สำเร็จ!"); fetchR2Files(); }} accept="*/*" maxSize={5000} /><small style={{ color: '#6b7280', fontSize: '0.75rem', display: 'block', marginTop: '0.5rem' }}><Icon name="info" size="0.6rem" /> รองรับทุกไฟล์ สูงสุด 5GB</small></div>
           <div className={styles.r2FilesSection}><div className={styles.r2FilesHeader}><h3><Icon name="cloud" size="1rem" /><span style={{ marginLeft: '0.5rem' }}>ไฟล์ใน R2 ({r2Files.length})</span></h3><button onClick={fetchR2Files} className={styles.r2RefreshBtn}><Icon name="refresh" size="0.8rem" /><span>รีเฟรช</span></button></div>
           {loadingR2Files ? <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>กำลังโหลด...</p></div> : r2Files.length === 0 ? <div className={styles.emptyState}><Icon name="cloud" size="3rem" /><p className={styles.emptyTitle}>ยังไม่มีไฟล์ใน R2</p><p className={styles.emptyText}>อัปโหลดไฟล์เพื่อเริ่มต้น</p></div> : (<div className={styles.r2FilesGrid}>{r2Files.map((file) => (<div key={file.key} className={styles.r2FileCard}>{isImageFile(file.fileName) ? <div className={styles.r2FilePreview}><img src={file.url} alt={file.fileName} className={styles.r2FileThumb} loading="lazy" /></div> : <div className={styles.r2FileIcon}><Icon name="file" size="2.5rem" /><span className={styles.r2FileType}>{file.fileName?.split('.').pop()?.toUpperCase() || 'FILE'}</span></div>}<div className={styles.r2FileInfo}><p className={styles.r2FileName} title={file.fileName}>{file.fileName}</p><p className={styles.r2FileSize}>{file.sizeFormatted || 'Unknown'}</p>{file.lastModified && <p className={styles.r2FileDate}><Icon name="calendar" size="0.6rem" /> {new Date(file.lastModified).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" })}</p>}</div><div className={styles.r2FileActions}><button onClick={() => { navigator.clipboard.writeText(file.url); success("คัดลอกลิงก์แล้ว!"); }} className={styles.r2CopyBtn}><Icon name="copy" size="0.8rem" /></button><a href={file.url} target="_blank" rel="noopener noreferrer" className={styles.r2OpenBtn}><Icon name="link" size="0.8rem" /></a><button onClick={() => handleDeleteR2File(file.key)} disabled={deletingR2File === file.key} className={styles.r2DeleteBtn}>{deletingR2File === file.key ? <Icon name="loading" size="0.8rem" /> : <Icon name="delete" size="0.8rem" />}</button></div></div>))}</div>)}</div>
         </>)}
@@ -372,8 +437,6 @@ export default function Admin() {
             <button onClick={handleClearLogs} className={styles.logClearBtn}><Icon name="delete" size="0.8rem" /><span>ล้างทั้งหมด</span></button>
           </div>
           {loadingLogs ? <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>กำลังโหลด...</p></div> : logs.length === 0 ? <div className={styles.emptyState}><Icon name="history" size="3rem" /><p className={styles.emptyTitle}>ยังไม่มีประวัติ</p></div> : (<div className={styles.tableWrapper}><table className={styles.dataTable}><thead><tr><th style={{ width: '140px' }}>วันที่</th><th style={{ width: '100px' }}>ประเภท</th><th>เรื่อง</th><th style={{ width: '120px' }}>ผู้ใช้</th></tr></thead><tbody>{logs.map((log) => (<tr key={log._id}><td style={{ fontSize: '0.75rem' }}>{new Date(log.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}</td><td><span className={styles.logBadge}>{log.type === 'login' ? <><Icon name="login" size="0.7rem" /> ล็อคอิน</> : log.type === 'logout' ? <><Icon name="logout" size="0.7rem" /> ล็อคเอาท์</> : log.type === 'purchase' ? <><Icon name="cart" size="0.7rem" /> ซื้อ</> : log.type === 'topup' ? <><Icon name="money" size="0.7rem" /> เติมเงิน</> : log.type === 'product_add' ? <><Icon name="add" size="0.7rem" /> เพิ่ม</> : log.type === 'product_edit' ? <><Icon name="edit" size="0.7rem" /> แก้ไข</> : log.type === 'product_delete' ? <><Icon name="delete" size="0.7rem" /> ลบ</> : log.type === 'user_edit' ? <><Icon name="user" size="0.7rem" /> ผู้ใช้</> : log.type === 'file_upload' ? <><Icon name="upload" size="0.7rem" /> อัปโหลด</> : log.type === 'file_delete' ? <><Icon name="delete" size="0.7rem" /> ลบไฟล์</> : log.type === 'error' ? <><Icon name="error" size="0.7rem" /> ผิดพลาด</> : log.type}</span></td><td><strong>{log.title}</strong>{log.message && <><br /><small style={{ color: '#9ca3af' }}>{log.message}</small></>}</td><td style={{ fontSize: '0.8rem' }}>{log.user}</td></tr>))}</tbody></table></div>)}
-          
-          {/* Webhook Settings */}
           <div style={{ marginTop: '2rem' }}>
             <section className={styles.header}><h1 className={styles.headerTitle}><Icon name="settings" size="1.2rem" /><span style={{ marginLeft: "0.5rem" }}>ตั้งค่า Discord Webhook</span></h1></section>
             <div className={styles.webhookForm}>

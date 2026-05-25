@@ -1,10 +1,54 @@
 import "../styles/globals.css";
-import { SessionProvider } from "next-auth/react";
+import { SessionProvider, useSession } from "next-auth/react";
 import { UserProvider } from "../context/UserContext";
 import { ToastProvider } from "../context/ToastContext";
-import { ConfirmProvider } from "../context/ConfirmContext";  // ✅ เพิ่ม
+import { ConfirmProvider } from "../context/ConfirmContext";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
+import { addLog, LOG_TYPES } from "../utils/logger";
+
+// ✅ Component สำหรับติดตาม Login/Logout
+function SessionLogger({ children }) {
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (session?.user) {
+      // ✅ Log เมื่อ login
+      addLog(
+        LOG_TYPES.LOGIN,
+        "ล็อคอิน",
+        `${session.user.name} เข้าสู่ระบบ`,
+        session.user.name,
+        { email: session.user.email, id: session.user.id }
+      ).catch(() => {}); // ไม่ต้องแสดง error ถ้า log ไม่สำเร็จ
+    }
+  }, [session?.user?.id]);
+
+  // ✅ Log เมื่อเปลี่ยนหน้า (สำหรับ track activity)
+  useEffect(() => {
+    const handleRouteChange = (url) => {
+      if (session?.user && !url.includes('/admin') && !url.includes('/api')) {
+        // Log เฉพาะหน้าที่สำคัญ
+        const importantPages = ['/shop', '/profile', '/products'];
+        if (importantPages.some(p => url.startsWith(p))) {
+          addLog(
+            'page_view',
+            'ดูหน้าเว็บ',
+            `${session.user.name} ดูหน้า ${url}`,
+            session.user.name,
+            { url }
+          ).catch(() => {});
+        }
+      }
+    };
+
+    router.events.on("routeChangeComplete", handleRouteChange);
+    return () => router.events.off("routeChangeComplete", handleRouteChange);
+  }, [session, router]);
+
+  return children;
+}
 
 export default function App({ Component, pageProps: { session, ...pageProps } }) {
   const router = useRouter();
@@ -28,8 +72,10 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
     <SessionProvider session={session}>
       <UserProvider>
         <ToastProvider>
-          <ConfirmProvider>  {/* ✅ ครอบด้วย ConfirmProvider */}
-            <Component {...pageProps} />
+          <ConfirmProvider>
+            <SessionLogger>
+              <Component {...pageProps} />
+            </SessionLogger>
           </ConfirmProvider>
         </ToastProvider>
       </UserProvider>
