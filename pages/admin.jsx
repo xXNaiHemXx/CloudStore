@@ -176,7 +176,7 @@ function ProductModal({ editingItem, onClose, onSaved }) {
             <label className={styles.modalLabel}>หรืออัปโหลดไฟล์จากเครื่อง (R2)</label>
             <R2Uploader
               onUploadComplete={(publicUrl) => {
-                setItemsfile(publicUrl);
+                setItemsfile(`${publicUrl}?v=${itemsversion || Date.now()}`);
                 success("อัปโหลดไฟล์ไป R2 สำเร็จ!");
               }}
               accept=".zip,.rar,.7z,.scs,.exe,.msi"
@@ -258,7 +258,7 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
       if (res.data.success) {
         const baseUrl = window.location.origin;
         const fullUrl = `${baseUrl}${res.data.url}`;
-        setNewFileUrl(fullUrl);
+        setNewFileUrl(`${fullUrl}?v=${newVersion}`);
         success(`อัปโหลดสำเร็จ! (${res.data.sizeMB}MB)`);
       }
     } catch (err) {
