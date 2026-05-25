@@ -9,17 +9,48 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  // ✅ จัดการ DELETE ก่อน
+  // ✅ GET - ดึงรายการไฟล์ทั้งหมด
+  if (req.method === 'GET') {
+    return handleGetFiles(req, res);
+  }
+
+  // ✅ DELETE - ลบไฟล์
   if (req.method === 'DELETE') {
     return handleDelete(req, res);
   }
 
-  // ✅ POST สำหรับอัปโหลด
+  // ✅ POST - อัปโหลดไฟล์
   if (req.method === 'POST') {
     return handleUpload(req, res);
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
+}
+
+// ✅ ฟังก์ชันดึงรายการไฟล์
+async function handleGetFiles(req, res) {
+  try {
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    
+    if (!fs.existsSync(uploadDir)) {
+      return res.status(200).json([]);
+    }
+
+    const files = fs.readdirSync(uploadDir)
+      .filter(file => {
+        const filePath = path.join(uploadDir, file);
+        return fs.statSync(filePath).isFile();
+      })
+      .map(file => `/uploads/${file}`);
+
+    console.log(`📁 Found ${files.length} files`);
+    
+    res.status(200).json(files);
+
+  } catch (error) {
+    console.error('Get files error:', error);
+    res.status(500).json({ error: 'ไม่สามารถโหลดรายการไฟล์ได้' });
+  }
 }
 
 // ✅ ฟังก์ชันอัปโหลด
@@ -52,16 +83,9 @@ async function handleUpload(req, res) {
     }
 
     const originalName = file.originalFilename || 'file';
-
     const ext = path.extname(originalName).toLowerCase();
-
-    const uniqueId =
-      Date.now() +
-      "_" +
-      Math.random().toString(36).substring(2, 8);
-
+    const uniqueId = Date.now() + "_" + Math.random().toString(36).substring(2, 8);
     const safeName = `${uniqueId}${ext}`;
-
     const finalPath = path.join(uploadDir, safeName);
 
     fs.renameSync(file.filepath, finalPath);
@@ -91,7 +115,6 @@ async function handleUpload(req, res) {
 // ✅ ฟังก์ชันลบไฟล์
 async function handleDelete(req, res) {
   try {
-    // ✅ อ่าน body แบบ manual (เพราะ bodyParser ถูกปิด)
     const chunks = [];
     for await (const chunk of req) {
       chunks.push(chunk);
@@ -105,7 +128,6 @@ async function handleDelete(req, res) {
       return res.status(400).json({ error: 'Missing fileName' });
     }
 
-    // ✅ ป้องกัน path traversal
     const safeName = path.basename(fileName);
     const filePath = path.join(process.cwd(), 'public', 'uploads', safeName);
 
