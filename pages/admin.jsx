@@ -28,6 +28,7 @@ function ProductModal({ editingItem, onClose, onSaved }) {
   const { success, error, warning } = useToast();
   const [saving, setSaving] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     if (editingItem) {
@@ -96,6 +97,7 @@ function ProductModal({ editingItem, onClose, onSaved }) {
     console.log(`📦 กำลังอัปโหลด: ${file.name} (${sizeMB}MB)`);
 
     setUploadingFile(true);
+    setUploadProgress(0);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -103,12 +105,11 @@ function ProductModal({ editingItem, onClose, onSaved }) {
     try {
       const res = await axios.post("/api/admin/upload-file", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 10 * 60 * 1000, // ✅ 10 minutes timeout
+        timeout: 10 * 60 * 1000,
         onUploadProgress: (progressEvent) => {
           const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          console.log(`📤 Upload progress: ${percent}%`);
-          // ✅ แสดง progress ให้ user เห็น
           setUploadProgress(percent);
+          console.log(`📤 Upload progress: ${percent}%`);
         },
       });
 
@@ -225,9 +226,9 @@ function ProductModal({ editingItem, onClose, onSaved }) {
             <label className={`custom-file-upload ${uploadingFile ? 'uploading' : ''} ${itemsfile && !uploadingFile ? 'has-file' : ''}`}>
               {uploadingFile ? (
                 <>
-                  <span>⏳ กำลังอัปโหลด...</span>
+                  <span>⏳ กำลังอัปโหลด... {uploadProgress}%</span>
                   <div className={styles.uploadProgressBar}>
-                    <div className={styles.uploadProgressFill}></div>
+                    <div className={styles.uploadProgressFill} style={{ width: `${uploadProgress}%` }}></div>
                   </div>
                 </>
               ) : itemsfile ? (
@@ -290,9 +291,51 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
   const [changelog, setChangelog] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const { success, error } = useToast();
 
-  
+  // ✅ เพิ่มฟังก์ชัน handleFileUpload ใน VersionUpdateModal
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const MAX_SIZE = 2000 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      error(`ไฟล์ใหญ่เกินไป (สูงสุด 2GB)`);
+      return;
+    }
+
+    setUploadingFile(true);
+    setUploadProgress(0);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await axios.post("/api/admin/upload-file", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 10 * 60 * 1000,
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percent);
+          console.log(`📤 Upload progress: ${percent}%`);
+        },
+      });
+
+      if (res.data.success) {
+        const baseUrl = window.location.origin;
+        const fullUrl = `${baseUrl}${res.data.url}`;
+        setNewFileUrl(fullUrl);
+        success(`อัปโหลดสำเร็จ! (${res.data.sizeMB}MB)`);
+      }
+    } catch (err) {
+      console.error(err);
+      error("อัปโหลดไม่สำเร็จ: " + (err.response?.data?.error || err.message));
+    } finally {
+      setUploadingFile(false);
+      setUploadProgress(0);
+    }
+  };
 
   const handleFileUrlChange = (value) => {
     if (value.startsWith('/uploads/')) {
@@ -351,20 +394,46 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>อัปโหลดไฟล์ใหม่</label>
             <label className={`custom-file-upload ${uploadingFile ? 'uploading' : ''}`}>
-              {uploadingFile ? <span>⏳ กำลังอัปโหลด...</span> : <span>📦 คลิกเพื่อเลือกไฟล์ (สูงสุด 2GB)</span>}
-              <input type="file" accept=".zip,.rar,.7z,.scs" onChange={handleFileUpload} disabled={uploadingFile} />
+              {uploadingFile ? (
+                <div>
+                  <span>⏳ กำลังอัปโหลด... {uploadProgress}%</span>
+                  <div className={styles.uploadProgressBar}>
+                    <div className={styles.uploadProgressFill} style={{ width: `${uploadProgress}%` }}></div>
+                  </div>
+                </div>
+              ) : (
+                <span>📦 คลิกเพื่อเลือกไฟล์ (สูงสุด 2GB)</span>
+              )}
+              <input 
+                type="file" 
+                accept=".zip,.rar,.7z,.scs" 
+                onChange={handleFileUpload} 
+                disabled={uploadingFile} 
+              />
             </label>
           </div>
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>ลิงก์ไฟล์ใหม่ *</label>
-            <input type="text" value={newFileUrl} onChange={(e) => handleFileUrlChange(e.target.value)} className={styles.modalInput} placeholder="https://yourdomain.com/uploads/ไฟล์.scs" />
+            <input 
+              type="text" 
+              value={newFileUrl} 
+              onChange={(e) => handleFileUrlChange(e.target.value)} 
+              className={styles.modalInput} 
+              placeholder="https://yourdomain.com/uploads/ไฟล์.scs หรือ /uploads/ชื่อไฟล์.scs"
+            />
             <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}>
               💡 ใส่ URL แบบเต็ม หรือ /uploads/ชื่อไฟล์.scs (ระบบจะแปลงให้อัตโนมัติ)
             </small>
           </div>
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>รายการอัปเดต (Changelog)</label>
-            <textarea value={changelog} onChange={(e) => setChangelog(e.target.value)} className={styles.modalTextarea} rows="4" placeholder="- แก้ไขบัค XYZ&#10;- เพิ่มฟีเจอร์ใหม่" />
+            <textarea 
+              value={changelog} 
+              onChange={(e) => setChangelog(e.target.value)} 
+              className={styles.modalTextarea} 
+              rows="4" 
+              placeholder="- แก้ไขบัค XYZ&#10;- เพิ่มฟีเจอร์ใหม่" 
+            />
           </div>
           <div className={styles.modalActions}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>ยกเลิก</button>
