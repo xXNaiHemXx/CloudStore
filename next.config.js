@@ -5,7 +5,7 @@ const nextConfig = {
   // ✅ เพิ่มขนาด body parser
   api: {
     bodyParser: {
-      sizeLimit: '500mb', // ✅ 500MB
+      sizeLimit: '2000mb', // ✅ 500MB
     },
     responseLimit: false, // ✅ ไม่จำกัด response
   },

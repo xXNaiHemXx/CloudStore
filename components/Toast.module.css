@@ -1,0 +1,161 @@
+.toast {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border-radius: 12px;
+  border-left: 4px solid;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  animation: slideInRight 0.3s ease-out forwards;
+  max-width: 380px;
+  width: 100%;
+  backdrop-filter: blur(10px);
+}
+
+/* ✅ เพิ่ม animation ตอนออก */
+.toast.exit {
+  animation: slideOutRight 0.3s ease-in forwards;
+}
+
+/* สีของ border ตาม type */
+.toast.success {
+  border-left-color: #10b981;
+}
+.toast.error {
+  border-left-color: #ef4444;
+}
+.toast.warning {
+  border-left-color: #f59e0b;
+}
+.toast.info {
+  border-left-color: #3b82f6;
+}
+
+.toastIcon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.toastContent {
+  flex: 1;
+}
+
+.toastMessage {
+  font-size: 0.85rem;
+  color: #e4e6f0;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.toastClose {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.toastClose:hover {
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+/* Progress bar */
+.toastProgress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 0 0 0 12px;
+  width: 100%;
+  animation: progressBar linear forwards;
+}
+
+.toast.success .toastProgress {
+  background: #10b981;
+}
+.toast.error .toastProgress {
+  background: #ef4444;
+}
+.toast.warning .toastProgress {
+  background: #f59e0b;
+}
+.toast.info .toastProgress {
+  background: #3b82f6;
+}
+
+/* Animations */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ✅ เพิ่ม animation slide out */
+@keyframes slideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+}
+
+@keyframes progressBar {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* Toast Container */
+.toastContainer {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 380px;
+  width: calc(100% - 40px);
+  pointer-events: none;
+}
+
+.toastContainer > * {
+  pointer-events: auto;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .toastContainer {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+    max-width: none;
+    width: calc(100% - 20px);
+  }
+  
+  .toast {
+    padding: 12px 16px;
+  }
+  
+  .toastMessage {
+    font-size: 0.8rem;
+  }
+}

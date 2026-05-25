@@ -6,6 +6,11 @@ import Link from "next/link";
 import Layout from "../../components/Layout";
 import styles from "../../styles/ProductDetail.module.css";
 import { useUser } from "../../context/UserContext";
+import { useConfirm } from "../../context/ConfirmContext";
+import { useToast } from "../../context/ToastContext";
+// แทนที่ emoji ด้วย Icon Component
+import Icon from "../../components/Icon";
+
 
 const convertToEmbedURL = (videoId) => {
   if (!videoId || videoId.length === 0) return null;
@@ -17,13 +22,15 @@ export default function ProductDetail() {
   const { data: session } = useSession();
   const { id } = router.query;
   const { userPoints, refreshPoints, userProducts } = useUser();
+  const { confirm } = useConfirm();
+  const { success, error, warning, info } = useToast();  // ✅ แก้ไขตรงนี้
 
   const [product, setProduct] = useState(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [activeTab, setActiveTab] = useState("detail");
   const [lightboxImage, setLightboxImage] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [errorState, setErrorState] = useState(null);
   const [isPurchasing, setIsPurchasing] = useState(false);
   
   // ✅ State สำหรับสินค้าแนะนำ
@@ -56,10 +63,8 @@ export default function ProductDetail() {
         const res = await axios.get("/api/items");
         let allProducts = res.data || [];
         
-        // ✅ กรองเอาสินค้าที่ไม่ใช่สินค้าปัจจุบัน
         let otherProducts = allProducts.filter(p => p._id !== id);
         
-        // ✅ สุ่มสินค้า 4 ชิ้น
         const shuffled = [...otherProducts];
         for (let i = shuffled.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -103,7 +108,7 @@ export default function ProductDetail() {
       })
       .catch((err) => {
         console.error("Error fetching product:", err);
-        setError("ไม่พบสินค้าหรือเกิดข้อผิดพลาด");
+        setErrorState("ไม่พบสินค้าหรือเกิดข้อผิดพลาด");
         setLoading(false);
       });
   }, [id]);
@@ -111,29 +116,36 @@ export default function ProductDetail() {
   // ==================== PURCHASE ====================
   const handlePurchase = async () => {
     if (isPurchasing) {
-      alert("กำลังดำเนินการ กรุณารอสักครู่...");
+      warning("กำลังดำเนินการ กรุณารอสักครู่...");
       return;
     }
 
+    if (!session) {
+      error("กรุณาเข้าสู่ระบบก่อนซื้อสินค้า");
+      return;
+    }
+
+    const currentPoints = Number(userPoints || 0);
+    const productPrice = Number(product?.itemsprice || 0);
+
+    if (currentPoints < productPrice) {
+      error(`แต้มไม่เพียงพอ! คุณมี ${currentPoints.toLocaleString()} แต้ม แต่ต้องใช้ ${productPrice.toLocaleString()} แต้ม`);
+      return;
+    }
+
+    const confirmed = await confirm({
+      title: "ยืนยันการซื้อ",
+      message: `คุณต้องการซื้อ ${product?.itemsname} ราคา ${productPrice.toLocaleString()} Points ใช่หรือไม่?`,
+      confirmText: "ซื้อเลย",
+      cancelText: "ยกเลิก",
+      type: "info",
+    });
+
+    if (!confirmed) return;
+
+    setIsPurchasing(true);
+
     try {
-      if (!session) {
-        alert("กรุณาเข้าสู่ระบบก่อนซื้อสินค้า");
-        return;
-      }
-
-      const currentPoints = Number(userPoints || 0);
-      const productPrice = Number(product?.itemsprice || 0);
-
-      if (currentPoints < productPrice) {
-        alert(`❌ แต้มไม่เพียงพอ! คุณมี ${currentPoints.toLocaleString()} แต้ม แต่ต้องใช้ ${productPrice.toLocaleString()} แต้ม`);
-        return;
-      }
-
-      const confirmed = confirm(`ยืนยันการซื้อ ${product?.itemsname}?`);
-      if (!confirmed) return;
-
-      setIsPurchasing(true);
-
       const purchaseRes = await axios.post("/api/user/purchase", {
         userId: session.user.discordId || session.user.id,
         productId: id,
@@ -142,12 +154,12 @@ export default function ProductDetail() {
 
       if (purchaseRes.data.success) {
         await refreshPoints();
-        alert(`✅ ซื้อสินค้าสำเร็จ! คงเหลือ ${purchaseRes.data.remainingPoints?.toLocaleString()} Points`);
+        success(`ซื้อสินค้าสำเร็จ! คงเหลือ ${purchaseRes.data.remainingPoints?.toLocaleString()} Points`);
         router.push("/profile");
       }
-    } catch (error) {
-      const errorMsg = error.response?.data?.error || "เกิดข้อผิดพลาด";
-      alert(`❌ ${errorMsg}`);
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || "เกิดข้อผิดพลาด";
+      error(errorMsg);
     } finally {
       setIsPurchasing(false);
     }
@@ -168,13 +180,13 @@ export default function ProductDetail() {
   }
 
   // ==================== ERROR ====================
-  if (error || !product) {
+  if (errorState || !product) {
     return (
       <Layout>
         <div className={styles.pageContainer}>
           <div className={styles.errorContainer}>
             <span style={{ fontSize: "3rem" }}>😔</span>
-            <h2>{error || "ไม่พบสินค้า"}</h2>
+            <h2>{errorState || "ไม่พบสินค้า"}</h2>
             <Link href="/shop" style={{ color: "#818cf8", textDecoration: "underline" }}>
               กลับไปหน้าร้านค้า
             </Link>
@@ -186,7 +198,7 @@ export default function ProductDetail() {
 
   const hasYouTube = product.itemsurlyoutube && product.itemsurlyoutube.length > 0;
   const descriptionLines = (product.itemsdesc || "").split("\n").filter((line) => line.trim() !== "");
-
+  
   return (
     <Layout>
       <div className={styles.pageContainer}>
@@ -381,14 +393,14 @@ export default function ProductDetail() {
                   <Link key={recProduct._id} href={`/products/${recProduct._id}`} className={styles.recommendedCard}>
                     {/* New Badge */}
                     {isNew && (
-                      <span className={styles.recommendedNewBadge}></span>
+                      <span className={styles.recommendedNewBadge}>NEW</span>
                     )}
                     
                     {/* Owned Badge */}
                     {isOwned && (
                       <div className={styles.recommendedOwnedBadge}>
-                        <span></span>
-                        <span>IN LIBRARY</span>
+                        <span>✅</span>
+                        <span>คุณเป็นเจ้าของแล้ว</span>
                       </div>
                     )}
                     
@@ -401,7 +413,7 @@ export default function ProductDetail() {
                       <div className={styles.recommendedPriceRow}>
                         <span className={styles.recommendedPrice}>฿{recProduct.itemsprice?.toLocaleString()}</span>
                         <span className={styles.recommendedViewBtn}>
-                          {isOwned ? "ดูรายละเอียด" : "ดูรายละเอียด"} →
+                          ดูรายละเอียด →
                         </span>
                       </div>
                     </div>

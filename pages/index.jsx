@@ -4,26 +4,24 @@ import axios from "axios";
 import Layout from "../components/Layout";
 import styles from "../styles/Home.module.css";
 import { useUser } from "../context/UserContext";
+import Icon from "../components/Icon";
 
 export default function Home() {
   const { data: session } = useSession();
-  const { userProducts } = useUser(); // ✅ ดึงสินค้าที่ user มี
+  const { userProducts } = useUser();
   const [products, setProducts] = useState([]);
   const [stats, setStats] = useState({ products: 0, purchases: 0, members: 0 });
   const [loading, setLoading] = useState(true);
 
-  // ✅ สร้าง Set ของ productId ที่ user มี
   const ownedProductIds = useMemo(() => {
     if (!userProducts) return new Set();
     return new Set(userProducts.map(p => p.productId));
   }, [userProducts]);
 
-  // ✅ ตรวจสอบว่าสินค้าเป็นของ user หรือไม่
   const isProductOwned = (productId) => {
     return session && ownedProductIds.has(productId);
   };
 
-  // ✅ ตรวจสอบว่าเป็นสินค้าใหม่หรือไม่ (7 วันล่าสุด)
   const isNewProduct = (createdAt) => {
     if (!createdAt) return false;
     const sevenDaysAgo = new Date();
@@ -40,7 +38,6 @@ export default function Home() {
           axios.get("/api/purchases/count"),
         ]);
         const items = itemsRes.data;
-        // เรียงตามวันที่สร้าง ล่าสุดอยู่หน้า
         const sortedItems = items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setProducts(sortedItems.slice(0, 6));
         setStats({
@@ -57,7 +54,6 @@ export default function Home() {
     load();
   }, []);
 
-  // Scroll to products
   const scrollToProducts = () => {
     const el = document.getElementById('latest-products');
     if (el) {
@@ -77,7 +73,8 @@ export default function Home() {
 
           <div className={styles.heroContent}>
             <div className={styles.badge}>
-              ⭐ Official xCloud Site
+              <Icon name="star" size="0.8rem" />
+              <span> Official xCloud Site</span>
             </div>
             <h1 className={styles.heroTitle}>
               Modeling{' '}
@@ -98,7 +95,7 @@ export default function Home() {
                 <span>Join Discord</span>
               </a>
               <a className={styles.btnShop} href="/shop">
-                <span>🛍️</span>
+                <Icon name="cart" size="1rem" />
                 <span>View Products</span>
               </a>
             </div>
@@ -113,33 +110,38 @@ export default function Home() {
         {/* ========== Latest Products ========== */}
         <section id="latest-products" className={styles.latestProducts}>
           <h2 className={styles.sectionTitle}>
-            ✨ สินค้า<span>ใหม่ล่าสุด</span>
+            <Icon name="star" size="1rem" />
+            <span>สินค้า</span>
+            <span>ใหม่ล่าสุด</span>
           </h2>
           <div className={styles.productGrid}>
             {loading ? (
               <div className={styles.emptyState}>
-                <p>⏳ กำลังโหลด...</p>
+                <Icon name="loading" size="2rem" />
+                <p>กำลังโหลด...</p>
               </div>
             ) : products.length === 0 ? (
               <div className={styles.emptyState}>
+                <Icon name="product" size="3rem" />
                 <p>ยังไม่มีสินค้าในขณะนี้</p>
               </div>
             ) : (
               products.map((product) => {
                 const isOwned = isProductOwned(product._id);
-                const isNew = !isOwned && isNewProduct(product.createdAt); // ✅ ถ้าเป็นเจ้าของแล้วไม่แสดง NEW
+                const isNew = !isOwned && isNewProduct(product.createdAt);
                 
                 return (
                   <a key={product._id} href={`/products/${product._id}`} className={styles.productCard}>
-                    {/* ✅ New Badge - แสดงเฉพาะเมื่อไม่ใช่ของ user */}
                     {isNew && (
-                      <span className={styles.newBadge}></span>
+                      <span className={styles.newBadge}>
+                        <Icon name="new" size="0.6rem" />
+                        <span>NEW</span>
+                      </span>
                     )}
                     
-                    {/* ✅ Owned Badge - แสดงเฉพาะเมื่อเป็นของ user */}
                     {isOwned && (
                       <div className={styles.ownedBadge}>
-                        <span className={styles.ownedIcon}></span>
+                        <Icon name="check" size="0.6rem" />
                         <span className={styles.ownedText}>IN LIBRARY</span>
                       </div>
                     )}
@@ -151,9 +153,12 @@ export default function Home() {
                       <h3 className={styles.productName}>{product.itemsname}</h3>
                       <p className={styles.productTitleTag}>{product.itemstitle}</p>
                       <div className={styles.productPriceRow}>
-                        <span className={styles.productPrice}>฿{product.itemsprice}</span>
+                        <span className={styles.productPrice}>
+                          <Icon name="coin" size="0.8rem" />
+                          {product.itemsprice}
+                        </span>
                         <span className={styles.viewBtn}>
-                          {isOwned ? "ดูรายละเอียด →" : "ดูรายละเอียด →"}
+                          ดูรายละเอียด <Icon name="arrow-right" size="0.7rem" />
                         </span>
                       </div>
                     </div>
@@ -168,17 +173,23 @@ export default function Home() {
         <section className={styles.statsSection}>
           <div className={styles.statsContainer}>
             <div className={styles.statCard} style={{ '--stat-color': '#a78bfa' }}>
-              <span className={styles.statIcon}>🛍️</span>
+              <span className={styles.statIcon}>
+                <Icon name="product" size="1.5rem" />
+              </span>
               <p className={styles.statValue}>{loading ? '-' : stats.products}</p>
               <p className={styles.statLabel}>Products</p>
             </div>
             <div className={styles.statCard} style={{ '--stat-color': '#10b981' }}>
-              <span className={styles.statIcon}>💵</span>
+              <span className={styles.statIcon}>
+                <Icon name="money" size="1.5rem" />
+              </span>
               <p className={styles.statValue}>{loading ? '-' : stats.purchases}</p>
               <p className={styles.statLabel}>Purchases</p>
             </div>
             <div className={styles.statCard} style={{ '--stat-color': '#f43f5e' }}>
-              <span className={styles.statIcon}>👥</span>
+              <span className={styles.statIcon}>
+                <Icon name="users" size="1.5rem" />
+              </span>
               <p className={styles.statValue}>{loading ? '-' : stats.members}</p>
               <p className={styles.statLabel}>Members</p>
             </div>
@@ -187,7 +198,10 @@ export default function Home() {
 
         {/* ========== Team Section ========== */}
         <section className={styles.teamSection}>
-          <h2 className={styles.teamTitle}>🚀 xCloud Leadership</h2>
+          <h2 className={styles.teamTitle}>
+            <Icon name="rocket" size="1.2rem" />
+            <span>xCloud Leadership</span>
+          </h2>
           <div className={styles.teamCard}>
             <img
               src="/images/developer-avatar.jpg"

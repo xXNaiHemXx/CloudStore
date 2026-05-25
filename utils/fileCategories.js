@@ -4,39 +4,39 @@
 
 const FILE_CATEGORIES = {
   images: {
-    label: '�️ รูปภาพ',
+    label: 'รูปภาพ',
     extensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico', '.tiff', '.avif'],
-    icon: '',
+    icon: '🖼️',  // เปลี่ยนเป็น emoji แทน
   },
   documents: {
-    label: '📄 เอกสาร',
+    label: 'เอกสาร',
     extensions: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv', '.json', '.xml'],
-    icon: '',
+    icon: '📄',
   },
   archives: {
-    label: '📦 ไฟล์บีบอัด',
+    label: 'ไฟล์บีบอัด',
     extensions: ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', '.xz', '.iso', '.scs'],
-    icon: '',
+    icon: '📦',
   },
   executables: {
-    label: '⚙️ ไฟล์โปรแกรม',
+    label: 'ไฟล์โปรแกรม',
     extensions: ['.exe', '.msi', '.dmg', '.pkg', '.app', '.apk', '.ipa'],
-    icon: '',
+    icon: '⚙️',
   },
   videos: {
-    label: '🎬 วิดีโอ',
+    label: 'วิดีโอ',
     extensions: ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.3gp'],
-    icon: '',
+    icon: '🎬',
   },
   audio: {
-    label: '🎵 เสียง',
+    label: 'เสียง',
     extensions: ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.wma', '.m4a', '.opus'],
-    icon: '',
+    icon: '🎵',
   },
   others: {
-    label: '📁 อื่นๆ',
+    label: 'อื่นๆ',
     extensions: [],
-    icon: '',
+    icon: '📁',
   },
 };
 

@@ -5,7 +5,11 @@ import Link from "next/link";
 import Head from "next/head";
 import styles from "../styles/Admin.module.css";
 import { useUser } from "../context/UserContext";
+import { useConfirm } from "../context/ConfirmContext";
+import { useToast } from "../context/ToastContext";
 import { groupFilesByCategory, isImageFile } from "../utils/fileCategories";
+import Icon from "../components/Icon";
+
 // ==================== PRODUCT MODAL ====================
 function ProductModal({ editingItem, onClose, onSaved }) {
   const isEdit = !!editingItem;
@@ -15,16 +19,16 @@ function ProductModal({ editingItem, onClose, onSaved }) {
   const [itemsimages, setItemsimages] = useState([""]);
   const [itemsdesc, setItemsdesc] = useState("");
   const [itemstitle, setItemstitle] = useState("");
- 
   const [itemsfile, setItemsfile] = useState("");
   const [itemsurlyoutube, setItemsurlyoutube] = useState("");
   const [itemsversion, setItemsversion] = useState("");
   const [discordRoleIdsText, setDiscordRoleIdsText] = useState("");
   const [previewImage, setPreviewImage] = useState("");
-
+  const { confirm } = useConfirm();
+  const { success, error, warning } = useToast();
   const [saving, setSaving] = useState(false);
-  // ใน ProductModal function
   const [uploadingFile, setUploadingFile] = useState(false);
+
   useEffect(() => {
     if (editingItem) {
       setItemsname(editingItem.itemsname || "");
@@ -40,29 +44,35 @@ function ProductModal({ editingItem, onClose, onSaved }) {
       setPreviewImage(editingItem.itemsimage || "");
     }
   }, [editingItem]);
-  
 
-  // ฟังก์ชันลบไฟล์
-  
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      error("ไฟล์รูปใหญ่เกินไป (สูงสุด 10MB)");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
+
     try {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const result = await res.json();
       if (res.ok) {
         setItemsimage(result.url);
         setPreviewImage(result.url);
+        success("อัปโหลดรูปสำเร็จ!");
       } else {
-        alert("Upload failed");
+        error("อัปโหลดรูปไม่สำเร็จ");
       }
-    } catch {
-      alert("Upload error");
+    } catch (err) {
+      console.error("Upload error:", err);
+      error("เกิดข้อผิดพลาดในการอัปโหลดรูป");
     }
   };
-  
+
   const handleImageChange = (index, value) => {
     const newImages = [...itemsimages];
     newImages[index] = value.trim();
@@ -70,20 +80,18 @@ function ProductModal({ editingItem, onClose, onSaved }) {
     if (!filtered.includes("")) filtered.push("");
     setItemsimages(filtered);
   };
-// ฟังก์ชันอัปโหลดไฟล์ Mod
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // ✅ ตรวจสอบขนาดไฟล์ (2GB)
-    const MAX_SIZE = 2000 * 1024 * 1024; // 2000MB
+    const MAX_SIZE = 2000 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
       const sizeGB = (file.size / (1024 * 1024 * 1024)).toFixed(2);
-      alert(`❌ ไฟล์ใหญ่เกินไป: ${sizeGB}GB\nขนาดสูงสุด: 2GB`);
+      error(`ไฟล์ใหญ่เกินไป: ${sizeGB}GB (สูงสุด 2GB)`);
       return;
     }
 
-    // ✅ แสดงขนาดไฟล์
     const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
     console.log(`📦 กำลังอัปโหลด: ${file.name} (${sizeMB}MB)`);
 
@@ -95,7 +103,7 @@ function ProductModal({ editingItem, onClose, onSaved }) {
     try {
       const res = await axios.post("/api/admin/upload-file", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 0, // ✅ ไม่มี timeout
+        timeout: 0,
         onUploadProgress: (progressEvent) => {
           const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           console.log(`📤 Upload progress: ${percent}%`);
@@ -104,26 +112,24 @@ function ProductModal({ editingItem, onClose, onSaved }) {
 
       if (res.data.success) {
         setItemsfile(res.data.url);
-        alert(`✅ อัปโหลดสำเร็จ!\n\n📦 ${res.data.originalName}\n📏 ${res.data.sizeMB}MB`);
+        success(`อัปโหลดสำเร็จ! ${res.data.originalName} (${res.data.sizeMB}MB)`);
       }
-    } catch (error) {
-      console.error(error);
-      
-      if (error.response?.status === 413) {
-        alert('❌ ไฟล์ใหญ่เกินไป (สูงสุด 2GB)');
+    } catch (err) {
+      console.error(err);
+      if (err.response?.status === 413) {
+        error("ไฟล์ใหญ่เกินไป (สูงสุด 2GB)");
       } else {
-        alert('❌ อัปโหลดไม่สำเร็จ: ' + (error.response?.data?.error || error.message));
+        error("อัปโหลดไม่สำเร็จ: " + (err.response?.data?.error || err.message));
       }
     } finally {
       setUploadingFile(false);
     }
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!itemsname || !itemsprice) {
-      alert("กรุณากรอกชื่อสินค้าและราคาก่อนบันทึก!");
+      error("กรุณากรอกชื่อสินค้าและราคาก่อนบันทึก!");
       return;
     }
     setSaving(true);
@@ -133,7 +139,7 @@ function ProductModal({ editingItem, onClose, onSaved }) {
         .split(/[ ,\n]+/)
         .filter(r => r && r.trim() !== "")
         .map(r => r.trim());
-      
+
       const payload = {
         itemsname,
         itemsprice: parseFloat(itemsprice),
@@ -149,15 +155,15 @@ function ProductModal({ editingItem, onClose, onSaved }) {
 
       if (isEdit) {
         await axios.put("/api/items", { id: editingItem._id, ...payload });
-        alert("แก้ไขสินค้าสำเร็จ!");
+        success("แก้ไขสินค้าสำเร็จ!");
       } else {
         await axios.post("/api/items", payload);
-        alert("เพิ่มสินค้าสำเร็จ!");
+        success("เพิ่มสินค้าสำเร็จ!");
       }
       onSaved();
-    } catch (error) {
-      console.error("Save error:", error);
-      alert(`เกิดข้อผิดพลาด: ${error.response?.data?.error || error.message}`);
+    } catch (err) {
+      console.error("Save error:", err);
+      error(`เกิดข้อผิดพลาด: ${err.response?.data?.error || err.message}`);
     } finally {
       setSaving(false);
     }
@@ -209,10 +215,8 @@ function ProductModal({ editingItem, onClose, onSaved }) {
             <label className={styles.modalLabel}>ลิ้งไฟล์ *</label>
             <input value={itemsfile} onChange={(e) => setItemsfile(e.target.value)} className={styles.modalInput} type="text" required />
           </div>
-          {/* ✅ ส่วนอัปโหลดไฟล์ตรง */}
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>หรืออัปโหลดไฟล์จากเครื่อง</label>
-            
             <label className={`custom-file-upload ${uploadingFile ? 'uploading' : ''} ${itemsfile && !uploadingFile ? 'has-file' : ''}`}>
               {uploadingFile ? (
                 <>
@@ -233,23 +237,19 @@ function ProductModal({ editingItem, onClose, onSaved }) {
                 disabled={uploadingFile}
               />
             </label>
-            
             {uploadingFile && (
               <small style={{ color: '#f59e0b', marginTop: '4px' }}>
                 ⏳ กำลังอัปโหลดไฟล์ขนาดใหญ่ กรุณารอสักครู่...
               </small>
             )}
-            
             {itemsfile && !uploadingFile && (
               <small style={{ color: '#10b981', marginTop: '4px' }}>
                 ✅ ไฟล์พร้อมให้ดาวน์โหลดจากเซิร์ฟเวอร์
               </small>
             )}
-            
             <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px' }}>
               💡 รองรับ .zip, .rar, .7z, .scs, .exe, .msi | สูงสุด 2GB
             </small>
-            {/* ✅ เพิ่มช่องราคาสินค้า (หายไป) */}
             <div className={styles.modalRow}>
               <label className={styles.modalLabel}>ราคาสินค้า *</label>
               <input 
@@ -285,20 +285,19 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
   const [changelog, setChangelog] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const { success, error } = useToast();
 
-  // ✅ ฟังก์ชันอัปโหลดไฟล์ (ได้ URL เต็ม automatics)
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const MAX_SIZE = 2000 * 1024 * 1024; // 2GB
+    const MAX_SIZE = 2000 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      alert(`❌ ไฟล์ใหญ่เกินไป (สูงสุด 2GB)`);
+      error("ไฟล์ใหญ่เกินไป (สูงสุด 2GB)");
       return;
     }
 
     setUploadingFile(true);
-
     const formData = new FormData();
     formData.append("file", file);
 
@@ -308,21 +307,19 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
       });
 
       if (res.data.success) {
-        // ✅ สร้าง URL แบบเต็ม
         const baseUrl = window.location.origin;
         const fullUrl = `${baseUrl}${res.data.url}`;
         setNewFileUrl(fullUrl);
-        alert(`✅ อัปโหลดสำเร็จ! URL: ${fullUrl}`);
+        success("อัปโหลดสำเร็จ!");
       }
-    } catch (error) {
-      console.error(error);
-      alert("อัปโหลดไม่สำเร็จ");
+    } catch (err) {
+      console.error(err);
+      error("อัปโหลดไม่สำเร็จ");
     } finally {
       setUploadingFile(false);
     }
   };
 
-  // ✅ แปลง relative path เป็น full URL
   const handleFileUrlChange = (value) => {
     if (value.startsWith('/uploads/')) {
       const baseUrl = window.location.origin;
@@ -334,19 +331,15 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // ✅ ตรวจสอบ URL
     let finalUrl = newFileUrl;
     if (finalUrl.startsWith('/uploads/')) {
       const baseUrl = window.location.origin;
       finalUrl = `${baseUrl}${finalUrl}`;
     }
-    
     if (!newVersion || !finalUrl) {
-      alert("กรุณากรอกเวอร์ชันใหม่และลิงก์ไฟล์");
+      error("กรุณากรอกเวอร์ชันใหม่และลิงก์ไฟล์");
       return;
     }
-    
     setLoading(true);
     try {
       const res = await axios.post("/api/admin/update-version", {
@@ -356,13 +349,13 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
         changelog
       });
       if (res.data.success) {
-        alert(`✅ อัปเดตเวอร์ชันสำเร็จ! แจ้งเตือนผู้ใช้ ${res.data.notifiedUsers} คน`);
+        success(`อัปเดตเวอร์ชันสำเร็จ! แจ้งเตือนผู้ใช้ ${res.data.notifiedUsers} คน`);
         onUpdated();
         onClose();
       }
-    } catch (error) {
-      console.error(error);
-      alert("อัปเดตไม่สำเร็จ: " + (error.response?.data?.error || error.message));
+    } catch (err) {
+      console.error(err);
+      error("อัปเดตไม่สำเร็จ: " + (err.response?.data?.error || err.message));
     } finally {
       setLoading(false);
     }
@@ -377,63 +370,28 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
             <label className={styles.modalLabel}>เวอร์ชันปัจจุบัน</label>
             <input type="text" value={product.itemsversion} disabled className={styles.modalInput} />
           </div>
-          
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>เวอร์ชันใหม่ *</label>
-            <input 
-              type="text" 
-              value={newVersion} 
-              onChange={(e) => setNewVersion(e.target.value)} 
-              className={styles.modalInput} 
-              placeholder="เช่น 2.0.0" 
-              required 
-            />
+            <input type="text" value={newVersion} onChange={(e) => setNewVersion(e.target.value)} className={styles.modalInput} placeholder="เช่น 2.0.0" required />
           </div>
-          
-          {/* ✅ อัปโหลดไฟล์ */}
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>อัปโหลดไฟล์ใหม่</label>
             <label className={`custom-file-upload ${uploadingFile ? 'uploading' : ''}`}>
-              {uploadingFile ? (
-                <span>⏳ กำลังอัปโหลด...</span>
-              ) : (
-                <span>📦 คลิกเพื่อเลือกไฟล์ (สูงสุด 2GB)</span>
-              )}
-              <input 
-                type="file" 
-                accept=".zip,.rar,.7z,.scs" 
-                onChange={handleFileUpload}
-                disabled={uploadingFile}
-              />
+              {uploadingFile ? <span>⏳ กำลังอัปโหลด...</span> : <span>📦 คลิกเพื่อเลือกไฟล์ (สูงสุด 2GB)</span>}
+              <input type="file" accept=".zip,.rar,.7z,.scs" onChange={handleFileUpload} disabled={uploadingFile} />
             </label>
           </div>
-
-          {/* ✅ ช่องลิงก์ไฟล์ใหม่ (ใส่เองได้ หรือได้จากอัปโหลด) */}
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>ลิงก์ไฟล์ใหม่ *</label>
-            <input 
-              type="text" 
-              value={newFileUrl} 
-              onChange={(e) => handleFileUrlChange(e.target.value)} 
-              className={styles.modalInput} 
-              placeholder="https://yourdomain.com/uploads/ไฟล์.scs"
-            />
+            <input type="text" value={newFileUrl} onChange={(e) => handleFileUrlChange(e.target.value)} className={styles.modalInput} placeholder="https://yourdomain.com/uploads/ไฟล์.scs" />
             <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}>
               💡 ใส่ URL แบบเต็ม หรือ /uploads/ชื่อไฟล์.scs (ระบบจะแปลงให้อัตโนมัติ)
             </small>
           </div>
-
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>รายการอัปเดต (Changelog)</label>
-            <textarea 
-              value={changelog} 
-              onChange={(e) => setChangelog(e.target.value)} 
-              className={styles.modalTextarea} 
-              rows="4" 
-              placeholder="- แก้ไขบัค XYZ&#10;- เพิ่มฟีเจอร์ใหม่" 
-            />
+            <textarea value={changelog} onChange={(e) => setChangelog(e.target.value)} className={styles.modalTextarea} rows="4" placeholder="- แก้ไขบัค XYZ&#10;- เพิ่มฟีเจอร์ใหม่" />
           </div>
-          
           <div className={styles.modalActions}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>ยกเลิก</button>
             <button type="submit" className={styles.submitBtn} disabled={loading}>
@@ -450,38 +408,33 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
 export default function Admin() {
   const { data: session } = useSession();
   const { userPoints, refreshPoints } = useUser();
+  const { confirm } = useConfirm();
+  const { success, error } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  // --- Dashboard State ---
   const [stats, setStats] = useState({ products: 0, orders: 0, users: 0, revenue: 0 });
-
-  // --- Orders State ---
   const [orders, setOrders] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
   const [topMod, setTopMod] = useState("-");
-
-  // --- Products State ---
   const [items, setItems] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [selectedProductForVersion, setSelectedProductForVersion] = useState(null);
-
-  // --- Uploads State ---
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [images, setImages] = useState([]);
-  const [deletingFile, setDeletingFile] = useState(null); // ✅ เพิ่มตรงนี้!
-  // --- Users State ---
+  const [deletingFile, setDeletingFile] = useState(null);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [proposedPoints, setProposedPoints] = useState(0);
   const [changeAmount, setChangeAmount] = useState(1);
   const [userProducts, setUserProducts] = useState([]);
   const [actionLoading, setActionLoading] = useState(false);
+  const [topups, setTopups] = useState([]);
+  const [loadingTopups, setLoadingTopups] = useState(false);
 
-  // --- Fetch Dashboard Stats ---
   useEffect(() => {
     if (!session || activeTab !== "dashboard") return;
     Promise.all([
@@ -500,7 +453,6 @@ export default function Admin() {
     }).catch(console.error);
   }, [session, activeTab]);
 
-  // --- Fetch Orders ---
   useEffect(() => {
     if (!session || activeTab !== "orders") return;
     axios.get("/api/user/purchase").then((res) => {
@@ -533,7 +485,6 @@ export default function Admin() {
     }).catch(console.error);
   }, [session, activeTab]);
 
-  // --- Fetch Products ---
   const fetchItems = async () => {
     const res = await axios.get("/api/items");
     setItems(res.data || []);
@@ -546,11 +497,25 @@ export default function Admin() {
     setEditingItem(item);
     setShowModal(true);
   };
-  const handleDelete = async (id) => {
-    if (!confirm("ยืนยันการลบสินค้า?")) return;
-    await axios.delete(`/api/items?id=${id}`);
-    fetchItems();
+  
+  const handleDelete = async (id, productName) => {
+    const confirmed = await confirm({
+      title: "ยืนยันการลบ",
+      message: `คุณต้องการลบสินค้า "${productName}" ใช่หรือไม่? การดำเนินการนี้ไม่สามารถกู้คืนได้`,
+      confirmText: "ลบเลย",
+      cancelText: "ยกเลิก",
+      type: "danger",
+    });
+    if (!confirmed) return;
+    try {
+      await axios.delete(`/api/items?id=${id}`);
+      success("ลบสินค้าสำเร็จ!");
+      fetchItems();
+    } catch (err) {
+      error("ลบสินค้าไม่สำเร็จ");
+    }
   };
+
   const handleSaved = () => {
     setShowModal(false);
     setEditingItem(null);
@@ -563,18 +528,15 @@ export default function Admin() {
   const handleVersionUpdated = () => {
     fetchItems();
   };
-  // --- Topups State ---
-  const [topups, setTopups] = useState([]);
-  const [loadingTopups, setLoadingTopups] = useState(false);
-  // --- Fetch Topups History ---
+  
   const fetchTopups = async () => {
     setLoadingTopups(true);
     try {
       const res = await axios.get("/api/admin/topups");
       setTopups(res.data || []);
-    } catch (error) {
-      console.error("Error fetching topups:", error);
-      alert("โหลดประวัติเติมเงินไม่สำเร็จ");
+    } catch (err) {
+      console.error("Error fetching topups:", err);
+      error("โหลดประวัติเติมเงินไม่สำเร็จ");
     } finally {
       setLoadingTopups(false);
     }
@@ -585,26 +547,22 @@ export default function Admin() {
       fetchTopups();
     }
   }, [activeTab]);
+  
   const getStatusBadge = (status) => {
     switch (status) {
-      case "success":
-        return { class: "statusSuccess", text: "✅ สำเร็จ" };
-      case "pending":
-        return { class: "statusPending", text: "⏳ รอตรวจสอบ" };
-      case "error":
-        return { class: "statusFailed", text: "❌ ล้มเหลว" };
-      case "duplicate":
-        return { class: "statusDuplicate", text: "⚠️ ซ้ำ" };
-      default:
-        return { class: "statusPending", text: "⏳ รอตรวจสอบ" };
+      case "success": return { class: "statusSuccess", text: "สำเร็จ", icon: "success" };
+      case "pending": return { class: "statusPending", text: "รอตรวจสอบ", icon: "pending" };
+      case "error": return { class: "statusFailed", text: "ล้มเหลว", icon: "error" };
+      case "duplicate": return { class: "statusDuplicate", text: "ซ้ำ", icon: "warning" };
+      default: return { class: "statusPending", text: "รอตรวจสอบ", icon: "pending" };
     }
   };
-  // --- Fetch Uploads ---
+  
   const fetchImages = async () => {
     try {
       const res = await axios.get("/api/uploads");
       setImages(res.data || []);
-    } catch { alert("ไม่สามารถโหลดรูปภาพได้"); }
+    } catch { error("ไม่สามารถโหลดรูปภาพได้"); }
   };
   useEffect(() => {
     if (activeTab === "uploads") fetchImages();
@@ -617,45 +575,48 @@ export default function Admin() {
     setUploading(true);
     try {
       await axios.post("/api/upload", formData);
-      alert("อัปโหลดสำเร็จ");
+      success("อัปโหลดสำเร็จ");
       setSelectedFile(null);
       fetchImages();
-    } catch { alert("เกิดข้อผิดพลาดในการอัปโหลดรูป"); }
+    } catch { error("เกิดข้อผิดพลาดในการอัปโหลดรูป"); }
     finally { setUploading(false); }
   };
+  
   const handleDeleteFile = async (fileName) => {
-  if (!confirm(`ต้องการลบ "${fileName}"?`)) return;
-
-  setDeletingFile(fileName);
-
-  try {
-    const res = await fetch('/api/upload', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fileName }),
+    const confirmed = await confirm({
+      title: "ยืนยันการลบ",
+      message: `ต้องการลบ "${fileName}"?`,
+      confirmText: "ลบ",
+      cancelText: "ยกเลิก",
+      type: "danger",
     });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      alert('✅ ลบไฟล์สำเร็จ!');
-      fetchImages();
-    } else {
-      throw new Error(data.error || 'ลบไม่สำเร็จ');
+    if (!confirmed) return;
+    setDeletingFile(fileName);
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        success("ลบไฟล์สำเร็จ!");
+        fetchImages();
+      } else {
+        throw new Error(data.error || 'ลบไม่สำเร็จ');
+      }
+    } catch (err) {
+      error(err.message);
+    } finally {
+      setDeletingFile(null);
     }
-  } catch (error) {
-    alert('❌ ' + error.message);
-  } finally {
-    setDeletingFile(null);
-  }
-};
+  };
 
-  // --- Fetch Users ---
   const fetchUsers = async () => {
     try {
       const res = await axios.get("/api/user/user");
       setUsers(res.data || []);
-    } catch { alert("โหลดข้อมูลผู้ใช้ล้มเหลว"); }
+    } catch { error("โหลดข้อมูลผู้ใช้ล้มเหลว"); }
   };
   useEffect(() => {
     if (activeTab === "users") fetchUsers();
@@ -671,21 +632,28 @@ export default function Admin() {
   const applyPointChange = (type) => {
     const current = Number(selectedUser.points || 0);
     const amount = Number(changeAmount || 0);
-    if (isNaN(amount) || amount < 0) return alert("กรุณากรอกจำนวนแต้มที่ถูกต้อง");
+    if (isNaN(amount) || amount < 0) return error("กรุณากรอกจำนวนแต้มที่ถูกต้อง");
     if (type === "add") setProposedPoints(current + amount);
     else setProposedPoints(Math.max(0, current - amount));
   };
 
-  const handleRemoveProduct = async (productId, index) => {
-    if (!confirm("คุณต้องการลบสินค้านี้ออกจากบัญชีผู้ใช้ใช่หรือไม่?")) return;
+  const handleRemoveProduct = async (productId, index, productName) => {
+    const confirmed = await confirm({
+      title: "ยืนยันการลบ",
+      message: `คุณต้องการลบสินค้า "${productName}" ออกจากบัญชีผู้ใช้ใช่หรือไม่?`,
+      confirmText: "ลบเลย",
+      cancelText: "ยกเลิก",
+      type: "danger",
+    });
+    if (!confirmed) return;
     setActionLoading(true);
     try {
       await axios.put("/api/user/remove-product", { userId: selectedUser.id, productId, index });
       setUserProducts((prev) => prev.filter((_, i) => i !== index));
-      alert("✅ ลบสินค้าสำเร็จ");
-    } catch (error) {
-      console.error(error);
-      alert(error.response?.data?.error || "ลบสินค้าไม่สำเร็จ");
+      success("ลบสินค้าสำเร็จ");
+    } catch (err) {
+      console.error(err);
+      error(err.response?.data?.error || "ลบสินค้าไม่สำเร็จ");
     } finally {
       setActionLoading(false);
     }
@@ -695,7 +663,7 @@ export default function Admin() {
     setActionLoading(true);
     try {
       await axios.put("/api/user/points", { userId: selectedUser.id, points: Number(proposedPoints) });
-      alert("✅ บันทึกแต้มสำเร็จ!");
+      success("บันทึกแต้มสำเร็จ!");
       fetchUsers();
       await refreshPoints();
       setSelectedUser(null);
@@ -703,7 +671,7 @@ export default function Admin() {
       setChangeAmount(1);
     } catch (err) {
       console.error("Save points error:", err);
-      alert("❌ ไม่สามารถบันทึกแต้มได้: " + (err.response?.data?.error || err.message));
+      error("ไม่สามารถบันทึกแต้มได้: " + (err.response?.data?.error || err.message));
     } finally {
       setActionLoading(false);
     }
@@ -717,12 +685,12 @@ export default function Admin() {
   };
 
   const tabs = [
-    { key: "dashboard", label: "📊 Dashboard" },
-    { key: "orders", label: "🧾 Orders" },
-    { key: "products", label: "📦 Products" },
-    { key: "topups", label: "💰 เติมเงิน" },  // ✅ เพิ่ม Tab ใหม่
-    { key: "uploads", label: "📁 Uploads" },
-    { key: "users", label: "👥 Users" },
+    { key: "dashboard", label: "Dashboard", icon: "dashboard" },
+    { key: "orders", label: "Orders", icon: "order" },
+    { key: "products", label: "Products", icon: "product" },
+    { key: "topups", label: "เติมเงิน", icon: "money" },
+    { key: "uploads", label: "Uploads", icon: "upload" },
+    { key: "users", label: "Users", icon: "users" },
   ];
 
   return (
@@ -731,23 +699,17 @@ export default function Admin() {
         <title>xCloud Studio Admin</title>
       </Head>
 
-      {/* ========== HEADER ========== */}
       <header className="header">
         <section className="headersc">
           <Link href="/" className="headersca">
             <img src="/favicon.ico" className="icon" alt="logo" />
-            <strong className="uppercase">
-              <span className="tuppercase">xCloud</span>Studio
-            </strong>
+            <strong className="uppercase"><span className="tuppercase">xCloud</span>Studio</strong>
           </Link>
           <div className="header-links">
             {tabs.map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`headertext ${activeTab === tab.key ? 'active' : ''}`}
-              >
-                {tab.label}
+              <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`headertext ${activeTab === tab.key ? 'active' : ''}`}>
+                <Icon name={tab.icon} size="1rem" />
+                <span style={{ marginLeft: "0.5rem" }}>{tab.label}</span>
               </button>
             ))}
           </div>
@@ -770,37 +732,36 @@ export default function Admin() {
         </section>
       </header>
 
-      {/* ========== MAIN CONTENT ========== */}
       <main className={styles.container}>
-
-        {/* Tab Navigation */}
         <div className={styles.adminTabs}>
           {tabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`${styles.adminTab} ${activeTab === tab.key ? styles.adminTabActive : ''}`}
-            >
-              {tab.label}
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)} className={`${styles.adminTab} ${activeTab === tab.key ? styles.adminTabActive : ''}`}>
+              <Icon name={tab.icon} size="1rem" />
+              <span style={{ marginLeft: "0.5rem" }}>{tab.label}</span>
             </button>
           ))}
         </div>
 
-        {/* ==================== DASHBOARD ==================== */}
+        {/* DASHBOARD */}
         {activeTab === "dashboard" && (
           <>
             <section className={styles.header}>
-              <h1 className={styles.headerTitle}>📊 Admin Dashboard</h1>
+              <h1 className={styles.headerTitle}>
+                <Icon name="dashboard" size="1.2rem" />
+                <span style={{ marginLeft: "0.5rem" }}>Admin Dashboard</span>
+              </h1>
             </section>
             <div className={styles.statsRow}> 
               {[
-                { icon: "📦", value: stats.products, label: "Products", className: styles.statIconProducts },
-                { icon: "🧾", value: stats.orders, label: "Orders", className: styles.statIconOrders },
-                { icon: "👥", value: stats.users, label: "Users", className: styles.statIconRevenue },
-                { icon: "💰", value: `฿${stats.revenue.toLocaleString()}`, label: "Revenue", className: styles.statIconRevenue },
+                { icon: "product", value: stats.products, label: "Products" },
+                { icon: "order", value: stats.orders, label: "Orders" },
+                { icon: "users", value: stats.users, label: "Users" },
+                { icon: "money", value: `฿${stats.revenue.toLocaleString()}`, label: "Revenue" },
               ].map((stat, i) => (
                 <div key={i} className={styles.statCard}>
-                  <div className={`${styles.statIcon} ${stat.className}`}>{stat.icon}</div>
+                  <div className={styles.statIcon}>
+                    <Icon name={stat.icon} size="1.5rem" />
+                  </div>
                   <div className={styles.statInfo}>
                     <h3>{stat.value}</h3>
                     <p>{stat.label}</p>
@@ -808,23 +769,28 @@ export default function Admin() {
                 </div>
               ))}
             </div>
-            
           </>
         )}
 
-        {/* ==================== ORDERS ==================== */}
+        {/* ORDERS */}
         {activeTab === "orders" && (
           <>
             <section className={styles.header}>
-              <h1 className={styles.headerTitle}>🧾 รายการคำสั่งซื้อ</h1>
+              <h1 className={styles.headerTitle}>
+                <Icon name="order" size="1.2rem" />
+                <span style={{ marginLeft: "0.5rem" }}>รายการคำสั่งซื้อ</span>
+              </h1>
             </section>
             <div className={styles.statsRow}>
-              {[
-                { value: `฿${totalRevenue.toLocaleString()}`, label: "💰 ยอดขายรวม" },
-                { value: `${totalOrders} รายการ`, label: "📦 จำนวนคำสั่งซื้อ" },
-                { value: topMod, label: "🏆 Mod ขายดีที่สุด", small: true },
-              ].map((s, i) => (
+            {[
+              { value: `฿${totalRevenue.toLocaleString()}`, label: "ยอดขายรวม", icon: "money" },
+              { value: `${totalOrders} รายการ`, label: "จำนวนคำสั่งซื้อ", icon: "order" },
+              { value: topMod, label: "Mod ขายดีที่สุด", icon: "winner", small: true },
+            ].map((s, i) => (
                 <div key={i} className={styles.statCard}>
+                  <div className={styles.statIcon}>
+                    <Icon name={s.icon} size="1.5rem" />
+                  </div>
                   <div className={styles.statInfo}>
                     <h3 style={s.small ? { fontSize: '0.9rem' } : {}}>{s.value}</h3>
                     <p>{s.label}</p>
@@ -834,9 +800,7 @@ export default function Admin() {
             </div>
             <div className={styles.tableWrapper}>
               <table className={styles.dataTable}>
-                <thead>
-                  <tr><th>สินค้า</th><th>ผู้ซื้อ</th><th>ราคา</th><th>วันที่</th></tr>
-                </thead>
+                <thead><tr><th>สินค้า</th><th>ผู้ซื้อ</th><th>ราคา</th><th>วันที่</th></tr></thead>
                 <tbody>
                   {orders.map((order, i) => (
                     <tr key={i}>
@@ -851,18 +815,18 @@ export default function Admin() {
             </div>
           </>
         )}
-        {/* ==================== TOPUPS HISTORY ==================== */}
+        
+        {/* TOPUPS HISTORY */}
         {activeTab === "topups" && (
           <>
             <section className={styles.header}>
-              <h1 className={styles.headerTitle}>💰 ประวัติการเติมเงิน</h1>
+              <h1 className={styles.headerTitle}>
+                <Icon name="money" size="1.2rem" />
+                <span style={{ marginLeft: "0.5rem" }}>ประวัติการเติมเงิน</span>
+              </h1>
             </section>
-
             {loadingTopups ? (
-              <div className={styles.loadingContainer}>
-                <div className={styles.loadingSpinner}></div>
-                <p>กำลังโหลด...</p>
-              </div>
+              <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>กำลังโหลด...</p></div>
             ) : topups.length === 0 ? (
               <div className={styles.emptyState}>
                 <span className={styles.emptyIcon}>📋</span>
@@ -871,59 +835,21 @@ export default function Admin() {
             ) : (
               <div className={styles.tableWrapper}>
                 <table className={styles.dataTable}>
-                  <thead>
-                    <tr>
-                      <th>วันที่</th>
-                      <th>ผู้ใช้</th>
-                      <th>จำนวนเงิน</th>
-                      <th>Reference</th>
-                      <th>สลิป</th>
-                      <th>สถานะ</th>
-                    </tr>
-                  </thead>
+                  <thead><tr><th>วันที่</th><th>ผู้ใช้</th><th>จำนวนเงิน</th><th>Reference</th><th>สลิป</th><th>สถานะ</th></tr></thead>
                   <tbody>
                     {topups.map((topup) => {
                       const statusInfo = getStatusBadge(topup.status);
                       return (
                         <tr key={topup._id}>
-                          <td>
-                            {new Date(topup.createdAt).toLocaleString("th-TH", {
-                              dateStyle: "medium",
-                              timeStyle: "short"
-                            })}
-                          </td>
-                          <td>
-                            <strong>{topup.userName}</strong>
-                            <br />
-                            <small style={{ fontSize: "0.7rem", color: "#6b7280" }}>
-                              ID: {topup.userId}
-                            </small>
-                          </td>
+                          <td>{new Date(topup.createdAt).toLocaleString("th-TH")}</td>
+                          <td><strong>{topup.userName}</strong><br /><small>ID: {topup.userId}</small></td>
                           <td>฿{topup.amount?.toLocaleString()}</td>
-                          <td>
-                            <small style={{ fontFamily: "monospace", fontSize: "0.7rem" }}>
-                              {topup.transRef || "-"}
-                            </small>
-                          </td>
-                          <td>
-                            {topup.slipUrl ? (
-                              <a 
-                                href={topup.slipUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className={styles.slipLink}
-                              >
-                                🔗 ดูสลิป
-                              </a>
-                            ) : (
-                              <span style={{ color: "#6b7280" }}>ไม่มีสลิป</span>
-                            )}
-                          </td>
-                          <td>
-                            <span className={`${styles.statusBadge} ${styles[statusInfo.class]}`}>
-                              {statusInfo.text}
-                            </span>
-                          </td>
+                          <td><small>{topup.transRef || "-"}</small></td>
+                          <td>{topup.slipUrl ? <a href={topup.slipUrl} target="_blank" className={styles.slipLink}>ดูสลิป</a> : <span style={{ color: "#6b7280" }}>ไม่มีสลิป</span>}</td>
+                          <td><span className={`${styles.statusBadge} ${styles[statusInfo.class]}`}>
+                            <Icon name={statusInfo.icon} size="0.7rem" />
+                            <span style={{ marginLeft: "0.3rem" }}>{statusInfo.text}</span>
+                          </span></td>
                         </tr>
                       );
                     })}
@@ -933,29 +859,26 @@ export default function Admin() {
             )}
           </>
         )}
-        {/* ==================== PRODUCTS ==================== */}
+        
+        {/* PRODUCTS */}
         {activeTab === "products" && (
           <>
             <section className={styles.header}>
-              <h1 className={styles.headerTitle}>📦 จัดการสินค้า (MOD)</h1>
+              <h1 className={styles.headerTitle}>
+                <Icon name="product" size="1.2rem" />
+                <span style={{ marginLeft: "0.5rem" }}>จัดการสินค้า (MOD)</span>
+              </h1>
               <div className={styles.headerButtons}>
                 <button onClick={() => { setEditingItem(null); setShowModal(true); }} className={styles.addButton}>
-                  + เพิ่มสินค้า
+                  <Icon name="add" size="0.8rem" />
+                  <span>เพิ่มสินค้า</span>
                 </button>
               </div>
             </section>
-
-            {showModal && (
-              <ProductModal editingItem={editingItem} onClose={() => { setShowModal(false); setEditingItem(null); }} onSaved={handleSaved} />
-            )}
+            {showModal && <ProductModal editingItem={editingItem} onClose={() => { setShowModal(false); setEditingItem(null); }} onSaved={handleSaved} />}
             {showVersionModal && selectedProductForVersion && (
-              <VersionUpdateModal 
-                product={selectedProductForVersion} 
-                onClose={() => { setShowVersionModal(false); setSelectedProductForVersion(null); }} 
-                onUpdated={handleVersionUpdated} 
-              />
+              <VersionUpdateModal product={selectedProductForVersion} onClose={() => { setShowVersionModal(false); setSelectedProductForVersion(null); }} onUpdated={handleVersionUpdated} />
             )}
-
             <div className={styles.productGrid}>
               {items.length === 0 ? (
                 <div className={styles.emptyState}><p>ยังไม่มีสินค้าในระบบ</p></div>
@@ -973,14 +896,24 @@ export default function Admin() {
                       </div>
                       {item.discordRoleIds && item.discordRoleIds.length > 0 && (
                         <div className={styles.productRoleId}>
-                          <small>🎭 Role IDs: {item.discordRoleIds.join(", ")}</small>
+                          <Icon name="role" size="0.7rem" />
+                          <small> Role IDs: {item.discordRoleIds.join(", ")}</small>
                         </div>
                       )}
                     </div>
                     <div className={styles.cardActions}>
-                      <button onClick={() => handleEdit(item)} className={styles.editBtn}>✏️ แก้ไข</button>
-                      <button onClick={() => handleVersionUpdate(item)} className={styles.versionBtn}>📦 อัปเดต</button>
-                      <button onClick={() => handleDelete(item._id)} className={styles.deleteBtn}>🗑️ ลบ</button>
+                      <button onClick={() => handleEdit(item)} className={styles.editBtn}>
+                        <Icon name="edit" size="0.8rem" />
+                        <span>แก้ไข</span>
+                      </button>
+                      <button onClick={() => handleVersionUpdate(item)} className={styles.versionBtn}>
+                        <Icon name="refresh" size="0.8rem" />
+                        <span>อัปเดต</span>
+                      </button>
+                      <button onClick={() => handleDelete(item._id, item.itemsname)} className={styles.deleteBtn}>
+                        <Icon name="delete" size="0.8rem" />
+                        <span>ลบ</span>
+                      </button>
                     </div>
                   </div>
                 ))
@@ -989,54 +922,31 @@ export default function Admin() {
           </>
         )}
 
-        {/* ==================== UPLOADS ==================== */}
+        {/* UPLOADS */}
         {activeTab === "uploads" && (
           <>
             <section className={styles.header}>
-              <h1 className={styles.headerTitle}>📁 อัปโหลดไฟล์</h1>
+              <h1 className={styles.headerTitle}>
+                <Icon name="upload" size="1.2rem" />
+                <span style={{ marginLeft: "0.5rem" }}>อัปโหลดไฟล์</span>
+              </h1>
             </section>
-
             <div className={styles.uploadSection}>
               <label className={`custom-file-upload ${uploading ? 'uploading' : ''} ${selectedFile ? 'has-file' : ''}`}>
                 {uploading ? (
-                  <>
-                    <span>⏳ กำลังอัปโหลด...</span>
-                    <div className={styles.uploadProgressBar}>
-                      <div className={styles.uploadProgressFill}></div>
-                    </div>
-                  </>
+                  <><span>⏳ กำลังอัปโหลด...</span><div className={styles.uploadProgressBar}><div className={styles.uploadProgressFill}></div></div></>
                 ) : selectedFile ? (
-                  <>
-                    <span>✅ {selectedFile.name}</span>
-                    <small style={{ color: '#9ca3af' }}>
-                      ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
-                    </small>
-                  </>
+                  <><span>✅ {selectedFile.name}</span><small>({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)</small></>
                 ) : (
-                  <>
-                    <span>📤 คลิกเพื่อเลือกไฟล์</span>
-                    <small style={{ color: '#6b7280' }}>รองรับทุกประเภทไฟล์ (สูงสุด 2GB)</small>
-                  </>
+                  <><span>📤 คลิกเพื่อเลือกไฟล์</span><small>รองรับทุกประเภทไฟล์ (สูงสุด 2GB)</small></>
                 )}
-                <input 
-                  type="file" 
-                  onChange={(e) => setSelectedFile(e.target.files[0])}
-                  disabled={uploading}
-                />
+                <input type="file" onChange={(e) => setSelectedFile(e.target.files[0])} disabled={uploading} />
               </label>
-              
-              {selectedFile && !uploading && (
-                <button onClick={() => setSelectedFile(null)} className={styles.cancelBtn} style={{ padding: '0.5rem 1rem' }}>
-                  ✕ ยกเลิก
-                </button>
-              )}
-              
+              {selectedFile && !uploading && <button onClick={() => setSelectedFile(null)} className={styles.cancelBtn}>✕ ยกเลิก</button>}
               <button onClick={handleUpload} disabled={!selectedFile || uploading} className={styles.addButton}>
-                {uploading ? "⏳ กำลังอัปโหลด..." : "🚀 อัปโหลด"}
+                {uploading ? "⏳ กำลังอัปโหลด..." : <><Icon name="upload" size="0.8rem" /><span>อัปโหลด</span></>}
               </button>
             </div>
-
-            {/* Gallery - จัดหมวดหมู่ */}
             {images.length > 0 && (
               <div className={styles.galleryContainer}>
                 {groupFilesByCategory(images).map((category) => (
@@ -1046,56 +956,28 @@ export default function Admin() {
                       <span className={styles.galleryCategoryLabel}>{category.label}</span>
                       <span className={styles.galleryCategoryCount}>{category.files.length} ไฟล์</span>
                     </div>
-                    
                     <div className={styles.galleryGrid}>
                       {category.files.map((file) => (
                         <div key={file.url} className={styles.galleryItem}>
                           {isImageFile(file.fileName) ? (
-                            <div className={styles.galleryImageWrapper}>
-                              <img src={file.url} alt={file.fileName} className={styles.galleryThumb} loading="lazy" />
-                            </div>
+                            <div className={styles.galleryImageWrapper}><img src={file.url} alt={file.fileName} className={styles.galleryThumb} loading="lazy" /></div>
                           ) : (
                             <div className={styles.galleryFileWrapper}>
-                              <span className={styles.galleryFileIcon}>{category.icon}</span>
+                              <Icon name="file" size="1.5rem" />
                               <span className={styles.galleryFileName}>{file.fileName}</span>
                             </div>
                           )}
-                          
                           <div className={styles.galleryItemInfo}>
-                            <input 
-                              type="text" 
-                              value={file.url} 
-                              readOnly 
-                              className={styles.galleryUrl} 
-                              onClick={(e) => e.target.select()} 
-                            />
+                            <input type="text" value={file.url} readOnly className={styles.galleryUrl} onClick={(e) => e.target.select()} />
                             <div className={styles.galleryActions}>
-                              <button 
-                                onClick={() => {
-                                  navigator.clipboard.writeText(file.url);
-                                  alert('✅ คัดลอกลิงก์แล้ว!');
-                                }}
-                                className={styles.galleryCopyBtn}
-                                title="คัดลอกลิงก์"
-                              >
-                                📋
+                              <button onClick={() => { navigator.clipboard.writeText(file.url); success("คัดลอกลิงก์แล้ว!"); }} className={styles.galleryCopyBtn}>
+                                <Icon name="copy" size="0.8rem" />
                               </button>
-                              <a 
-                                href={file.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className={styles.galleryOpenBtn}
-                                title="เปิดในแท็บใหม่"
-                              >
-                                🔗
+                              <a href={file.url} target="_blank" rel="noopener noreferrer" className={styles.galleryOpenBtn}>
+                                <Icon name="link" size="0.8rem" />
                               </a>
-                              <button 
-                                onClick={() => handleDeleteFile(file.fileName)}
-                                disabled={deletingFile === file.fileName}
-                                className={styles.galleryDeleteBtn}
-                                title="ลบไฟล์"
-                              >
-                                {deletingFile === file.fileName ? '⏳' : '🗑️'}
+                              <button onClick={() => handleDeleteFile(file.fileName)} disabled={deletingFile === file.fileName} className={styles.galleryDeleteBtn}>
+                                {deletingFile === file.fileName ? <Icon name="loading" size="0.8rem" /> : <Icon name="delete" size="0.8rem" />}
                               </button>
                             </div>
                           </div>
@@ -1106,10 +988,9 @@ export default function Admin() {
                 ))}
               </div>
             )}
-
             {images.length === 0 && !uploading && (
               <div className={styles.emptyState}>
-                <span className={styles.emptyIcon}>📁</span>
+                <Icon name="file" size="3rem" />
                 <p className={styles.emptyTitle}>ยังไม่มีไฟล์ที่อัปโหลด</p>
                 <p className={styles.emptyText}>เลือกไฟล์แล้วคลิกอัปโหลด</p>
               </div>
@@ -1117,18 +998,21 @@ export default function Admin() {
           </>
         )}
 
-        {/* ==================== USERS ==================== */}
+        {/* USERS */}
         {activeTab === "users" && (
           <>
             <section className={styles.header}>
-              <h1 className={styles.headerTitle}>👥 ผู้ใช้ทั้งหมด</h1>
+              <h1 className={styles.headerTitle}>
+                <Icon name="users" size="1.2rem" />
+                <span style={{ marginLeft: "0.5rem" }}>ผู้ใช้ทั้งหมด</span>
+              </h1>
             </section>
             <div className={styles.userGrid}>
               {users.map(user => (
                 <div key={user.id} className={styles.userCard} onClick={() => handleSelectUser(user)}>
                   <div className={styles.userInfoLeft}>
                     <h2 className={styles.userNameCard}>{user.name}</h2>
-                    <p>💎 {user.points?.toLocaleString() || 0} point</p>
+                    <p><Icon name="coin" size="0.7rem" /> {user.points?.toLocaleString() || 0} point</p>
                   </div>
                   <div className={styles.userInfoRight}>
                     <p>{user.email}</p>
@@ -1138,62 +1022,41 @@ export default function Admin() {
               ))}
             </div>
 
-            {/* User Detail Modal */}
             {selectedUser && (
               <div className={styles.modalOverlay} onClick={() => !actionLoading && setSelectedUser(null)}>
                 <div className={styles.userDetailModal} onClick={(e) => e.stopPropagation()}>
                   <button className={styles.modalCloseBtn} onClick={() => setSelectedUser(null)} disabled={actionLoading}>✕</button>
-                  
                   <div className={styles.userDetailHeader}>
                     <div className={styles.userAvatarLarge}>{selectedUser.name?.charAt(0)?.toUpperCase() || '?'}</div>
-                    <div>
-                      <h2 className={styles.userDetailName}>{selectedUser.name}</h2>
-                      <p className={styles.userDetailEmail}>{selectedUser.email}</p>
-                    </div>
+                    <div><h2 className={styles.userDetailName}>{selectedUser.name}</h2><p className={styles.userDetailEmail}>{selectedUser.email}</p></div>
                   </div>
-
                   <div className={styles.userInfoCards}>
                     <div className={styles.userInfoCard}>
-                      <span className={styles.userInfoCardIcon}>🆔</span>
-                      <div>
-                        <p className={styles.userInfoCardLabel}>Discord ID</p>
-                        <p className={styles.userInfoCardValue}>{selectedUser.id}</p>
-                      </div>
+                      <Icon name="user" size="1.2rem" />
+                      <div><p className={styles.userInfoCardLabel}>Discord ID</p><p className={styles.userInfoCardValue}>{selectedUser.id}</p></div>
                     </div>
                     <div className={styles.userInfoCard}>
-                      <span className={styles.userInfoCardIcon}>💎</span>
-                      <div>
-                        <p className={styles.userInfoCardLabel}>Points คงเหลือ</p>
-                        <p className={styles.userInfoCardValueHighlight}>{selectedUser.points?.toLocaleString() || 0} Point</p>
-                      </div>
+                      <Icon name="coin" size="1.2rem" />
+                      <div><p className={styles.userInfoCardLabel}>Points คงเหลือ</p><p className={styles.userInfoCardValueHighlight}>{selectedUser.points?.toLocaleString() || 0} Point</p></div>
                     </div>
                   </div>
-
                   <div className={styles.userDetailDivider}><span>⚙️ จัดการแต้ม</span></div>
-                  
                   <div className={styles.pointAdjustSection}>
-                    <div className={styles.pointAdjustInput}>
-                      <label className={styles.pointAdjustLabel}>จำนวนที่ต้องการเพิ่ม/ลด</label>
-                      <input type="number" className={styles.pointInput} value={changeAmount} onChange={(e) => setChangeAmount(e.target.value)} min="1" />
-                    </div>
+                    <div className={styles.pointAdjustInput}><label className={styles.pointAdjustLabel}>จำนวนที่ต้องการเพิ่ม/ลด</label><input type="number" className={styles.pointInput} value={changeAmount} onChange={(e) => setChangeAmount(e.target.value)} min="1" /></div>
                     <div className={styles.pointAdjustButtons}>
-                      <button className={styles.pointAddBtn} onClick={() => applyPointChange("add")} disabled={actionLoading}>➕ เพิ่มแต้ม</button>
-                      <button className={styles.pointSubtractBtn} onClick={() => applyPointChange("subtract")} disabled={actionLoading}>➖ ลบแต้ม</button>
+                      <button className={styles.pointAddBtn} onClick={() => applyPointChange("add")} disabled={actionLoading}><Icon name="add" size="0.8rem" /> เพิ่มแต้ม</button>
+                      <button className={styles.pointSubtractBtn} onClick={() => applyPointChange("subtract")} disabled={actionLoading}><Icon name="remove" size="0.8rem" /> ลบแต้ม</button>
                     </div>
-                    <div className={styles.pointPreview}>
-                      <span className={styles.pointPreviewLabel}>แต้มใหม่</span>
-                      <span className={styles.pointPreviewValue}>{proposedPoints?.toLocaleString() || 0} Point</span>
-                    </div>
+                    <div className={styles.pointPreview}><span className={styles.pointPreviewLabel}>แต้มใหม่</span><span className={styles.pointPreviewValue}>{proposedPoints?.toLocaleString() || 0} Point</span></div>
                     <div className={styles.pointActionButtons}>
                       <button className={styles.pointSaveBtn} onClick={handleSavePoints} disabled={actionLoading}>
-                        {actionLoading ? '⏳ กำลังบันทึก...' : '✅ ยืนยัน'}
+                        {actionLoading ? <Icon name="loading" size="0.8rem" /> : <Icon name="save" size="0.8rem" />}
+                        <span>{actionLoading ? "กำลังบันทึก..." : "ยืนยัน"}</span>
                       </button>
                       <button className={styles.pointCancelBtn} onClick={() => setSelectedUser(null)} disabled={actionLoading}>ยกเลิก</button>
                     </div>
                   </div>
-
                   <div className={styles.userDetailDivider}><span>🛒 สินค้าที่ซื้อ ({userProducts.length})</span></div>
-                  
                   <div className={styles.purchasedProducts}>
                     {userProducts.length > 0 ? (
                       userProducts.map((item, index) => (
@@ -1201,24 +1064,32 @@ export default function Admin() {
                           <div className={styles.purchasedProductInfo}>
                             <h4 className={styles.purchasedProductName}>{item.name}</h4>
                             <div className={styles.purchasedProductMeta}>
-                              <span className={styles.purchasedProductVersion}>📌 v{item.version}</span>
+                              <span className={styles.purchasedProductVersion}>
+                                <Icon name="product" size="0.7rem" /> v{item.version}
+                              </span>
                               <span className={styles.purchasedProductDate}>
-                                🗓 {new Date(item.purchaseDate).toLocaleString("th-TH", { dateStyle: "long", timeStyle: "short" })}
+                                <Icon name="calendar" size="0.7rem" /> {new Date(item.purchaseDate).toLocaleString("th-TH", { dateStyle: "long", timeStyle: "short" })}
                               </span>
                             </div>
                             <div className={styles.purchasedProductLinks}>
-                              <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className={styles.purchasedProductDownload}>📥 ดาวน์โหลด</a>
+                              <a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className={styles.purchasedProductDownload}>
+                                <Icon name="download" size="0.8rem" /> ดาวน์โหลด
+                              </a>
                               {item.discordRoleIds && item.discordRoleIds.length > 0 && (
-                                <span className={styles.purchasedProductRoles}>🎭 Role: {item.discordRoleIds.join(", ")}</span>
+                                <span className={styles.purchasedProductRoles}>
+                                  <Icon name="role" size="0.7rem" /> Role: {item.discordRoleIds.join(", ")}
+                                </span>
                               )}
                             </div>
                           </div>
-                          <button className={styles.purchasedProductRemoveBtn} onClick={() => handleRemoveProduct(item.productId, index)} disabled={actionLoading}>🗑️</button>
+                          <button className={styles.purchasedProductRemoveBtn} onClick={() => handleRemoveProduct(item.productId, index, item.name)} disabled={actionLoading}>
+                            <Icon name="delete" size="0.8rem" />
+                          </button>
                         </div>
                       ))
                     ) : (
                       <div className={styles.noProducts}>
-                        <span className={styles.noProductsIcon}>📦</span>
+                        <Icon name="product" size="2rem" />
                         <p>ยังไม่มีสินค้าที่ซื้อ</p>
                       </div>
                     )}
@@ -1228,7 +1099,6 @@ export default function Admin() {
             )}
           </>
         )}
-
       </main>
     </div>
   );
