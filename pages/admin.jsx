@@ -231,7 +231,8 @@ export default function Admin() {
   const [webhookConfig, setWebhookConfig] = useState({ discordWebhook: '', enabled: false, events: [] });
   const [savingWebhook, setSavingWebhook] = useState(false);
   const [testingWebhook, setTestingWebhook] = useState(false);
-
+  const [logPage, setLogPage] = useState(1);
+  const [logsPerPage] = useState(10);
   useEffect(() => {
     if (!session || activeTab !== "dashboard") return;
     Promise.all([axios.get("/api/items"), axios.get("/api/user/count"), axios.get("/api/user/purchase")])
@@ -359,7 +360,19 @@ export default function Admin() {
   const handleDeleteR2File = async (fileKey) => { const fileName = fileKey.split('/').pop(); const confirmed = await confirm({ title: "ยืนยันการลบ", message: `ลบ "${fileName}" จาก R2?`, confirmText: "ลบเลย", cancelText: "ยกเลิก", type: "danger" }); if (!confirmed) return; setDeletingR2File(fileKey); try { await axios.delete(`/api/admin/r2-files?key=${encodeURIComponent(fileKey)}`); success("ลบไฟล์จาก R2 สำเร็จ!"); fetchR2Files(); } catch (err) { error("ลบไฟล์ไม่สำเร็จ"); } finally { setDeletingR2File(null); } };
   useEffect(() => { if (activeTab === "r2") fetchR2Files(); }, [activeTab]);
 
-  const fetchLogs = async () => { setLoadingLogs(true); try { const res = await axios.get(`/api/admin/logs?type=${logFilter}&limit=${logLimit}`); setLogs(res.data.logs || []); } catch { error("โหลด logs ไม่สำเร็จ"); } finally { setLoadingLogs(false); } };
+  const fetchLogs = async () => {
+    setLoadingLogs(true);
+    try {
+      const res = await axios.get(`/api/admin/logs?type=${logFilter}&limit=1000`); // ดึงทั้งหมด
+      setLogs(res.data.logs || []);
+      setLogPage(1); // รีเซ็ตเป็นหน้าแรก
+    } catch { error("โหลด logs ไม่สำเร็จ"); }
+    finally { setLoadingLogs(false); }
+  };
+
+// ✅ คำนวณ Pagination
+const totalPages = Math.ceil(logs.length / logsPerPage);
+const paginatedLogs = logs.slice((logPage - 1) * logsPerPage, logPage * logsPerPage);
   
   const handleClearLogs = async () => { const confirmed = await confirm({ title: "ยืนยันการลบ", message: "ต้องการลบประวัติทั้งหมด?", confirmText: "ลบทั้งหมด", cancelText: "ยกเลิก", type: "danger" }); if (!confirmed) return; try { await axios.delete('/api/admin/logs'); success("ลบประวัติทั้งหมดแล้ว"); fetchLogs(); } catch { error("ลบไม่สำเร็จ"); } };
   
@@ -476,127 +489,141 @@ export default function Admin() {
             <button onClick={fetchLogs} className={styles.logRefreshBtn}><Icon name="refresh" size="0.8rem" /><span>รีเฟรช</span></button>
             <button onClick={handleClearLogs} className={styles.logClearBtn}><Icon name="delete" size="0.8rem" /><span>ล้างทั้งหมด</span></button>
           </div>
-          {loadingLogs ? <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>กำลังโหลด...</p></div> : logs.length === 0 ? <div className={styles.emptyState}><Icon name="history" size="3rem" /><p className={styles.emptyTitle}>ยังไม่มีประวัติ</p></div> : (<div className={styles.tableWrapper}><table className={styles.dataTable}><thead><tr><th style={{ width: '140px' }}>วันที่</th><th style={{ width: '100px' }}>ประเภท</th><th>เรื่อง</th><th style={{ width: '120px' }}>ผู้ใช้</th></tr></thead><tbody>{logs.map((log) => (<tr key={log._id}><td style={{ fontSize: '0.75rem' }}>{new Date(log.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}</td><td><span className={styles.logBadge}>{log.type === 'login' ? <><Icon name="login" size="0.7rem" /> ล็อคอิน</> : log.type === 'logout' ? <><Icon name="logout" size="0.7rem" /> ล็อคเอาท์</> : log.type === 'purchase' ? <><Icon name="cart" size="0.7rem" /> ซื้อ</> : log.type === 'topup' ? <><Icon name="money" size="0.7rem" /> เติมเงิน</> : log.type === 'product_add' ? <><Icon name="add" size="0.7rem" /> เพิ่ม</> : log.type === 'product_edit' ? <><Icon name="edit" size="0.7rem" /> แก้ไข</> : log.type === 'product_delete' ? <><Icon name="delete" size="0.7rem" /> ลบ</> : log.type === 'user_edit' ? <><Icon name="user" size="0.7rem" /> ผู้ใช้</> : log.type === 'file_upload' ? <><Icon name="upload" size="0.7rem" /> อัปโหลด</> : log.type === 'file_delete' ? <><Icon name="delete" size="0.7rem" /> ลบไฟล์</> : log.type === 'error' ? <><Icon name="error" size="0.7rem" /> ผิดพลาด</> : log.type}</span></td><td><strong>{log.title}</strong>{log.message && <><br /><small style={{ color: '#9ca3af' }}>{log.message}</small></>}</td><td style={{ fontSize: '0.8rem' }}>{log.user}</td></tr>))}</tbody></table></div>)}
-          <div style={{ marginTop: '2rem' }}>
-            {/* Webhook Settings */}
-            <div style={{ marginTop: '2rem' }}>
-              <section className={styles.header}>
-                <h1 className={styles.headerTitle}>
-                  <Icon name="settings" size="1.2rem" />
-                  <span style={{ marginLeft: "0.5rem" }}>ตั้งค่า Discord Webhook (แยกแต่ละเหตุการณ์)</span>
-                </h1>
-              </section>
+          {/* LOGS TABLE */}
+          {loadingLogs ? (
+            <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>กำลังโหลด...</p></div>
+          ) : logs.length === 0 ? (
+            <div className={styles.emptyState}><Icon name="history" size="3rem" /><p className={styles.emptyTitle}>ยังไม่มีประวัติ</p></div>
+          ) : (
+            <>
+              <div className={styles.tableWrapper}>
+                <table className={styles.dataTable}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '140px' }}>วันที่</th>
+                      <th style={{ width: '100px' }}>ประเภท</th>
+                      <th>เรื่อง</th>
+                      <th style={{ width: '120px' }}>ผู้ใช้</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedLogs.map((log) => (
+                      <tr key={log._id}>
+                        <td style={{ fontSize: '0.75rem' }}>
+                          {new Date(log.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
+                        </td>
+                        <td>
+                          <span className={styles.logBadge}>
+                            {log.type === 'login' && <><Icon name="login" size="0.7rem" /> ล็อคอิน</>}
+                            {log.type === 'logout' && <><Icon name="logout" size="0.7rem" /> ล็อคเอาท์</>}
+                            {log.type === 'purchase' && <><Icon name="cart" size="0.7rem" /> ซื้อ</>}
+                            {log.type === 'topup' && <><Icon name="money" size="0.7rem" /> เติมเงิน</>}
+                            {log.type === 'product_add' && <><Icon name="add" size="0.7rem" /> เพิ่ม</>}
+                            {log.type === 'product_edit' && <><Icon name="edit" size="0.7rem" /> แก้ไข</>}
+                            {log.type === 'product_delete' && <><Icon name="delete" size="0.7rem" /> ลบ</>}
+                            {log.type === 'user_edit' && <><Icon name="user" size="0.7rem" /> ผู้ใช้</>}
+                            {log.type === 'file_upload' && <><Icon name="upload" size="0.7rem" /> อัปโหลด</>}
+                            {log.type === 'file_delete' && <><Icon name="delete" size="0.7rem" /> ลบไฟล์</>}
+                            {log.type === 'error' && <><Icon name="error" size="0.7rem" /> ผิดพลาด</>}
+                            {!['login','logout','purchase','topup','product_add','product_edit','product_delete','user_edit','file_upload','file_delete','error'].includes(log.type) && log.type}
+                          </span>
+                        </td>
+                        <td>
+                          <strong>{log.title}</strong>
+                          {log.message && <><br /><small style={{ color: '#9ca3af' }}>{log.message}</small></>}
+                        </td>
+                        <td style={{ fontSize: '0.8rem' }}>{log.user}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-              <div className={styles.webhookForm}>
-                {/* Master Switch */}
-                <div className={styles.modalRow}>
-                  <label className={styles.modalLabel} style={{ display: 'flex', alignItems: 'center', textTransform: 'none' }}>
-                    <input
-                      type="checkbox"
-                      checked={webhookConfig.enabled}
-                      onChange={(e) => setWebhookConfig(prev => ({ ...prev, enabled: e.target.checked }))}
-                      style={{ marginRight: '0.5rem', display: 'inline-block', width: 'auto' }}
-                    />
-                    เปิดใช้งาน Webhook ทั้งหมด
-                  </label>
-                </div>
-
-                <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {[
-                    { key: 'login', label: 'ล็อคอิน', icon: 'login' },
-                    { key: 'logout', label: 'ล็อคเอาท์', icon: 'logout' },
-                    { key: 'purchase', label: 'ซื้อสินค้า', icon: 'cart' },
-                    { key: 'topup', label: 'เติมเงิน', icon: 'money' },
-                    { key: 'product_add', label: 'เพิ่มสินค้า', icon: 'add' },
-                    { key: 'product_edit', label: 'แก้ไขสินค้า', icon: 'edit' },
-                    { key: 'product_delete', label: 'ลบสินค้า', icon: 'delete' },
-                    { key: 'product_update', label: 'อัปเดตเวอร์ชัน', icon: 'refresh' },
-                    { key: 'user_edit', label: 'แก้ไขผู้ใช้', icon: 'user' },
-                    { key: 'file_upload', label: 'อัปโหลดไฟล์', icon: 'upload' },
-                    { key: 'file_delete', label: 'ลบไฟล์', icon: 'delete' },
-                    { key: 'error', label: 'ข้อผิดพลาด', icon: 'error' },
-                  ].map(event => (
-                    <div key={event.key} className={styles.webhookEventRow}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '180px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                          <input
-                            type="checkbox"
-                            checked={webhookConfig.webhooks?.[event.key]?.enabled || false}
-                            onChange={(e) => setWebhookConfig(prev => ({
-                              ...prev,
-                              webhooks: {
-                                ...prev.webhooks,
-                                [event.key]: {
-                                  ...prev.webhooks?.[event.key],
-                                  enabled: e.target.checked,
-                                },
-                              },
-                            }))}
-                            style={{ display: 'inline-block', width: 'auto' }}
-                          />
-                          <Icon name={event.icon} size="0.8rem" />
-                          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{event.label}</span>
-                        </label>
-                      </div>
-                      <input
-                        type="url"
-                        value={webhookConfig.webhooks?.[event.key]?.url || ''}
-                        onChange={(e) => setWebhookConfig(prev => ({
-                          ...prev,
-                          webhooks: {
-                            ...prev.webhooks,
-                            [event.key]: {
-                              ...prev.webhooks?.[event.key],
-                              url: e.target.value,
-                              enabled: prev.webhooks?.[event.key]?.enabled ?? true,
-                            },
-                          },
-                        }))}
-                        className={styles.modalInput}
-                        placeholder={`Webhook URL สำหรับ ${event.label}`}
-                        style={{ flex: 1 }}
-                      />
-                      {webhookConfig.webhooks?.[event.key]?.url && (
-                        <button
-                          onClick={async () => {
-                            try {
-                              setTestingWebhook(true);
-                              await axios.post(webhookConfig.webhooks[event.key].url, {
-                                embeds: [{
-                                  title: `🧪 ทดสอบ Webhook - ${event.label}`,
-                                  description: `ข้อความทดสอบสำหรับเหตุการณ์ "${event.label}"`,
-                                  color: 0x6366f1,
-                                  timestamp: new Date().toISOString(),
-                                  footer: { text: "xCloud Studio" },
-                                }],
-                              });
-                              success(`ส่งทดสอบ "${event.label}" ไป Discord แล้ว!`);
-                            } catch (err) {
-                              error("ส่งไม่สำเร็จ: " + err.message);
-                            } finally {
-                              setTestingWebhook(false);
-                            }
-                          }}
-                          disabled={testingWebhook}
-                          className={styles.cancelBtn}
-                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                        >
-                          {testingWebhook ? '⏳' : '🧪'}
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <div className={styles.modalActions}>
-                  <button onClick={handleSaveWebhook} disabled={savingWebhook} className={styles.submitBtn}>
-                    {savingWebhook ? <Icon name="loading" size="0.8rem" /> : <Icon name="save" size="0.8rem" />}
-                    <span>{savingWebhook ? 'กำลังบันทึก...' : 'บันทึกทั้งหมด'}</span>
+              {/* ✅ Pagination */}
+              {totalPages > 1 && (
+                <div className={styles.logPagination}>
+                  <button 
+                    onClick={() => setLogPage(p => Math.max(1, p - 1))}
+                    disabled={logPage === 1}
+                    className={styles.logPageBtn}
+                  >
+                    <Icon name="arrow-left" size="0.8rem" /> ก่อนหน้า
+                  </button>
+                  
+                  <span className={styles.logPageInfo}>
+                    หน้า {logPage} / {totalPages} (ทั้งหมด {logs.length} รายการ)
+                  </span>
+                  
+                  <button 
+                    onClick={() => setLogPage(p => Math.min(totalPages, p + 1))}
+                    disabled={logPage === totalPages}
+                    className={styles.logPageBtn}
+                  >
+                    ถัดไป <Icon name="arrow-right" size="0.8rem" />
                   </button>
                 </div>
+              )}
+            </>
+          )}
+
+          {/* ✅ Webhook Settings - ไม่มี div ซ้ำ */}
+          <div style={{ marginTop: '2rem' }}>
+            <section className={styles.header}>
+              <h1 className={styles.headerTitle}>
+                <Icon name="settings" size="1.2rem" />
+                <span style={{ marginLeft: "0.5rem" }}>ตั้งค่า Discord Webhook (แยกแต่ละเหตุการณ์)</span>
+              </h1>
+            </section>
+
+            <div className={styles.webhookForm}>
+              {/* Master Switch */}
+              <div className={styles.modalRow}>
+                <label className={styles.modalLabel} style={{ display: 'flex', alignItems: 'center', textTransform: 'none' }}>
+                  <input type="checkbox" checked={webhookConfig.enabled} onChange={(e) => setWebhookConfig(prev => ({ ...prev, enabled: e.target.checked }))} style={{ marginRight: '0.5rem', display: 'inline-block', width: 'auto' }} />
+                  เปิดใช้งาน Webhook ทั้งหมด
+                </label>
+              </div>
+
+              <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {[
+                  { key: 'login', label: 'ล็อคอิน', icon: 'login' },
+                  { key: 'logout', label: 'ล็อคเอาท์', icon: 'logout' },
+                  { key: 'purchase', label: 'ซื้อสินค้า', icon: 'cart' },
+                  { key: 'topup', label: 'เติมเงิน', icon: 'money' },
+                  { key: 'product_add', label: 'เพิ่มสินค้า', icon: 'add' },
+                  { key: 'product_edit', label: 'แก้ไขสินค้า', icon: 'edit' },
+                  { key: 'product_delete', label: 'ลบสินค้า', icon: 'delete' },
+                  { key: 'product_update', label: 'อัปเดตเวอร์ชัน', icon: 'refresh' },
+                  { key: 'user_edit', label: 'แก้ไขผู้ใช้', icon: 'user' },
+                  { key: 'file_upload', label: 'อัปโหลดไฟล์', icon: 'upload' },
+                  { key: 'file_delete', label: 'ลบไฟล์', icon: 'delete' },
+                  { key: 'error', label: 'ข้อผิดพลาด', icon: 'error' },
+                ].map(event => (
+                  <div key={event.key} className={styles.webhookEventRow}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '180px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        <input type="checkbox" checked={webhookConfig.webhooks?.[event.key]?.enabled || false} onChange={(e) => setWebhookConfig(prev => ({ ...prev, webhooks: { ...prev.webhooks, [event.key]: { ...prev.webhooks?.[event.key], enabled: e.target.checked } } }))} style={{ display: 'inline-block', width: 'auto' }} />
+                        <Icon name={event.icon} size="0.8rem" />
+                        <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{event.label}</span>
+                      </label>
+                    </div>
+                    <input type="url" value={webhookConfig.webhooks?.[event.key]?.url || ''} onChange={(e) => setWebhookConfig(prev => ({ ...prev, webhooks: { ...prev.webhooks, [event.key]: { ...prev.webhooks?.[event.key], url: e.target.value, enabled: prev.webhooks?.[event.key]?.enabled ?? true } } }))} className={styles.modalInput} placeholder={`Webhook URL สำหรับ ${event.label}`} style={{ flex: 1 }} />
+                    {webhookConfig.webhooks?.[event.key]?.url && (
+                      <button onClick={async () => { try { setTestingWebhook(true); await axios.post(webhookConfig.webhooks[event.key].url, { embeds: [{ title: `🧪 ทดสอบ - ${event.label}`, description: `ทดสอบสำหรับ "${event.label}"`, color: 0x6366f1, timestamp: new Date().toISOString(), footer: { text: "xCloud Studio" } }] }); success(`ส่งทดสอบ "${event.label}" แล้ว!`); } catch (err) { error("ส่งไม่สำเร็จ: " + err.message); } finally { setTestingWebhook(false); } }} disabled={testingWebhook} className={styles.cancelBtn} style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>{testingWebhook ? '⏳' : '🧪'}</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.modalActions}>
+                <button onClick={handleSaveWebhook} disabled={savingWebhook} className={styles.submitBtn}>
+                  {savingWebhook ? <Icon name="loading" size="0.8rem" /> : <Icon name="save" size="0.8rem" />}
+                  <span>{savingWebhook ? 'กำลังบันทึก...' : 'บันทึกทั้งหมด'}</span>
+                </button>
               </div>
             </div>
           </div>
+          {/* ✅ จบ Webhook */}
         </>)}
       </main>
     </div>

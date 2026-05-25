@@ -1609,3 +1609,49 @@
   margin: 0;
   cursor: pointer;
 }
+
+
+/* Log Pagination */
+.logPagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(30, 35, 50, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.logPageBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+
+.logPageBtn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+.logPageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.logPageInfo {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
