@@ -916,7 +916,7 @@ export default function Admin() {
           </>
         )}
 
-        {/* UPLOADS */}
+        {/* ==================== UPLOADS ==================== */}
         {activeTab === "uploads" && (
           <>
             <section className={styles.header}>
@@ -925,22 +925,24 @@ export default function Admin() {
                 <span style={{ marginLeft: "0.5rem" }}>อัปโหลดไฟล์</span>
               </h1>
             </section>
+
+            {/* ✅ ใช้ R2Uploader แทนการอัปโหลดแบบเดิม */}
             <div className={styles.uploadSection}>
-              <label className={`custom-file-upload ${uploading ? 'uploading' : ''} ${selectedFile ? 'has-file' : ''}`}>
-                {uploading ? (
-                  <><span>⏳ กำลังอัปโหลด...</span><div className={styles.uploadProgressBar}><div className={styles.uploadProgressFill}></div></div></>
-                ) : selectedFile ? (
-                  <><span>✅ {selectedFile.name}</span><small>({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)</small></>
-                ) : (
-                  <><span>📤 คลิกเพื่อเลือกไฟล์</span><small>รองรับทุกประเภทไฟล์ (สูงสุด 2GB)</small></>
-                )}
-                <input type="file" onChange={(e) => setSelectedFile(e.target.files[0])} disabled={uploading} />
-              </label>
-              {selectedFile && !uploading && <button onClick={() => setSelectedFile(null)} className={styles.cancelBtn}>✕ ยกเลิก</button>}
-              <button onClick={handleUpload} disabled={!selectedFile || uploading} className={styles.addButton}>
-                {uploading ? "⏳ กำลังอัปโหลด..." : <><Icon name="upload" size="0.8rem" /><span>อัปโหลด</span></>}
-              </button>
+              <R2Uploader
+                onUploadComplete={(publicUrl) => {
+                  success("อัปโหลดไฟล์ไป R2 สำเร็จ!");
+                  fetchImages(); // รีเฟรชรายการ
+                }}
+                accept="*/*"
+                maxSize={5000}
+              />
+              
+              <small style={{ color: '#6b7280', fontSize: '0.8rem', display: 'block', marginTop: '0.5rem' }}>
+                💡 รองรับทุกประเภทไฟล์ อัปโหลดตรงไป Cloudflare R2 (สูงสุด 5GB)
+              </small>
             </div>
+
+            {/* Gallery - จัดหมวดหมู่ */}
             {images.length > 0 && (
               <div className={styles.galleryContainer}>
                 {groupFilesByCategory(images).map((category) => (
@@ -950,28 +952,56 @@ export default function Admin() {
                       <span className={styles.galleryCategoryLabel}>{category.label}</span>
                       <span className={styles.galleryCategoryCount}>{category.files.length} ไฟล์</span>
                     </div>
+                    
                     <div className={styles.galleryGrid}>
                       {category.files.map((file) => (
                         <div key={file.url} className={styles.galleryItem}>
                           {isImageFile(file.fileName) ? (
-                            <div className={styles.galleryImageWrapper}><img src={file.url} alt={file.fileName} className={styles.galleryThumb} loading="lazy" /></div>
+                            <div className={styles.galleryImageWrapper}>
+                              <img src={file.url} alt={file.fileName} className={styles.galleryThumb} loading="lazy" />
+                            </div>
                           ) : (
                             <div className={styles.galleryFileWrapper}>
-                              <Icon name="file" size="1.5rem" />
+                              <Icon name="file" size="2rem" />
                               <span className={styles.galleryFileName}>{file.fileName}</span>
                             </div>
                           )}
+                          
                           <div className={styles.galleryItemInfo}>
-                            <input type="text" value={file.url} readOnly className={styles.galleryUrl} onClick={(e) => e.target.select()} />
+                            <input 
+                              type="text" 
+                              value={file.url} 
+                              readOnly 
+                              className={styles.galleryUrl} 
+                              onClick={(e) => e.target.select()} 
+                            />
                             <div className={styles.galleryActions}>
-                              <button onClick={() => { navigator.clipboard.writeText(file.url); success("คัดลอกลิงก์แล้ว!"); }} className={styles.galleryCopyBtn}>
+                              <button 
+                                onClick={() => { 
+                                  navigator.clipboard.writeText(file.url); 
+                                  success("คัดลอกลิงก์แล้ว!"); 
+                                }}
+                                className={styles.galleryCopyBtn}
+                                title="คัดลอกลิงก์"
+                              >
                                 <Icon name="copy" size="0.8rem" />
                               </button>
-                              <a href={file.url} target="_blank" rel="noopener noreferrer" className={styles.galleryOpenBtn}>
+                              <a 
+                                href={file.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className={styles.galleryOpenBtn}
+                                title="เปิดในแท็บใหม่"
+                              >
                                 <Icon name="link" size="0.8rem" />
                               </a>
-                              <button onClick={() => handleDeleteFile(file.fileName)} disabled={deletingFile === file.fileName} className={styles.galleryDeleteBtn}>
-                                {deletingFile === file.fileName ? <Icon name="loading" size="0.8rem" /> : <Icon name="delete" size="0.8rem" />}
+                              <button 
+                                onClick={() => handleDeleteFile(file.fileName)}
+                                disabled={deletingFile === file.fileName}
+                                className={styles.galleryDeleteBtn}
+                                title="ลบไฟล์"
+                              >
+                                {deletingFile === file.fileName ? '⏳' : '🗑️'}
                               </button>
                             </div>
                           </div>
@@ -982,11 +1012,13 @@ export default function Admin() {
                 ))}
               </div>
             )}
-            {images.length === 0 && !uploading && (
+
+            {/* Empty State */}
+            {images.length === 0 && (
               <div className={styles.emptyState}>
                 <Icon name="file" size="3rem" />
                 <p className={styles.emptyTitle}>ยังไม่มีไฟล์ที่อัปโหลด</p>
-                <p className={styles.emptyText}>เลือกไฟล์แล้วคลิกอัปโหลด</p>
+                <p className={styles.emptyText}>เลือกไฟล์แล้วอัปโหลดผ่าน R2</p>
               </div>
             )}
           </>
