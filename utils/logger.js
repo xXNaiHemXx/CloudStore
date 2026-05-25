@@ -16,34 +16,14 @@ const LOG_TYPES = {
   ERROR: 'error',
 };
 
-/**
- * ฟอร์แมต Discord ID เป็น Mention
- * @param {string} discordId - Discord User ID
- * @returns {string} <@discordId>
- */
 function formatMention(discordId) {
-  if (!discordId) return 'Unknown';
+  if (!discordId) return null;
   return `<@${discordId}>`;
 }
 
-/**
- * ฟอร์แมต Role IDs เป็น Mention
- * @param {string[]} roleIds - Array of Role IDs
- * @returns {string} <@&roleId>
- */
 function formatRoleMentions(roleIds) {
-  if (!roleIds || roleIds.length === 0) return 'ไม่มี Role';
-  return roleIds.map(id => `<@&${id}>`).join(', ');
-}
-
-/**
- * ดึง Username + Discord ID
- */
-function getUserDisplay(userName, discordId) {
-  if (discordId) {
-    return `${userName || 'Unknown'} (${formatMention(discordId)})`;
-  }
-  return userName || 'System';
+  if (!roleIds || roleIds.length === 0) return null;
+  return roleIds.map(id => `<@&${id}>`).join('\n');
 }
 
 async function addLog(type, title, message, user = 'System', details = {}) {
@@ -82,61 +62,140 @@ async function sendWebhook(type, title, message, user, details) {
 
     const color = colors[type] || 0x6366f1;
 
-    // ✅ สร้าง fields จาก details
-    const fields = [];
-    
+    // ✅ สร้าง Description แบบสวยงาม
+    let description = message;
+
+    // ✅ เพิ่ม Discord Mention ถ้ามี
     if (details.discordId) {
-      fields.push({ name: '👤 Discord User', value: formatMention(details.discordId), inline: true });
+      description += `\n\n👤 **Discord:** ${formatMention(details.discordId)}`;
     }
-    if (details.productName) {
-      fields.push({ name: '📦 สินค้า', value: details.productName, inline: true });
+
+    // ✅ สร้าง Fields
+    const fields = [];
+
+    // --- PURCHASE ---
+    if (type === 'purchase') {
+      if (details.productName) {
+        fields.push({ name: '📦 สินค้า', value: details.productName, inline: true });
+      }
+      if (details.price !== undefined) {
+        fields.push({ name: '💰 ราคา', value: `${details.price.toLocaleString()} Point`, inline: true });
+      }
+      if (details.version) {
+        fields.push({ name: '📌 เวอร์ชัน', value: `v${details.version}`, inline: true });
+      }
+      if (details.roleIds && details.roleIds.length > 0) {
+        fields.push({ 
+          name: '🎭 Role ที่ได้รับ', 
+          value: formatRoleMentions(details.roleIds) || 'ไม่มี', 
+          inline: false 
+        });
+      }
     }
-    if (details.price) {
-      fields.push({ name: '💰 ราคา', value: `${details.price.toLocaleString()} Point`, inline: true });
+
+    // --- TOPUP ---
+    if (type === 'topup') {
+      if (details.amount !== undefined) {
+        fields.push({ name: '💵 จำนวนเงิน', value: `${details.amount.toLocaleString()} บาท`, inline: true });
+        fields.push({ name: '💎 Point ที่ได้รับ', value: `${details.amount.toLocaleString()} Point`, inline: true });
+      }
     }
-    if (details.amount) {
-      fields.push({ name: '💵 จำนวนเงิน', value: `${details.amount.toLocaleString()} บาท`, inline: true });
+
+    // --- PRODUCT ADD/EDIT ---
+    if (type === 'product_add' || type === 'product_edit') {
+      if (details.productName) {
+        fields.push({ name: '📦 สินค้า', value: details.productName, inline: true });
+      }
+      if (details.price !== undefined) {
+        fields.push({ name: '💰 ราคา', value: `${details.price.toLocaleString()} Point`, inline: true });
+      }
+      if (details.version) {
+        fields.push({ name: '📌 เวอร์ชัน', value: `v${details.version}`, inline: true });
+      }
+      if (details.roleIds && details.roleIds.length > 0) {
+        fields.push({ 
+          name: '🎭 Auto Role', 
+          value: formatRoleMentions(details.roleIds) || 'ไม่มี', 
+          inline: false 
+        });
+      }
     }
-    if (details.version) {
-      fields.push({ name: '📌 เวอร์ชัน', value: `v${details.version}`, inline: true });
+
+    // --- PRODUCT DELETE ---
+    if (type === 'product_delete') {
+      if (details.productName) {
+        fields.push({ name: '📦 สินค้า', value: details.productName, inline: true });
+      }
     }
-    if (details.oldVersion) {
-      fields.push({ name: '📌 เวอร์ชันเก่า', value: `v${details.oldVersion}`, inline: true });
+
+    // --- PRODUCT UPDATE ---
+    if (type === 'product_update') {
+      if (details.productName) {
+        fields.push({ name: '📦 สินค้า', value: details.productName, inline: true });
+      }
+      if (details.version) {
+        fields.push({ name: '📌 เวอร์ชันใหม่', value: `v${details.version}`, inline: true });
+      }
     }
-    if (details.newVersion) {
-      fields.push({ name: '📌 เวอร์ชันใหม่', value: `v${details.newVersion}`, inline: true });
+
+    // --- USER EDIT ---
+    if (type === 'user_edit') {
+      if (details.discordId) {
+        fields.push({ name: '👤 Discord ID', value: details.discordId, inline: true });
+      }
+      if (details.oldPoints !== undefined) {
+        fields.push({ name: '💎 แต้มก่อนหน้า', value: `${details.oldPoints.toLocaleString()} Point`, inline: true });
+      }
+      if (details.newPoints !== undefined) {
+        fields.push({ name: '💎 แต้มใหม่', value: `${details.newPoints.toLocaleString()} Point`, inline: true });
+      }
+      if (details.email) {
+        fields.push({ name: '📧 Email', value: details.email, inline: true });
+      }
     }
-    if (details.roleIds && details.roleIds.length > 0) {
-      fields.push({ name: '🎭 Role ที่ได้รับ', value: formatRoleMentions(details.roleIds), inline: false });
+
+    // --- FILE UPLOAD/DELETE ---
+    if (type === 'file_upload' || type === 'file_delete') {
+      if (details.fileName) {
+        fields.push({ name: '📁 ไฟล์', value: details.fileName, inline: true });
+      }
+      if (details.fileSize) {
+        fields.push({ name: '📏 ขนาด', value: details.fileSize, inline: true });
+      }
     }
-    if (details.fileName) {
-      fields.push({ name: '📁 ไฟล์', value: details.fileName, inline: true });
+
+    // --- ERROR ---
+    if (type === 'error') {
+      if (details.error) {
+        fields.push({ 
+          name: '❌ รายละเอียดข้อผิดพลาด', 
+          value: '```' + String(details.error).substring(0, 1000) + '```', 
+          inline: false 
+        });
+      }
     }
-    if (details.points) {
-      fields.push({ name: '💎 แต้ม', value: `${details.points.toLocaleString()} Point`, inline: true });
-    }
-    if (details.oldPoints !== undefined) {
-      fields.push({ name: '💎 แต้มก่อนหน้า', value: `${details.oldPoints.toLocaleString()} Point`, inline: true });
-    }
-    if (details.newPoints !== undefined) {
-      fields.push({ name: '💎 แต้มใหม่', value: `${details.newPoints.toLocaleString()} Point`, inline: true });
-    }
-    if (details.email) {
-      fields.push({ name: '📧 Email', value: details.email, inline: true });
-    }
-    if (details.error) {
-      fields.push({ name: '❌ Error', value: String(details.error).substring(0, 1024), inline: false });
+
+    // ✅ ส่งไป Discord
+    const embed = {
+      title: title,
+      description: description || undefined,
+      color: color,
+      timestamp: new Date().toISOString(),
+      footer: { 
+        text: user,
+        icon_url: 'https://cdn.discordapp.com/emojis/1234567890.png' // optional
+      },
+    };
+
+    if (fields.length > 0) {
+      embed.fields = fields;
     }
 
     await axios.post(eventWebhook.url, {
-      embeds: [{
-        title: `${title}`,
-        description: message,
-        color: color,
-        timestamp: new Date().toISOString(),
-        footer: { text: user },
-        fields: fields.length > 0 ? fields : undefined,
-      }],
+      embeds: [embed],
+      // ✅ ถ้ามี Discord ID ให้ @mention (แต่จะไม่ส่ง notification ถ้าเป็น webhook)
+      content: details.discordId ? formatMention(details.discordId) : undefined,
+      allowed_mentions: details.discordId ? { users: [details.discordId] } : undefined,
     });
 
   } catch (err) {
@@ -144,4 +203,4 @@ async function sendWebhook(type, title, message, user, details) {
   }
 }
 
-export { addLog, LOG_TYPES, formatMention, formatRoleMentions, getUserDisplay };
+export { addLog, LOG_TYPES };
