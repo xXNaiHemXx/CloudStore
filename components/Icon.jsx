@@ -90,6 +90,7 @@ export default function Icon({ name, size = "1rem", color = "currentColor" }) {
     "pending": "fi-rr-clock",            // ⏳ รอดำเนินการ
     "new": "fi-rr-sparkles",             // ✨ ใหม่
     "sort": "fi-rr-sort",                // 🔤 เรียงลำดับ
+    "cloud": "fi-rr-cloud",              // ☁️ คลาวด์
   };
 
   const iconClass = iconMap[name] || "fi-rr-question";
