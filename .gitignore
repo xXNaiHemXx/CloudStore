@@ -1,5 +1,4 @@
-
-*.scs
 .next
 node_modules
 .env.local
+*.scs
