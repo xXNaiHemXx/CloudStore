@@ -550,11 +550,15 @@ export default function Admin() {
   
   const fetchImages = async () => {
     try {
-      const res = await axios.get("/api/upload"); // ✅ ใช้ /api/upload (GET)
-      setImages(res.data || []);
+      const res = await axios.get("/api/upload");
+      const files = res.data || [];
+      console.log("📁 Files loaded:", files); // debug
+      setImages(files.map(url => ({
+        url: url,                           // /uploads/filename.jpg
+        fileName: url.replace('/uploads/', ''),
+      })));
     } catch (err) { 
-      console.error("ไม่สามารถโหลดรูปภาพได้:", err);
-      error("ไม่สามารถโหลดรูปภาพได้"); 
+      console.error("❌ Error:", err);
     }
   };
   useEffect(() => {
