@@ -58,7 +58,16 @@ export default function Profile() {
     finally { setCheckingUpdates(false); }
   };
 
-  useEffect(() => { if (session && activeTab === 'products') { const timer = setTimeout(() => checkForUpdates(false), 500); return () => clearTimeout(timer); } }, [session, activeTab, myProducts]);
+  useEffect(() => {
+  if (!session || activeTab !== 'products') return;
+  
+  // ✅ ตรวจสอบอัปเดตอัตโนมัติ (รอ 2 วิ ให้ข้อมูลโหลดเสร็จ)
+  const timer = setTimeout(() => {
+      checkForUpdates(false);
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, [session, activeTab, myProducts.length]); 
   useEffect(() => { if (session && activeTab === 'products' && myProducts.length > 0) checkForUpdates(false); }, [myProducts.length]);
 
   const downloadUpdate = async (productId, productName) => {
