@@ -1,1 +1,53 @@
-{"discordWebhook":"","enabled":false,"events":["login","purchase","topup","product_add","error"]}
+{
+  "enabled": true,
+  "webhooks": {
+    "login": {
+      "url": "https://discord.com/api/webhooks/1508603854608924863/HYp9ZbLv7D376pRV3OqubbAHW4E5pfPFKMP73-IfOhyuaMZp_cvJRhtUj6jZRBf6sexU",
+      "enabled": true
+    },
+    "logout": {
+      "url": "https://discord.com/api/webhooks/1508603973181898884/RXnFnK33qvUbkDBipr_viF0mwWokMqhpaPdOn0wF9cUHQoMzoZ_zZ6DDpUyTge5xcMel",
+      "enabled": true
+    },
+    "purchase": {
+      "url": "https://discord.com/api/webhooks/1508604067046494383/jic8KaAm5NDsDc3UcpzvO9gHGut88H_O3naCTyhjX0vIdVWdratiuLI3qppkd0cbM5jM",
+      "enabled": true
+    },
+    "topup": {
+      "url": "https://discord.com/api/webhooks/1508604138659774534/QKhP8ap4FelHEvijr3AKLVIVwzel1B3vWnnxUexYFkKiz1pWcyk1oGR-Ehu5IZVE9sMn",
+      "enabled": true
+    },
+    "product_add": {
+      "url": "https://discord.com/api/webhooks/1508604194989543525/phHoGvQBWXI9963nQpRh4YZO0cfjygzCAIUw73CWwfL_yv_6eRvQp9f-BVKwtwg8CU03",
+      "enabled": true
+    },
+    "product_edit": {
+      "url": "https://discord.com/api/webhooks/1508604262664376477/3LovDAdUF4eFXsTZper0U6sCcUSR4F4c-e9tx41EGwEGcOM0DrUtsln-ugCpjN3yTv7W",
+      "enabled": true
+    },
+    "product_delete": {
+      "url": "https://discord.com/api/webhooks/1508604445540483132/bcwNO76YT7RivFQvODQ2BIb67aeN3iaB9l8_xjeEDgOhyZ_-eiAez9B0hdKHI8uTq_lU",
+      "enabled": true
+    },
+    "product_update": {
+      "url": "https://discord.com/api/webhooks/1508607525380161536/JNW7fqx5r9WqptDQXm3x_MRi_oE7FYnJfvqgA_H52i9EMpt4ZC49h0BahScjoz46Br7f",
+      "enabled": true
+    },
+    "user_edit": {
+      "url": "https://discord.com/api/webhooks/1508604529770364958/78swQogIAAKheh72VCnSNgDfEs0ypm-VayGAVt_Al5xmMNl0eZzuA8bOVxC3qT5hTnur",
+      "enabled": true
+    },
+    "file_upload": {
+      "url": "https://discord.com/api/webhooks/1508607686185582763/5hUQC--Nm99iJxd5lWi3O9BuRqzVNVWcIULuSb6pRRSMgD7JgDqHx4PX5SsjfA2iZwQ1",
+      "enabled": true
+    },
+    "file_delete": {
+      "url": "https://discord.com/api/webhooks/1508607768381096058/mK7EEMyskZwCV94qQdwdWO435vaNIbJn3Ida3nzoGdKJbDNK_ZBEx5foX3rDe0xyDdpE",
+      "enabled": true
+    },
+    "error": {
+      "url": "https://discord.com/api/webhooks/1508604588322853044/LcNYvtCfOKwYH7_RPPhZVjtHG3v5_Uutc-wYIX2c7_t_8AHVB0MUnHTiiyOMSTL9xYET",
+      "enabled": true
+    }
+  }
+}
