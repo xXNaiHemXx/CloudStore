@@ -414,7 +414,7 @@ export default function Admin() {
           <div className={styles.userGrid}>{users.map(user => (<div key={user.id} className={styles.userCard} onClick={() => handleSelectUser(user)}><div className={styles.userInfoLeft}><h2 className={styles.userNameCard}>{user.name}</h2><p><Icon name="coin" size="0.7rem" /> {user.points?.toLocaleString() || 0} point</p></div><div className={styles.userInfoRight}><p>{user.email}</p><p className={styles.userDetailLink}><Icon name="info" size="0.7rem" /> ดูข้อมูลเพิ่มเติม →</p></div></div>))}</div>
           {selectedUser && (<div className={styles.modalOverlay} onClick={() => !actionLoading && setSelectedUser(null)}><div className={styles.userDetailModal} onClick={(e) => e.stopPropagation()}><button className={styles.modalCloseBtn} onClick={() => setSelectedUser(null)} disabled={actionLoading}><Icon name="close" size="0.8rem" /></button><div className={styles.userDetailHeader}><div className={styles.userAvatarLarge}>{selectedUser.name?.charAt(0)?.toUpperCase() || '?'}</div><div><h2 className={styles.userDetailName}>{selectedUser.name}</h2><p className={styles.userDetailEmail}>{selectedUser.email}</p></div></div><div className={styles.userInfoCards}><div className={styles.userInfoCard}><Icon name="user" size="1.2rem" /><div><p className={styles.userInfoCardLabel}>Discord ID</p><p className={styles.userInfoCardValue}>{selectedUser.id}</p></div></div><div className={styles.userInfoCard}><Icon name="coin" size="1.2rem" /><div><p className={styles.userInfoCardLabel}>Points คงเหลือ</p><p className={styles.userInfoCardValueHighlight}>{selectedUser.points?.toLocaleString() || 0} Point</p></div></div></div><div className={styles.userDetailDivider}><span><Icon name="settings" size="0.7rem" /> จัดการแต้ม</span></div><div className={styles.pointAdjustSection}><div className={styles.pointAdjustInput}><label className={styles.pointAdjustLabel}>จำนวนที่ต้องการเพิ่ม/ลด</label><input type="number" className={styles.pointInput} value={changeAmount} onChange={(e) => setChangeAmount(e.target.value)} min="1" /></div><div className={styles.pointAdjustButtons}><button className={styles.pointAddBtn} onClick={() => applyPointChange("add")} disabled={actionLoading}><Icon name="add" size="0.8rem" /> เพิ่มแต้ม</button><button className={styles.pointSubtractBtn} onClick={() => applyPointChange("subtract")} disabled={actionLoading}><Icon name="remove" size="0.8rem" /> ลบแต้ม</button></div><div className={styles.pointPreview}><span className={styles.pointPreviewLabel}>แต้มใหม่</span><span className={styles.pointPreviewValue}>{proposedPoints?.toLocaleString() || 0} Point</span></div><div className={styles.pointActionButtons}><button className={styles.pointSaveBtn} onClick={handleSavePoints} disabled={actionLoading}>{actionLoading ? <Icon name="loading" size="0.8rem" /> : <Icon name="save" size="0.8rem" />}<span>{actionLoading ? "กำลังบันทึก..." : "ยืนยัน"}</span></button><button className={styles.pointCancelBtn} onClick={() => setSelectedUser(null)} disabled={actionLoading}>ยกเลิก</button></div></div><div className={styles.userDetailDivider}><span><Icon name="cart" size="0.7rem" /> สินค้าที่ซื้อ ({userProducts.length})</span></div><div className={styles.purchasedProducts}>{userProducts.length > 0 ? userProducts.map((item, index) => (<div key={index} className={styles.purchasedProductCard}><div className={styles.purchasedProductInfo}><h4 className={styles.purchasedProductName}>{item.name}</h4><div className={styles.purchasedProductMeta}><span className={styles.purchasedProductVersion}><Icon name="product" size="0.7rem" /> v{item.version}</span><span className={styles.purchasedProductDate}><Icon name="calendar" size="0.7rem" /> {new Date(item.purchaseDate).toLocaleString("th-TH", { dateStyle: "long", timeStyle: "short" })}</span></div><div className={styles.purchasedProductLinks}><a href={item.fileUrl} target="_blank" rel="noopener noreferrer" className={styles.purchasedProductDownload}><Icon name="download" size="0.8rem" /> ดาวน์โหลด</a>{item.discordRoleIds?.length > 0 && <span className={styles.purchasedProductRoles}><Icon name="role" size="0.7rem" /> Role: {item.discordRoleIds.join(", ")}</span>}</div></div><button className={styles.purchasedProductRemoveBtn} onClick={() => handleRemoveProduct(item.productId, index, item.name)} disabled={actionLoading}><Icon name="delete" size="0.8rem" /></button></div>)) : <div className={styles.noProducts}><Icon name="product" size="2rem" /><p>ยังไม่มีสินค้าที่ซื้อ</p></div>}</div></div></div>)}
         </>)}
-
+            
         {/* LOGS + WEBHOOK */}
         {activeTab === "logs" && (<>
           <section className={styles.header}><h1 className={styles.headerTitle}><Icon name="history" size="1.2rem" /><span style={{ marginLeft: "0.5rem" }}>ประวัติการทำงาน (Logs)</span></h1></section>
@@ -438,12 +438,123 @@ export default function Admin() {
           </div>
           {loadingLogs ? <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>กำลังโหลด...</p></div> : logs.length === 0 ? <div className={styles.emptyState}><Icon name="history" size="3rem" /><p className={styles.emptyTitle}>ยังไม่มีประวัติ</p></div> : (<div className={styles.tableWrapper}><table className={styles.dataTable}><thead><tr><th style={{ width: '140px' }}>วันที่</th><th style={{ width: '100px' }}>ประเภท</th><th>เรื่อง</th><th style={{ width: '120px' }}>ผู้ใช้</th></tr></thead><tbody>{logs.map((log) => (<tr key={log._id}><td style={{ fontSize: '0.75rem' }}>{new Date(log.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}</td><td><span className={styles.logBadge}>{log.type === 'login' ? <><Icon name="login" size="0.7rem" /> ล็อคอิน</> : log.type === 'logout' ? <><Icon name="logout" size="0.7rem" /> ล็อคเอาท์</> : log.type === 'purchase' ? <><Icon name="cart" size="0.7rem" /> ซื้อ</> : log.type === 'topup' ? <><Icon name="money" size="0.7rem" /> เติมเงิน</> : log.type === 'product_add' ? <><Icon name="add" size="0.7rem" /> เพิ่ม</> : log.type === 'product_edit' ? <><Icon name="edit" size="0.7rem" /> แก้ไข</> : log.type === 'product_delete' ? <><Icon name="delete" size="0.7rem" /> ลบ</> : log.type === 'user_edit' ? <><Icon name="user" size="0.7rem" /> ผู้ใช้</> : log.type === 'file_upload' ? <><Icon name="upload" size="0.7rem" /> อัปโหลด</> : log.type === 'file_delete' ? <><Icon name="delete" size="0.7rem" /> ลบไฟล์</> : log.type === 'error' ? <><Icon name="error" size="0.7rem" /> ผิดพลาด</> : log.type}</span></td><td><strong>{log.title}</strong>{log.message && <><br /><small style={{ color: '#9ca3af' }}>{log.message}</small></>}</td><td style={{ fontSize: '0.8rem' }}>{log.user}</td></tr>))}</tbody></table></div>)}
           <div style={{ marginTop: '2rem' }}>
-            <section className={styles.header}><h1 className={styles.headerTitle}><Icon name="settings" size="1.2rem" /><span style={{ marginLeft: "0.5rem" }}>ตั้งค่า Discord Webhook</span></h1></section>
-            <div className={styles.webhookForm}>
-              <div className={styles.modalRow}><label className={styles.modalLabel}>Discord Webhook URL</label><input type="url" value={webhookConfig.discordWebhook} onChange={(e) => setWebhookConfig(prev => ({ ...prev, discordWebhook: e.target.value }))} className={styles.modalInput} placeholder="https://discord.com/api/webhooks/..." /></div>
-              <div className={styles.modalRow}><label className={styles.modalLabel} style={{ display: 'flex', alignItems: 'center', textTransform: 'none' }}><input type="checkbox" checked={webhookConfig.enabled} onChange={(e) => setWebhookConfig(prev => ({ ...prev, enabled: e.target.checked }))} style={{ marginRight: '0.5rem', display: 'inline-block', width: 'auto' }} /> เปิดใช้งาน Webhook</label></div>
-              <div className={styles.modalRow}><label className={styles.modalLabel}>แจ้งเตือนเมื่อเกิดเหตุการณ์:</label><div className={styles.webhookEvents}>{['login', 'logout', 'purchase', 'topup', 'product_add', 'product_edit', 'product_delete', 'user_edit', 'error'].map(key => (<label key={key} className={styles.webhookEventCheckbox}><input type="checkbox" checked={webhookConfig.events?.includes(key)} onChange={(e) => { const events = e.target.checked ? [...(webhookConfig.events || []), key] : (webhookConfig.events || []).filter(k => k !== key); setWebhookConfig(prev => ({ ...prev, events })); }} /><span>{key === 'login' ? <><Icon name="login" size="0.7rem" /> ล็อคอิน</> : key === 'logout' ? <><Icon name="logout" size="0.7rem" /> ล็อคเอาท์</> : key === 'purchase' ? <><Icon name="cart" size="0.7rem" /> ซื้อสินค้า</> : key === 'topup' ? <><Icon name="money" size="0.7rem" /> เติมเงิน</> : key === 'product_add' ? <><Icon name="add" size="0.7rem" /> เพิ่มสินค้า</> : key === 'product_edit' ? <><Icon name="edit" size="0.7rem" /> แก้ไขสินค้า</> : key === 'product_delete' ? <><Icon name="delete" size="0.7rem" /> ลบสินค้า</> : key === 'user_edit' ? <><Icon name="user" size="0.7rem" /> แก้ไขผู้ใช้</> : <><Icon name="error" size="0.7rem" /> ข้อผิดพลาด</>}</span></label>))}</div></div>
-              <div className={styles.modalActions}><button onClick={handleTestWebhook} disabled={testingWebhook} className={styles.cancelBtn}>{testingWebhook ? <><Icon name="loading" size="0.8rem" />...</> : <><Icon name="bell" size="0.8rem" /> ทดสอบ</>}</button><button onClick={handleSaveWebhook} disabled={savingWebhook} className={styles.submitBtn}>{savingWebhook ? <><Icon name="loading" size="0.8rem" />...</> : <><Icon name="save" size="0.8rem" /> บันทึก</>}</button></div>
+            {/* Webhook Settings */}
+            <div style={{ marginTop: '2rem' }}>
+              <section className={styles.header}>
+                <h1 className={styles.headerTitle}>
+                  <Icon name="settings" size="1.2rem" />
+                  <span style={{ marginLeft: "0.5rem" }}>ตั้งค่า Discord Webhook (แยกแต่ละเหตุการณ์)</span>
+                </h1>
+              </section>
+
+              <div className={styles.webhookForm}>
+                {/* Master Switch */}
+                <div className={styles.modalRow}>
+                  <label className={styles.modalLabel} style={{ display: 'flex', alignItems: 'center', textTransform: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={webhookConfig.enabled}
+                      onChange={(e) => setWebhookConfig(prev => ({ ...prev, enabled: e.target.checked }))}
+                      style={{ marginRight: '0.5rem', display: 'inline-block', width: 'auto' }}
+                    />
+                    เปิดใช้งาน Webhook ทั้งหมด
+                  </label>
+                </div>
+
+                <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {[
+                    { key: 'login', label: 'ล็อคอิน', icon: 'login' },
+                    { key: 'logout', label: 'ล็อคเอาท์', icon: 'logout' },
+                    { key: 'purchase', label: 'ซื้อสินค้า', icon: 'cart' },
+                    { key: 'topup', label: 'เติมเงิน', icon: 'money' },
+                    { key: 'product_add', label: 'เพิ่มสินค้า', icon: 'add' },
+                    { key: 'product_edit', label: 'แก้ไขสินค้า', icon: 'edit' },
+                    { key: 'product_delete', label: 'ลบสินค้า', icon: 'delete' },
+                    { key: 'product_update', label: 'อัปเดตเวอร์ชัน', icon: 'refresh' },
+                    { key: 'user_edit', label: 'แก้ไขผู้ใช้', icon: 'user' },
+                    { key: 'file_upload', label: 'อัปโหลดไฟล์', icon: 'upload' },
+                    { key: 'file_delete', label: 'ลบไฟล์', icon: 'delete' },
+                    { key: 'error', label: 'ข้อผิดพลาด', icon: 'error' },
+                  ].map(event => (
+                    <div key={event.key} className={styles.webhookEventRow}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '180px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <input
+                            type="checkbox"
+                            checked={webhookConfig.webhooks?.[event.key]?.enabled || false}
+                            onChange={(e) => setWebhookConfig(prev => ({
+                              ...prev,
+                              webhooks: {
+                                ...prev.webhooks,
+                                [event.key]: {
+                                  ...prev.webhooks?.[event.key],
+                                  enabled: e.target.checked,
+                                },
+                              },
+                            }))}
+                            style={{ display: 'inline-block', width: 'auto' }}
+                          />
+                          <Icon name={event.icon} size="0.8rem" />
+                          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{event.label}</span>
+                        </label>
+                      </div>
+                      <input
+                        type="url"
+                        value={webhookConfig.webhooks?.[event.key]?.url || ''}
+                        onChange={(e) => setWebhookConfig(prev => ({
+                          ...prev,
+                          webhooks: {
+                            ...prev.webhooks,
+                            [event.key]: {
+                              ...prev.webhooks?.[event.key],
+                              url: e.target.value,
+                              enabled: prev.webhooks?.[event.key]?.enabled ?? true,
+                            },
+                          },
+                        }))}
+                        className={styles.modalInput}
+                        placeholder={`Webhook URL สำหรับ ${event.label}`}
+                        style={{ flex: 1 }}
+                      />
+                      {webhookConfig.webhooks?.[event.key]?.url && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              setTestingWebhook(true);
+                              await axios.post(webhookConfig.webhooks[event.key].url, {
+                                embeds: [{
+                                  title: `🧪 ทดสอบ Webhook - ${event.label}`,
+                                  description: `ข้อความทดสอบสำหรับเหตุการณ์ "${event.label}"`,
+                                  color: 0x6366f1,
+                                  timestamp: new Date().toISOString(),
+                                  footer: { text: "xCloud Studio" },
+                                }],
+                              });
+                              success(`ส่งทดสอบ "${event.label}" ไป Discord แล้ว!`);
+                            } catch (err) {
+                              error("ส่งไม่สำเร็จ: " + err.message);
+                            } finally {
+                              setTestingWebhook(false);
+                            }
+                          }}
+                          disabled={testingWebhook}
+                          className={styles.cancelBtn}
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                        >
+                          {testingWebhook ? '⏳' : '🧪'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className={styles.modalActions}>
+                  <button onClick={handleSaveWebhook} disabled={savingWebhook} className={styles.submitBtn}>
+                    {savingWebhook ? <Icon name="loading" size="0.8rem" /> : <Icon name="save" size="0.8rem" />}
+                    <span>{savingWebhook ? 'กำลังบันทึก...' : 'บันทึกทั้งหมด'}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </>)}
