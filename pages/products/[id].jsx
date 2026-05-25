@@ -104,22 +104,27 @@ export default function ProductDetail() {
         productId: id,
         price: productPrice,
       });
-
       if (purchaseRes.data.success) {
-        await refreshPoints();
-        
-        // ✅ บันทึก Log การซื้อ
-        await addLog(
-          LOG_TYPES.PURCHASE,
-          "ซื้อสินค้า",
-          `${session.user.name} ซื้อ "${product?.itemsname}" ราคา ${productPrice} Point`,
-          session.user.name,
-          { productId: id, productName: product?.itemsname, price: productPrice }
-        ).catch(() => {});
+          await refreshPoints();
+          
+          // ✅ Log พร้อมข้อมูลละเอียด
+          await addLog(
+            LOG_TYPES.PURCHASE,
+            "ซื้อสินค้า",
+            `${session.user.name} ซื้อ "${product?.itemsname}"`,
+            session.user.name,
+            {
+              discordId: session.user.discordId || session.user.id,
+              productName: product?.itemsname,
+              price: productPrice,
+              roleIds: product?.discordRoleIds || [],
+              version: product?.itemsversion,
+            }
+          ).catch(() => {});
 
-        success(`ซื้อสินค้าสำเร็จ! คงเหลือ ${purchaseRes.data.remainingPoints?.toLocaleString()} Points`);
-        router.push("/profile");
-      }
+          success(`ซื้อสินค้าสำเร็จ! คงเหลือ ${purchaseRes.data.remainingPoints?.toLocaleString()} Points`);
+          router.push("/profile");
+        }
     } catch (err) {
       const errorMsg = err.response?.data?.error || "เกิดข้อผิดพลาด";
       error(errorMsg);
