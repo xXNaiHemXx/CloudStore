@@ -552,18 +552,33 @@ export default function Admin() {
   };
   
   const fetchImages = async () => {
-    try {
-      const res = await axios.get("/api/upload");
-      const files = res.data || [];
-      console.log("📁 Files loaded:", files); // debug
-      setImages(files.map(url => ({
-        url: url,                           // /uploads/filename.jpg
-        fileName: url.replace('/uploads/', ''),
-      })));
-    } catch (err) { 
-      console.error("❌ Error:", err);
-    }
-  };
+  try {
+    const res = await axios.get("/api/upload");
+    const files = res.data || [];
+    console.log("📁 Raw files:", files);
+    
+    // ✅ แปลงให้เป็นรูปแบบที่ใช้ได้
+    const formattedFiles = files.map(file => {
+      if (typeof file === 'string') {
+        // ถ้าเป็น string: "/uploads/filename.jpg"
+        return {
+          url: file,
+          fileName: file.split('/').pop() || file,
+        };
+      }
+      // ถ้าเป็น object: {url, fileName}
+      return {
+        url: file.url || '',
+        fileName: file.fileName || (file.url ? file.url.split('/').pop() : ''),
+      };
+    });
+    
+    setImages(formattedFiles);
+  } catch (err) { 
+    console.error("❌ Error:", err);
+    setImages([]); // ✅ เซ็ตเป็น array เปล่า
+  }
+};
   useEffect(() => {
     if (activeTab === "uploads") fetchImages();
   }, [activeTab]);
