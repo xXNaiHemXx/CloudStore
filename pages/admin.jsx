@@ -325,25 +325,39 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
             <input type="text" value={newVersion} onChange={(e) => setNewVersion(e.target.value)} className={styles.modalInput} placeholder="เช่น 2.0.0" required />
           </div>
           <div className={styles.modalRow}>
-            <label className={styles.modalLabel}>อัปโหลดไฟล์ใหม่</label>
-            <label className={`custom-file-upload ${uploadingFile ? 'uploading' : ''}`}>
-              {uploadingFile ? (
-                <div>
-                  <span>⏳ กำลังอัปโหลด... {uploadProgress}%</span>
-                  <div className={styles.uploadProgressBar}>
-                    <div className={styles.uploadProgressFill} style={{ width: `${uploadProgress}%` }}></div>
-                  </div>
-                </div>
-              ) : (
-                <span>📦 คลิกเพื่อเลือกไฟล์ (สูงสุด 2GB)</span>
-              )}
-              <input 
-                type="file" 
-                accept=".zip,.rar,.7z,.scs" 
-                onChange={handleFileUpload} 
-                disabled={uploadingFile} 
-              />
-            </label>
+            <label className={styles.modalLabel}>อัปโหลดไฟล์ใหม่ (Cloudflare R2)</label>
+
+            <R2Uploader
+              onUploadComplete={(publicUrl) => {
+                setNewFileUrl(publicUrl);
+                success("อัปโหลดไฟล์ไป R2 สำเร็จ!");
+              }}
+              accept=".zip,.rar,.7z,.scs,.exe,.msi"
+              maxSize={5000}
+            />
+
+            {newFileUrl && (
+              <small
+                style={{
+                  color: "#10b981",
+                  marginTop: "4px",
+                  display: "block",
+                }}
+              >
+                ✅ ไฟล์ใหม่พร้อมดาวน์โหลดแล้ว
+              </small>
+            )}
+
+            <small
+              style={{
+                color: "#6b7280",
+                fontSize: "0.7rem",
+                marginTop: "4px",
+                display: "block",
+              }}
+            >
+              💡 อัปโหลดตรงไป Cloudflare R2 รองรับไฟล์ใหญ่หลาย GB
+            </small>
           </div>
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>ลิงก์ไฟล์ใหม่ *</label>
