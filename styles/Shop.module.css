@@ -247,21 +247,8 @@
   }
 }
 
-/* Badge */
-.cardBadge {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  padding: 0.3rem 0.75rem;
-  background: rgba(16, 185, 129, 0.9);
-  color: white;
-  font-size: 0.7rem;
-  font-weight: 700;
-  border-radius: 6px;
-  z-index: 2;
-  letter-spacing: 0.02em;
-  backdrop-filter: blur(4px);
-}
+
+
 
 /* Image */
 .cardImage {
@@ -471,5 +458,56 @@
 
   .cardName {
     font-size: 0.95rem;
+  }
+}
+.ownedBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  background: linear-gradient(135deg, #3b66b6 0%, #661da1 100%);
+  border-radius: 20px;
+  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* New Badge - แสดงเฉพาะสินค้าใหม่ที่ยังไม่ได้ซื้อ */
+.cardBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #ef444400 0%, #dc262600 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ✅ ปรับตำแหน่งบนมือถือ */
+@media (max-width: 640px) {
+  .ownedBadge {
+    top: 5px;
+    right: 5px;
+    padding: 2px 8px;
+  }
+  
+  .ownedText {
+    font-size: 0.6rem;
+  }
+  
+  .cardBadge {
+    top: 5px;
+    right: 5px;
+    padding: 2px 8px;
+    font-size: 0.6rem;
   }
 }

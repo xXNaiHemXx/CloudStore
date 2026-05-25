@@ -269,12 +269,69 @@ a {
 }
 
 /* ==================== FOOTER ==================== */
-.footer {
+.footer-b {
   margin-top: auto;
-  padding: 1.5rem;
-  color: white;
+  padding: 2rem 1.5rem;
+  background: rgba(13, 15, 25, 0.8);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   text-align: center;
-  font-size: 0.9rem;
+  width: 100%;
+}
+
+.footer-bn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  font-size: 0.85rem;
+  margin: 0;
+  flex-wrap: wrap;
+}
+
+.footer-bn::before {
+  content: '©';
+  margin-right: 0.25rem;
+}
+
+/* Footer Links (ถ้ามี) */
+.footer-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.footer-links a {
+  color: #6b7280;
+  font-size: 0.8rem;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: #818cf8;
+}
+
+/* Footer Divider */
+.footer-divider {
+  width: 60px;
+  height: 2px;
+  background: rgba(99, 102, 241, 0.3);
+  margin: 0 auto 1rem;
+  border-radius: 1px;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .footer-b {
+    padding: 1.5rem 1rem;
+  }
+
+  .footer-bn {
+    font-size: 0.75rem;
+  }
 }
 
 /* ==================== BUTTONS (Global) ==================== */

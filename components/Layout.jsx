@@ -96,7 +96,8 @@ export default function Layout({ children }) {
 
       {/* ===== FOOTER ===== */}
       <footer className="footer-b">
-        <p className="footer-bn">© 2025 xCloud Studio. All rights reserved.</p>
+        <div className="footer-divider"></div>
+        <p className="footer-bn">2025 xCloud Studio. All rights reserved.</p>
       </footer>
     </div>
   );

@@ -1,14 +1,24 @@
 import { useEffect, useState, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import axios from "axios";
 import Link from "next/link";
 import Layout from "../components/Layout";
 import styles from "../styles/Shop.module.css";
+import { useUser } from "../context/UserContext";
 
 export default function Shop() {
+  const { data: session } = useSession();
+  const { userProducts, isLoading: userLoading } = useUser();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
+
+  // ✅ สร้าง Set ของ productId ที่ user มี
+  const ownedProductIds = useMemo(() => {
+    if (!userProducts) return new Set();
+    return new Set(userProducts.map(p => p.productId));
+  }, [userProducts]);
 
   // Fetch products
   useEffect(() => {
@@ -28,7 +38,6 @@ export default function Shop() {
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // Search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase().trim();
       result = result.filter(
@@ -39,7 +48,6 @@ export default function Shop() {
       );
     }
 
-    // Sort
     switch (sortBy) {
       case "price-asc":
         result.sort((a, b) => (a.itemsprice || 0) - (b.itemsprice || 0));
@@ -55,7 +63,6 @@ export default function Shop() {
         break;
       case "newest":
       default:
-        // Assume newest first (reverse order from API)
         result.reverse();
         break;
     }
@@ -66,6 +73,19 @@ export default function Shop() {
   const resetFilters = () => {
     setSearchTerm("");
     setSortBy("newest");
+  };
+
+  // ✅ ตรวจสอบว่าสินค้าเป็นของ user หรือไม่
+  const isProductOwned = (productId) => {
+    return session && ownedProductIds.has(productId);
+  };
+
+  // ✅ ตรวจสอบว่าเป็นสินค้าใหม่หรือไม่ (7 วันล่าสุด)
+  const isNewProduct = (createdAt) => {
+    if (!createdAt) return false;
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return new Date(createdAt) > sevenDaysAgo;
   };
 
   return (
@@ -79,7 +99,7 @@ export default function Shop() {
             <span className={styles.heroTitleAccent}>Products</span>
           </h1>
           <p className={styles.heroSubtitle}>
-            ค้นพบโมเดลและรถสำหรับเกม ETS2 คุณภาพสูงจากทีมพัฒนา xCloud-Studio 
+            ค้นพบโมเดลและรถสำหรับเกม ETS2 คุณภาพสูงจากทีมพัฒนา ALLNEWOKBUS
           </p>
           <div className={styles.heroStats}>
             <div className={styles.heroStatItem}>
@@ -156,43 +176,58 @@ export default function Shop() {
             </div>
           ) : (
             <div className={styles.productGrid}>
-              {filteredProducts.map((product) => (
-                <Link
-                  key={product._id}
-                  href={`/products/${product._id}`}
-                  className={styles.productCard}
-                >
-                  {/* New Badge */}
-                  <span className={styles.cardBadge}>NEW</span>
-
-                  {/* Image */}
-                  <div className={styles.cardImage}>
-                    <img
-                      src={product.itemsimage}
-                      alt={product.itemsname}
-                      loading="lazy"
-                    />
-                  </div>
-
-                  {/* Info */}
-                  <div className={styles.cardInfo}>
-                    <p className={styles.cardTitle}>{product.itemstitle}</p>
-                    <h3 className={styles.cardName}>{product.itemsname}</h3>
-                    {product.itemsdesc && (
-                      <p className={styles.cardDesc}>{product.itemsdesc}</p>
+              {filteredProducts.map((product) => {
+                const isOwned = isProductOwned(product._id);
+                const isNew = !isOwned && isNewProduct(product.createdAt); // ✅ ถ้าเป็นเจ้าของแล้วไม่แสดง NEW
+                
+                return (
+                  <Link
+                    key={product._id}
+                    href={`/products/${product._id}`}
+                    className={styles.productCard}
+                  >
+                    {/* ✅ New Badge - แสดงเฉพาะเมื่อไม่ใช่ของ user */}
+                    {isNew && (
+                      <span className={styles.cardBadge}></span>
                     )}
-                    <div className={styles.cardFooter}>
-                      <div className={styles.cardPrice}>
-                        {product.itemsprice?.toLocaleString()}
-                        <span className={styles.cardPriceCurrency}>฿</span>
+                    
+                    {/* ✅ Owned Badge - แสดงเฉพาะเมื่อเป็นของ user */}
+                    {isOwned && (
+                      <div className={styles.ownedBadge}>
+                        <span className={styles.ownedIcon}></span>
+                        <span className={styles.ownedText}>IN LIBRARY</span>
                       </div>
-                      <span className={styles.cardArrow}>
-                        ดูเพิ่มเติม →
-                      </span>
+                    )}
+
+                    {/* Image */}
+                    <div className={styles.cardImage}>
+                      <img
+                        src={product.itemsimage}
+                        alt={product.itemsname}
+                        loading="lazy"
+                      />
                     </div>
-                  </div>
-                </Link>
-              ))}
+
+                    {/* Info */}
+                    <div className={styles.cardInfo}>
+                      <p className={styles.cardTitle}>{product.itemstitle}</p>
+                      <h3 className={styles.cardName}>{product.itemsname}</h3>
+                      {product.itemsdesc && (
+                        <p className={styles.cardDesc}>{product.itemsdesc}</p>
+                      )}
+                      <div className={styles.cardFooter}>
+                        <div className={styles.cardPrice}>
+                          {product.itemsprice?.toLocaleString()}
+                          <span className={styles.cardPriceCurrency}>฿</span>
+                        </div>
+                        <span className={styles.cardArrow}>
+                          {isOwned ? "ดูรายละเอียด →" : "ดูเพิ่มเติม →"}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </section>
