@@ -31,7 +31,7 @@ export async function getPresignedUploadUrl(
     "_"
   );
 
-  const key = `products/${timestamp}_${safeName}`;
+  const key = `products/${safeName}`;
 
   const command = new PutObjectCommand({
     Bucket: BUCKET_NAME,
