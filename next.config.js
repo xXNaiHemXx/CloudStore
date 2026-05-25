@@ -2,23 +2,22 @@
 const nextConfig = {
   reactStrictMode: true,
   
-  // ✅ เพิ่มการตั้งค่าสำหรับไฟล์ใหญ่
   api: {
     bodyParser: {
-      sizeLimit: '2gb',  // 2GB
+      sizeLimit: '2gb',
     },
     responseLimit: false,
   },
   
-  // ✅ เพิ่ม timeout สำหรับ server
   staticPageGenerationTimeout: 600,
   
-  // ✅ เพิ่ม experimental
+  // ✅ ให้ Next.js serve static files
+  output: 'standalone',
+  
   experimental: {
     serverComponentsExternalPackages: ['formidable'],
   },
   
-  // ✅ เพิ่ม poweredByHeader: false (optional)
   poweredByHeader: false,
 };
 
