@@ -550,9 +550,12 @@ export default function Admin() {
   
   const fetchImages = async () => {
     try {
-      const res = await axios.get("/api/uploads");
+      const res = await axios.get("/api/upload"); // ✅ ใช้ /api/upload (GET)
       setImages(res.data || []);
-    } catch { error("ไม่สามารถโหลดรูปภาพได้"); }
+    } catch (err) { 
+      console.error("ไม่สามารถโหลดรูปภาพได้:", err);
+      error("ไม่สามารถโหลดรูปภาพได้"); 
+    }
   };
   useEffect(() => {
     if (activeTab === "uploads") fetchImages();
