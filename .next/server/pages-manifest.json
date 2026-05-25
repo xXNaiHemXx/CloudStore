@@ -2,15 +2,10 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/profile": "pages/profile.js",
-  "/admin": "pages/admin.js",
-  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
   "/": "pages/index.js",
-  "/api/admin/update-version": "pages/api/admin/update-version.js",
   "/api/items": "pages/api/items.js",
-  "/api/user": "pages/api/user.js",
   "/api/purchases/count": "pages/api/purchases/count.js",
   "/api/user/count": "pages/api/user/count.js",
-  "/api/user/check-updates": "pages/api/user/check-updates.js",
-  "/api/user/download-update": "pages/api/user/download-update.js"
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
+  "/api/user": "pages/api/user.js"
 }

@@ -1,14 +1,35 @@
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import Layout from "../components/Layout";
 import styles from "../styles/Home.module.css";
+import { useUser } from "../context/UserContext";
 
 export default function Home() {
   const { data: session } = useSession();
+  const { userProducts } = useUser(); // ✅ ดึงสินค้าที่ user มี
   const [products, setProducts] = useState([]);
   const [stats, setStats] = useState({ products: 0, purchases: 0, members: 0 });
   const [loading, setLoading] = useState(true);
+
+  // ✅ สร้าง Set ของ productId ที่ user มี
+  const ownedProductIds = useMemo(() => {
+    if (!userProducts) return new Set();
+    return new Set(userProducts.map(p => p.productId));
+  }, [userProducts]);
+
+  // ✅ ตรวจสอบว่าสินค้าเป็นของ user หรือไม่
+  const isProductOwned = (productId) => {
+    return session && ownedProductIds.has(productId);
+  };
+
+  // ✅ ตรวจสอบว่าเป็นสินค้าใหม่หรือไม่ (7 วันล่าสุด)
+  const isNewProduct = (createdAt) => {
+    if (!createdAt) return false;
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return new Date(createdAt) > sevenDaysAgo;
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -19,7 +40,7 @@ export default function Home() {
           axios.get("/api/purchases/count"),
         ]);
         const items = itemsRes.data;
-        // เอา 6 ชิ้นล่าสุด
+        // เรียงตามวันที่สร้าง ล่าสุดอยู่หน้า
         const sortedItems = items.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setProducts(sortedItems.slice(0, 6));
         setStats({
@@ -50,12 +71,10 @@ export default function Home() {
         
         {/* ========== Hero Section ========== */}
         <section className={styles.hero}>
-          {/* Background Effects */}
           <div className={styles.heroGrid}></div>
           <div className={styles.heroOrb1}></div>
           <div className={styles.heroOrb2}></div>
 
-          {/* Content */}
           <div className={styles.heroContent}>
             <div className={styles.badge}>
               ⭐ Official xCloud Site
@@ -85,7 +104,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Scroll Indicator */}
           <div className={styles.scrollIndicator} onClick={scrollToProducts} role="button" tabIndex={0}>
             <div className={styles.scrollMouse}></div>
             <span>Scroll</span>
@@ -107,23 +125,41 @@ export default function Home() {
                 <p>ยังไม่มีสินค้าในขณะนี้</p>
               </div>
             ) : (
-              products.map((product) => (
-                <a key={product._id} href={`/products/${product._id}`} className={styles.productCard}>
-                  <div className={styles.productImageWrapper}>
-                    <img src={product.itemsimage} alt={product.itemsname} loading="lazy" />
-                  </div>
-                  <div className={styles.productInfo}>
-                    <h3 className={styles.productName}>{product.itemsname}</h3>
-                    <p className={styles.productTitleTag}>{product.itemstitle}</p>
-                    <div className={styles.productPriceRow}>
-                      <span className={styles.productPrice}>฿{product.itemsprice}</span>
-                      <span className={styles.viewBtn}>
-                        ดูรายละเอียด →
-                      </span>
+              products.map((product) => {
+                const isOwned = isProductOwned(product._id);
+                const isNew = !isOwned && isNewProduct(product.createdAt); // ✅ ถ้าเป็นเจ้าของแล้วไม่แสดง NEW
+                
+                return (
+                  <a key={product._id} href={`/products/${product._id}`} className={styles.productCard}>
+                    {/* ✅ New Badge - แสดงเฉพาะเมื่อไม่ใช่ของ user */}
+                    {isNew && (
+                      <span className={styles.newBadge}></span>
+                    )}
+                    
+                    {/* ✅ Owned Badge - แสดงเฉพาะเมื่อเป็นของ user */}
+                    {isOwned && (
+                      <div className={styles.ownedBadge}>
+                        <span className={styles.ownedIcon}></span>
+                        <span className={styles.ownedText}>IN LIBRARY</span>
+                      </div>
+                    )}
+                    
+                    <div className={styles.productImageWrapper}>
+                      <img src={product.itemsimage} alt={product.itemsname} loading="lazy" />
                     </div>
-                  </div>
-                </a>
-              ))
+                    <div className={styles.productInfo}>
+                      <h3 className={styles.productName}>{product.itemsname}</h3>
+                      <p className={styles.productTitleTag}>{product.itemstitle}</p>
+                      <div className={styles.productPriceRow}>
+                        <span className={styles.productPrice}>฿{product.itemsprice}</span>
+                        <span className={styles.viewBtn}>
+                          {isOwned ? "ดูรายละเอียด →" : "ดูรายละเอียด →"}
+                        </span>
+                      </div>
+                    </div>
+                  </a>
+                );
+              })
             )}
           </div>
         </section>
