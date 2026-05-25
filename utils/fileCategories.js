@@ -1,71 +1,20 @@
 /**
- * จัดหมวดหมู่ไฟล์ตามนามสกุล
- */
-
-const FILE_CATEGORIES = {
-  images: {
-    label: 'รูปภาพ',
-    extensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.ico', '.tiff', '.avif'],
-    icon: '🖼️',  // เปลี่ยนเป็น emoji แทน
-  },
-  documents: {
-    label: 'เอกสาร',
-    extensions: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.csv', '.json', '.xml'],
-    icon: '📄',
-  },
-  archives: {
-    label: 'ไฟล์บีบอัด',
-    extensions: ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', '.xz', '.iso', '.scs'],
-    icon: '📦',
-  },
-  executables: {
-    label: 'ไฟล์โปรแกรม',
-    extensions: ['.exe', '.msi', '.dmg', '.pkg', '.app', '.apk', '.ipa'],
-    icon: '⚙️',
-  },
-  videos: {
-    label: 'วิดีโอ',
-    extensions: ['.mp4', '.avi', '.mkv', '.mov', '.wmv', '.flv', '.webm', '.m4v', '.3gp'],
-    icon: '🎬',
-  },
-  audio: {
-    label: 'เสียง',
-    extensions: ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.wma', '.m4a', '.opus'],
-    icon: '🎵',
-  },
-  others: {
-    label: 'อื่นๆ',
-    extensions: [],
-    icon: '📁',
-  },
-};
-
-/**
- * หาหมวดหมู่ของไฟล์
- */
-export function getFileCategory(fileName) {
-  if (!fileName) return FILE_CATEGORIES.others;
-  
-  const ext = '.' + fileName.split('.').pop()?.toLowerCase();
-  
-  for (const [key, category] of Object.entries(FILE_CATEGORIES)) {
-    if (key === 'others') continue;
-    if (category.extensions.includes(ext)) {
-      return { key, ...category };
-    }
-  }
-  
-  return { key: 'others', ...FILE_CATEGORIES.others };
-}
-
-/**
  * จัดกลุ่มไฟล์ตามหมวดหมู่
  */
 export function groupFilesByCategory(urls) {
+  if (!Array.isArray(urls)) return []; // ✅ กัน error
+  
   const grouped = {};
   
-  urls.forEach(url => {
-    const fileName = url.split('/').pop();
+  urls.forEach(item => {
+    // ✅ รองรับทั้ง string และ object
+    const url = typeof item === 'string' ? item : (item.url || '');
+    const fileName = typeof item === 'string' 
+      ? item.split('/').pop() 
+      : (item.fileName || (item.url ? item.url.split('/').pop() : ''));
+    
+    if (!url || !fileName) return; // ✅ ข้ามถ้าไม่มีข้อมูล
+    
     const category = getFileCategory(fileName);
     
     if (!grouped[category.key]) {
@@ -81,7 +30,6 @@ export function groupFilesByCategory(urls) {
     });
   });
   
-  // ✅ เรียงตามลำดับที่ต้องการ
   const order = ['images', 'archives', 'documents', 'executables', 'videos', 'audio', 'others'];
   
   return order
@@ -93,18 +41,7 @@ export function groupFilesByCategory(urls) {
  * ตรวจสอบว่าเป็นไฟล์รูปภาพหรือไม่
  */
 export function isImageFile(fileName) {
-  const ext = '.' + fileName?.split('.').pop()?.toLowerCase();
+  if (!fileName || typeof fileName !== 'string') return false; // ✅ กัน error
+  const ext = '.' + fileName.split('.').pop()?.toLowerCase();
   return FILE_CATEGORIES.images.extensions.includes(ext);
-}
-
-/**
- * ฟอร์แมตขนาดไฟล์
- */
-export function formatFileSize(bytes) {
-  if (!bytes) return 'Unknown';
-  if (bytes === 0) return '0 Bytes';
-  
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return (bytes / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
 }
