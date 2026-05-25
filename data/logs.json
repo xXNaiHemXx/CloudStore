@@ -34,5 +34,83 @@
       "id": "689667804462710835"
     },
     "createdAt": "2026-05-25T23:23:04.021Z"
+  },
+  {
+    "_id": "mpluc1reyi98p",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-05-25T23:31:48.842Z"
+  },
+  {
+    "_id": "mpluc2gc6xp4y",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-05-25T23:31:49.740Z"
+  },
+  {
+    "_id": "mpluc3poxmcv2",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /products/6a12f289cfd1bd3bbbfa4cdd",
+    "user": "jayther",
+    "details": {
+      "url": "/products/6a12f289cfd1bd3bbbfa4cdd"
+    },
+    "createdAt": "2026-05-25T23:31:51.372Z"
+  },
+  {
+    "_id": "mpluc47zeax1n",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-05-25T23:31:52.031Z"
+  },
+  {
+    "_id": "mpluc70rgniox",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "email": "hem.and.nas.and.rif@gmail.com",
+      "id": "689667804462710835"
+    },
+    "createdAt": "2026-05-25T23:31:55.659Z"
+  },
+  {
+    "_id": "mpluc7gmfupop",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /products/6a12f289cfd1bd3bbbfa4cdd",
+    "user": "jayther",
+    "details": {
+      "url": "/products/6a12f289cfd1bd3bbbfa4cdd"
+    },
+    "createdAt": "2026-05-25T23:31:56.230Z"
+  },
+  {
+    "_id": "mpluc81csqxmr",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-05-25T23:31:56.976Z"
   }
 ]
