@@ -2,6 +2,15 @@ import { getPresignedUploadUrl } from "@/utils/r2";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '5mb',  // Request body limit (แค่ JSON ไม่ใช่ไฟล์)
+    },
+    responseLimit: false,
+  },
+};
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -24,6 +33,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing fileName" });
     }
 
+    // ✅ สร้าง Presigned URL สำหรับอัปโหลดไฟล์ขนาดใหญ่ (R2 รองรับ 5TB)
     const { uploadUrl, publicUrl, key } = await getPresignedUploadUrl(fileName, contentType);
     
     return res.status(200).json({
