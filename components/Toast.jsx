@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import styles from "./Toast.module.css";
-import Icon from "./Icon"; // ✅ เพิ่ม import Icon
+import Icon from "./Icon"; //  เพิ่ม import Icon
 
 export default function Toast({ message, type, onClose, duration = 3000 }) {
   const [isExiting, setIsExiting] = useState(false);
@@ -14,7 +14,7 @@ export default function Toast({ message, type, onClose, duration = 3000 }) {
     return () => clearTimeout(timer);
   }, [duration, onClose]);
 
-  // ✅ เปลี่ยนเป็นใช้ Icon Component
+  //  เปลี่ยนเป็นใช้ Icon Component
   const getIconName = () => {
     switch (type) {
       case "success":

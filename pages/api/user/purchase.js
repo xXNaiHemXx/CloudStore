@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     const purchases = await Purchase.find({})
       .sort({ purchaseDate: -1 });
 
-    // ✅ ดึงข้อมูลผู้ใช้เพิ่มเติมสำหรับแต่ละคำสั่งซื้อ
+    //  ดึงข้อมูลผู้ใช้เพิ่มเติมสำหรับแต่ละคำสั่งซื้อ
     const purchasesWithUser = await Promise.all(
       purchases.map(async (purchase) => {
         const user = await User.findOne({ discordId: purchase.userId });
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
           price: purchase.price,
           purchaseDate: purchase.purchaseDate,
           buyerId: purchase.userId,
-          buyerName: user?.name || purchase.userName || "Unknown",  // ✅ เพิ่มชื่อผู้ซื้อ
+          buyerName: user?.name || purchase.userName || "Unknown",  //  เพิ่มชื่อผู้ซื้อ
         };
       })
     );
@@ -182,7 +182,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         message: "Purchase successful",
-        remainingPoints: user.points  // ✅ ต้องมีบรรทัดนี้!
+        remainingPoints: user.points  //  ต้องมีบรรทัดนี้!
       });
 
     } catch (error) {

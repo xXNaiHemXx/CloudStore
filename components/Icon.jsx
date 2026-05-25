@@ -69,7 +69,7 @@ export default function Icon({ name, size = "1rem", color = "currentColor" }) {
     "export": "fi-rr-export",
     "import": "fi-rr-import",
     
-    // ✅ เพิ่มที่หายไป
+    //  เพิ่มที่หายไป
     "winner": "fi-rr-trophy",           // 🏆 ถ้วยรางวัล
     "trophy": "fi-rr-trophy",            // 🏆 ถ้วยรางวัล
     "crown": "fi-rr-crown",              // 👑 มงกุฎ

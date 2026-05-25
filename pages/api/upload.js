@@ -9,17 +9,17 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  // ✅ GET - ดึงรายการไฟล์ทั้งหมด
+  //  GET - ดึงรายการไฟล์ทั้งหมด
   if (req.method === 'GET') {
     return handleGetFiles(req, res);
   }
 
-  // ✅ DELETE - ลบไฟล์
+  //  DELETE - ลบไฟล์
   if (req.method === 'DELETE') {
     return handleDelete(req, res);
   }
 
-  // ✅ POST - อัปโหลดไฟล์
+  //  POST - อัปโหลดไฟล์
   if (req.method === 'POST') {
     return handleUpload(req, res);
   }
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   return res.status(405).json({ error: 'Method not allowed' });
 }
 
-// ✅ ฟังก์ชันดึงรายการไฟล์
+//  ฟังก์ชันดึงรายการไฟล์
 async function handleGetFiles(req, res) {
   try {
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
@@ -53,7 +53,7 @@ async function handleGetFiles(req, res) {
   }
 }
 
-// ✅ ฟังก์ชันอัปโหลด
+//  ฟังก์ชันอัปโหลด
 async function handleUpload(req, res) {
   try {
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
@@ -112,7 +112,7 @@ async function handleUpload(req, res) {
   }
 }
 
-// ✅ ฟังก์ชันลบไฟล์
+//  ฟังก์ชันลบไฟล์
 async function handleDelete(req, res) {
   try {
     const chunks = [];

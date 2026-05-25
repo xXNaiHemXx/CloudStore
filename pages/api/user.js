@@ -16,7 +16,7 @@ export default async function handler(req, res) {
             name: user.name,
             email: user.email,
             points: user.points || 0,
-            products: user.products || []  // ✅ ป้องกัน undefined
+            products: user.products || []  //  ป้องกัน undefined
         });
     }
 
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
             let user = await User.findOne({ discordId });
 
             if (!user) {
-                user = new User({ discordId, name, email, points: 0, products: [] }); // ✅ กำหนด products เป็น []
+                user = new User({ discordId, name, email, points: 0, products: [] }); //  กำหนด products เป็น []
                 await user.save();
             }
 

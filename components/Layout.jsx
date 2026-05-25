@@ -18,15 +18,12 @@ export default function Layout({ children }) {
     if (links) links.classList.toggle("active");
   };
 
-  // ✅ Custom Logout พร้อม Log
+  //  Custom Logout พร้อม Log
   const handleLogout = async () => {
     if (session?.user) {
-      await addLog(
-        LOG_TYPES.LOGOUT,
-        "ล็อคเอาท์",
-        `${session.user.name} ออกจากระบบ`,
-        session.user.name
-      ).catch(() => {});
+      await addLog(LOG_TYPES.LOGOUT, "ล็อคเอาท์", `${session.user.name} ออกจากระบบ`, session.user.name, {
+        discordId: session.user.id, // 
+      }).catch(() => {});
     }
     nextAuthSignOut({ callbackUrl: "/" });
   };

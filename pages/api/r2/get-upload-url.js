@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing fileName" });
     }
 
-    // ✅ สร้าง Presigned URL สำหรับอัปโหลดไฟล์ขนาดใหญ่ (R2 รองรับ 5TB)
+    //  สร้าง Presigned URL สำหรับอัปโหลดไฟล์ขนาดใหญ่ (R2 รองรับ 5TB)
     const { uploadUrl, publicUrl, key } = await getPresignedUploadUrl(fileName, contentType);
     
     return res.status(200).json({

@@ -33,7 +33,7 @@ export default async function handler(req, res) {
       const currentVer = userProduct.currentVersion || userProduct.version;
       const latestVer = latestProduct.itemsversion;
 
-      // ✅ ตรวจสอบว่ามีเวอร์ชันใหม่
+      //  ตรวจสอบว่ามีเวอร์ชันใหม่
       if (latestVer !== currentVer) {
         updates.push({
           productId: userProduct.productId,
@@ -44,14 +44,14 @@ export default async function handler(req, res) {
           fileSize: latestProduct.fileSize || "Unknown",
         });
 
-        // ✅ อัปเดต hasUpdate
+        //  อัปเดต hasUpdate
         if (!userProduct.hasUpdate) {
           user.products[i].hasUpdate = true;
           user.products[i].currentVersion = currentVer;
           needSave = true;
         }
       } else {
-        // ✅ ปิด hasUpdate ถ้าเวอร์ชันตรงกันแล้ว
+        //  ปิด hasUpdate ถ้าเวอร์ชันตรงกันแล้ว
         if (userProduct.hasUpdate) {
           user.products[i].hasUpdate = false;
           needSave = true;
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // ✅ ใช้ findOneAndUpdate แทน save() เพื่อป้องกัน VersionError
+    //  ใช้ findOneAndUpdate แทน save() เพื่อป้องกัน VersionError
     if (needSave) {
       try {
         await User.findOneAndUpdate(
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
           { new: true, runValidators: false }
         );
       } catch (saveErr) {
-        // ✅ ถ้า error → log แต่ไม่ throw (ให้ response กลับไปก่อน)
+        //  ถ้า error → log แต่ไม่ throw (ให้ response กลับไปก่อน)
         console.error("Save products error (non-critical):", saveErr.message);
       }
     }
@@ -83,7 +83,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error("Check updates error:", error);
 
-    // ✅ ถ้าเป็น VersionError → ส่ง response ปกติ (ไม่ error)
+    //  ถ้าเป็น VersionError → ส่ง response ปกติ (ไม่ error)
     if (error.name === 'VersionError') {
       return res.status(200).json({
         success: true,

@@ -55,7 +55,7 @@ export function convertGoogleDriveUrl(url) {
   }
   
   if (fileId) {
-    // ✅ วิธีที่ 1: ใช้ confirm=t (ข้ามหน้าไวรัส) + export=download
+    //  วิธีที่ 1: ใช้ confirm=t (ข้ามหน้าไวรัส) + export=download
     return `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
   }
   
@@ -101,7 +101,7 @@ export function getDirectDownloadUrl(url) {
  */
 export async function downloadGoogleDriveFile(fileId, fileName) {
   try {
-    // ✅ ใช้ API Proxy ของเราเอง
+    //  ใช้ API Proxy ของเราเอง
     const proxyUrl = `/api/download/drive?fileId=${fileId}`;
     
     const link = document.createElement('a');
@@ -115,7 +115,7 @@ export async function downloadGoogleDriveFile(fileId, fileName) {
   } catch (error) {
     console.error('❌ Google Drive download error:', error);
     
-    // ✅ Fallback: ใช้ direct URL
+    //  Fallback: ใช้ direct URL
     const directUrl = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
     window.open(directUrl, '_blank');
     return false;
@@ -145,18 +145,18 @@ export async function downloadFile(url, fileName) {
     throw new Error('URL is required');
   }
   
-  // ✅ Google Drive: ใช้วิธีพิเศษ
+  //  Google Drive: ใช้วิธีพิเศษ
   if (isGoogleDriveUrl(url)) {
     const fileId = getGoogleDriveFileId(url);
     
     if (fileId) {
-      // ✅ วิธีที่ 1: ใช้ iframe invisible (ข้ามทุกหน้า)
+      //  วิธีที่ 1: ใช้ iframe invisible (ข้ามทุกหน้า)
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
       iframe.src = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
       document.body.appendChild(iframe);
       
-      // ✅ วิธีที่ 2: ใช้ <a> tag พร้อม confirm=t
+      //  วิธีที่ 2: ใช้ <a> tag พร้อม confirm=t
       setTimeout(() => {
         const link = document.createElement('a');
         link.href = `https://drive.google.com/uc?export=download&id=${fileId}&confirm=t`;
@@ -177,7 +177,7 @@ export async function downloadFile(url, fileName) {
     }
   }
   
-  // ✅ ประเภทอื่น: ใช้ <a> tag
+  //  ประเภทอื่น: ใช้ <a> tag
   const directUrl = getDirectDownloadUrl(url);
   
   const link = document.createElement('a');

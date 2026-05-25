@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     const oldVersion = product.itemsversion;
     const oldFileUrl = product.itemsfile;
     
-    // ✅ อัปเดตทุกฟิลด์
+    //  อัปเดตทุกฟิลด์
     product.itemsversion = newVersion;
     product.itemsfile = newFileUrl;
     product.currentVersion = newVersion;  // ← เพิ่มบรรทัดนี้

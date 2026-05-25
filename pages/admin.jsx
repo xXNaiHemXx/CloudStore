@@ -78,7 +78,7 @@ function ProductModal({ editingItem, onClose, onSaved }) {
         await axios.put("/api/items", { id: editingItem._id, ...payload });
         success("แก้ไขสินค้าสำเร็จ!");
         
-        // ✅ Log พร้อม roleIds
+        //  Log พร้อม roleIds
         await addLog(
           LOG_TYPES.PRODUCT_EDIT,
           "แก้ไขสินค้า",
@@ -95,19 +95,13 @@ function ProductModal({ editingItem, onClose, onSaved }) {
         await axios.post("/api/items", payload);
         success("เพิ่มสินค้าสำเร็จ!");
         
-        // ✅ Log พร้อม roleIds
-        await addLog(
-          LOG_TYPES.PRODUCT_ADD,
-          "เพิ่มสินค้า",
-          `เพิ่ม "${itemsname}"`,
-          session?.user?.name || "Admin",
-          {
-            productName: itemsname,
-            price: parseFloat(itemsprice),
-            version: itemsversion,
-            roleIds: roleIds,
-          }
-        ).catch(() => {});
+        //  Log พร้อม roleIds
+        await addLog(LOG_TYPES.PRODUCT_ADD, "...", "...", session?.user?.name || "Admin", {
+          productName: itemsname,
+          price: parseFloat(itemsprice),
+          version: itemsversion,
+          roleIds: roleIds,
+        }).catch(() => {});
       }
       onSaved();
     } catch (err) { error(`เกิดข้อผิดพลาด: ${err.response?.data?.error || err.message}`); }
@@ -335,19 +329,13 @@ export default function Admin() {
       await axios.put("/api/user/points", { userId: selectedUser.id, points: Number(proposedPoints) }); 
       success("บันทึกแต้มสำเร็จ!"); 
       
-      // ✅ Log พร้อมข้อมูลละเอียด
-      await addLog(
-        LOG_TYPES.USER_EDIT,
-        "แก้ไขแต้มผู้ใช้",
-        `ปรับแต้ม ${selectedUser.name} จาก ${selectedUser.points?.toLocaleString()} → ${proposedPoints?.toLocaleString()} Point`,
-        session?.user?.name || "Admin",
-        {
-          discordId: selectedUser.id,
-          oldPoints: selectedUser.points,
-          newPoints: proposedPoints,
-          email: selectedUser.email,
-        }
-      ).catch(() => {});
+      //  Log พร้อมข้อมูลละเอียด
+      await addLog(LOG_TYPES.USER_EDIT, "...", "...", session?.user?.name || "Admin", {
+        discordId: selectedUser.id, // 
+        oldPoints: selectedUser.points,
+        newPoints: proposedPoints,
+        email: selectedUser.email,
+      }).catch(() => {});
       
       fetchUsers(); await refreshPoints(); setSelectedUser(null); setProposedPoints(0); setChangeAmount(1); 
     } catch (err) { error("ไม่สามารถบันทึกแต้มได้"); } finally { setActionLoading(false); }
@@ -370,7 +358,7 @@ export default function Admin() {
     finally { setLoadingLogs(false); }
   };
 
-// ✅ คำนวณ Pagination
+//  คำนวณ Pagination
 const totalPages = Math.ceil(logs.length / logsPerPage);
 const paginatedLogs = logs.slice((logPage - 1) * logsPerPage, logPage * logsPerPage);
   

@@ -11,11 +11,11 @@ export default async function handler(req, res) {
   try {
     await connectToDB();
 
-    // ✅ ดึงประวัติการเติมเงินทั้งหมด เรียงตามล่าสุด
+    //  ดึงประวัติการเติมเงินทั้งหมด เรียงตามล่าสุด
     const topups = await TopupHistory.find({})
       .sort({ createdAt: -1 });
 
-    // ✅ ดึงข้อมูลผู้ใช้เพิ่มเติมสำหรับแต่ละรายการ
+    //  ดึงข้อมูลผู้ใช้เพิ่มเติมสำหรับแต่ละรายการ
     const topupsWithUser = await Promise.all(
       topups.map(async (topup) => {
         const user = await User.findOne({ discordId: topup.userId });

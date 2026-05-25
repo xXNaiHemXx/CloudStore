@@ -16,10 +16,10 @@ export default function DownloadButton({ fileUrl, fileName, className }) {
     setDownloading(true);
     
     try {
-      // ✅ แปลงเป็น direct download URL
+      //  แปลงเป็น direct download URL
       const directUrl = getDirectDownloadUrl(fileUrl);
       
-      // ✅ วิธีที่ 1: ใช้ <a> tag (recommended)
+      //  วิธีที่ 1: ใช้ <a> tag (recommended)
       const link = document.createElement('a');
       link.href = directUrl;
       link.download = fileName || ''; // ระบุชื่อไฟล์ (ถ้ามี)
@@ -29,7 +29,7 @@ export default function DownloadButton({ fileUrl, fileName, className }) {
       link.click();
       document.body.removeChild(link);
       
-      // ✅ วิธีที่ 2: ใช้ fetch + blob (สำหรับ Google Drive)
+      //  วิธีที่ 2: ใช้ fetch + blob (สำหรับ Google Drive)
       // ถ้าเป็น Google Drive อาจต้องใช้วิธีนี้เพราะมี redirect
       if (isCloudStorageUrl(fileUrl)) {
         setTimeout(async () => {

@@ -12,7 +12,7 @@ const itemSchema = new mongoose.Schema({
   itemsversion: { type: String, required: true },
   discordRoleIds: { type: [String], default: [] },
   
-  // ✅ ระบบเวอร์ชันใหม่ (เปลี่ยน required เป็น false หรือลบ required)
+  //  ระบบเวอร์ชันใหม่ (เปลี่ยน required เป็น false หรือลบ required)
   currentVersion: { type: String, default: "" },  // ← เปลี่ยนจาก required: true เป็น default: ""
   latestUpdate: { type: Date, default: Date.now },
   versionStatus: { type: String, enum: ["stable", "beta", "alpha"], default: "stable" },

@@ -24,10 +24,10 @@ export default async function handler(req, res) {
     return res.status(409).json({ error: "สลิปนี้ถูกใช้ไปแล้ว" });
   }
 
-  // ✅ บันทึกว่าใช้สลิปนี้แล้ว
+  //  บันทึกว่าใช้สลิปนี้แล้ว
   await Slip.create({ ref_code, userId });
 
-  // ✅ เพิ่ม point ให้ user
+  //  เพิ่ม point ให้ user
   const updated = await User.findOneAndUpdate(
     { discordId: userId },
     { $inc: { points: parseFloat(amount) } },

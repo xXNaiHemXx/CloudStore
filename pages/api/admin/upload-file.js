@@ -12,7 +12,7 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  // ✅ ตั้ง timeout สูงสุด 30 นาที
+  //  ตั้ง timeout สูงสุด 30 นาที
   req.setTimeout(30 * 60 * 1000); // 30 minutes
   
   if (req.method !== "POST") {
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
       maxFileSize: 2000 * 1024 * 1024, // 2GB
       multiples: false,
       allowEmptyFiles: false,
-      // ✅ เพิ่ม timeout ให้ formidable
+      //  เพิ่ม timeout ให้ formidable
       timeout: 30 * 60 * 1000, // 30 minutes
       filename: (name, ext, part, form) => {
         return part.originalFilename || "file";
@@ -89,7 +89,7 @@ export default async function handler(req, res) {
     const finalFilePath = path.join(uploadDir, finalFileName);
     const finalFileUrl = `/uploads/${finalFileName}`;
 
-    // ✅ ถ้าชื่อไฟล์เดียวกัน ให้ข้าม
+    //  ถ้าชื่อไฟล์เดียวกัน ให้ข้าม
     if (file.filepath !== finalFilePath) {
       if (fs.existsSync(finalFilePath)) {
         fs.unlinkSync(finalFilePath);

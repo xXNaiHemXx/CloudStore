@@ -8,7 +8,7 @@ export function UserProvider({ children }) {
   const { data: session } = useSession();
   const [userPoints, setUserPoints] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [userProducts, setUserProducts] = useState([]); // ✅ เพิ่ม state สำหรับสินค้าผู้ใช้
+  const [userProducts, setUserProducts] = useState([]); //  เพิ่ม state สำหรับสินค้าผู้ใช้
 
   const fetchUserData = useCallback(async () => {
     if (!session?.user?.id && !session?.user?.discordId) {
@@ -22,7 +22,7 @@ export function UserProvider({ children }) {
       const discordId = session.user.discordId || session.user.id;
       const res = await axios.get(`/api/user?discordId=${discordId}`);
       setUserPoints(res.data.points || 0);
-      setUserProducts(res.data.products || []); // ✅ ดึง products จาก API
+      setUserProducts(res.data.products || []); //  ดึง products จาก API
     } catch (error) {
       console.error("Error fetching user data:", error);
       setUserPoints(0);
@@ -63,7 +63,7 @@ export function UserProvider({ children }) {
       isLoading, 
       refreshPoints, 
       setUserPoints,
-      userProducts, // ✅ ส่ง products ออกไป
+      userProducts, //  ส่ง products ออกไป
     }}>
       {children}
     </UserContext.Provider>
