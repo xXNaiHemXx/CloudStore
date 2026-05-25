@@ -1274,3 +1274,230 @@
 .custom-file-upload input {
   display: none;
 }
+
+
+/* ==================== R2 FILES ==================== */
+
+.r2UploadArea {
+  padding: 1.5rem;
+  background: rgba(30, 35, 50, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  margin-bottom: 2rem;
+}
+
+.r2FilesSection {
+  background: rgba(30, 35, 50, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.r2FilesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.r2FilesHeader h3 {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  color: #e4e6f0;
+  margin: 0;
+}
+
+.r2RefreshBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+
+.r2RefreshBtn:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+/* R2 Files Grid */
+.r2FilesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .r2FilesGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .r2FilesGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .r2FilesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* R2 File Card */
+.r2FileCard {
+  background: rgba(20, 25, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.r2FileCard:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* R2 File Preview */
+.r2FilePreview {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #111827;
+}
+
+.r2FileThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.r2FileCard:hover .r2FileThumb {
+  transform: scale(1.05);
+}
+
+/* R2 File Icon (non-image) */
+.r2FileIcon {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #111827;
+  gap: 0.5rem;
+  color: #6b7280;
+}
+
+.r2FileType {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.15);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* R2 File Info */
+.r2FileInfo {
+  padding: 0.75rem 1rem;
+  flex: 1;
+}
+
+.r2FileName {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e4e6f0;
+  margin: 0 0 0.3rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.r2FileSize {
+  font-size: 0.75rem;
+  color: #10b981;
+  margin: 0 0 0.15rem;
+  font-weight: 500;
+}
+
+.r2FileDate {
+  font-size: 0.65rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* R2 File Actions */
+.r2FileActions {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem 0.75rem;
+}
+
+.r2CopyBtn,
+.r2OpenBtn,
+.r2DeleteBtn {
+  flex: 1;
+  padding: 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+
+.r2CopyBtn {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.r2CopyBtn:hover {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.r2OpenBtn {
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.r2OpenBtn:hover {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.r2DeleteBtn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.r2DeleteBtn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.r2DeleteBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

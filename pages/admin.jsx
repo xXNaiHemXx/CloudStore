@@ -30,7 +30,7 @@ function ProductModal({ editingItem, onClose, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-
+;
   useEffect(() => {
     if (editingItem) {
       setItemsname(editingItem.itemsname || "");
@@ -424,7 +424,10 @@ export default function Admin() {
   const [actionLoading, setActionLoading] = useState(false);
   const [topups, setTopups] = useState([]);
   const [loadingTopups, setLoadingTopups] = useState(false);
-
+    const [r2Files, setR2Files] = useState([]);
+  const [loadingR2Files, setLoadingR2Files] = useState(false);
+  const [deletingR2File, setDeletingR2File] = useState(null);
+  const [uploadingR2, setUploadingR2] = useState(false)
   useEffect(() => {
     if (!session || activeTab !== "dashboard") return;
     Promise.all([
@@ -681,12 +684,83 @@ export default function Admin() {
     await fetchUserProducts(user.id);
   };
 
+  // --- Fetch R2 Files ---
+const fetchR2Files = async () => {
+  setLoadingR2Files(true);
+  try {
+    const res = await axios.get("/api/admin/r2-files");
+    setR2Files(res.data.files || []);
+  } catch (err) {
+    console.error("Error fetching R2 files:", err);
+    error("ไม่สามารถโหลดไฟล์จาก R2 ได้");
+  } finally {
+    setLoadingR2Files(false);
+  }
+};
+
+// --- Delete R2 File ---
+const handleDeleteR2File = async (fileKey) => {
+  const fileName = fileKey.split('/').pop();
+  const confirmed = await confirm({
+    title: "ยืนยันการลบ",
+    message: `ต้องการลบ "${fileName}" จาก R2?\n\n⚠️ การลบไม่สามารถกู้คืนได้`,
+    confirmText: "ลบเลย",
+    cancelText: "ยกเลิก",
+    type: "danger",
+  });
+  if (!confirmed) return;
+
+  setDeletingR2File(fileKey);
+  try {
+    await axios.delete(`/api/admin/r2-files?key=${encodeURIComponent(fileKey)}`);
+    success("ลบไฟล์จาก R2 สำเร็จ!");
+    fetchR2Files();
+  } catch (err) {
+    error("ลบไฟล์ไม่สำเร็จ: " + (err.response?.data?.error || err.message));
+  } finally {
+    setDeletingR2File(null);
+  }
+};
+
+// --- Upload to R2 ---
+const handleR2Upload = async (file) => {
+  if (!file) return;
+  
+  setUploadingR2(true);
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await axios.post("/api/admin/r2-upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      timeout: 30 * 60 * 1000,
+    });
+    
+    if (res.data.success) {
+      success("อัปโหลดไฟล์ไป R2 สำเร็จ!");
+      fetchR2Files();
+    }
+  } catch (err) {
+    error("อัปโหลดไม่สำเร็จ");
+  } finally {
+    setUploadingR2(false);
+  }
+};
+
+  useEffect(() => {
+    if (activeTab === "r2") {
+      fetchR2Files();
+    }
+  }, [activeTab]);
+
+  // เพิ่ม tab ใหม่
   const tabs = [
     { key: "dashboard", label: "Dashboard", icon: "dashboard" },
     { key: "orders", label: "Orders", icon: "order" },
     { key: "products", label: "Products", icon: "product" },
     { key: "topups", label: "เติมเงิน", icon: "money" },
     { key: "uploads", label: "Uploads", icon: "upload" },
+    { key: "r2", label: "R2 Files", icon: "cloud" }, // ✅ เพิ่ม tab ใหม่
     { key: "users", label: "Users", icon: "users" },
   ];
 
@@ -998,7 +1072,140 @@ export default function Admin() {
             )}
           </>
         )}
+        {/* ==================== R2 FILES ==================== */}
+        {activeTab === "r2" && (
+          <>
+            <section className={styles.header}>
+              <h1 className={styles.headerTitle}>
+                <Icon name="cloud" size="1.2rem" />
+                <span style={{ marginLeft: "0.5rem" }}>จัดการไฟล์ Cloudflare R2</span>
+              </h1>
+            </section>
 
+            {/* R2 Upload Area */}
+            <div className={styles.r2UploadArea}>
+              <h3 style={{ margin: '0 0 1rem', fontSize: '0.95rem', color: '#e4e6f0' }}>
+                ☁️ อัปโหลดไฟล์ไป R2
+              </h3>
+              <R2Uploader
+                onUploadComplete={(publicUrl) => {
+                  success("อัปโหลดไฟล์ไป R2 สำเร็จ!");
+                  fetchR2Files();
+                }}
+                accept="*/*"
+                maxSize={5000}
+              />
+              <small style={{ color: '#6b7280', fontSize: '0.75rem', display: 'block', marginTop: '0.5rem' }}>
+                💡 รองรับทุกไฟล์ สูงสุด 5GB ไฟล์จะถูกเก็บใน Cloudflare R2
+              </small>
+            </div>
+
+            {/* R2 Files List */}
+            <div className={styles.r2FilesSection}>
+              <div className={styles.r2FilesHeader}>
+                <h3>
+                  <Icon name="folder" size="1rem" />
+                  <span style={{ marginLeft: '0.5rem' }}>ไฟล์ใน R2 ({r2Files.length})</span>
+                </h3>
+                <button onClick={fetchR2Files} className={styles.r2RefreshBtn}>
+                  <Icon name="refresh" size="0.8rem" />
+                  <span>รีเฟรช</span>
+                </button>
+              </div>
+
+              {loadingR2Files ? (
+                <div className={styles.loadingContainer}>
+                  <div className={styles.loadingSpinner}></div>
+                  <p>กำลังโหลด...</p>
+                </div>
+              ) : r2Files.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <Icon name="cloud" size="3rem" />
+                  <p className={styles.emptyTitle}>ยังไม่มีไฟล์ใน R2</p>
+                  <p className={styles.emptyText}>อัปโหลดไฟล์เพื่อเริ่มต้น</p>
+                </div>
+              ) : (
+                <div className={styles.r2FilesGrid}>
+                  {r2Files.map((file) => (
+                    <div key={file.key} className={styles.r2FileCard}>
+                      {/* Preview */}
+                      {isImageFile(file.fileName) ? (
+                        <div className={styles.r2FilePreview}>
+                          <img 
+                            src={file.url} 
+                            alt={file.fileName} 
+                            className={styles.r2FileThumb}
+                            loading="lazy"
+                          />
+                        </div>
+                      ) : (
+                        <div className={styles.r2FileIcon}>
+                          <Icon name="file" size="2.5rem" />
+                          <span className={styles.r2FileType}>
+                            {file.fileName?.split('.').pop()?.toUpperCase() || 'FILE'}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Info */}
+                      <div className={styles.r2FileInfo}>
+                        <p className={styles.r2FileName} title={file.fileName}>
+                          {file.fileName}
+                        </p>
+                        <p className={styles.r2FileSize}>
+                          {file.sizeFormatted || 'Unknown'}
+                        </p>
+                        {file.lastModified && (
+                          <p className={styles.r2FileDate}>
+                            🗓 {new Date(file.lastModified).toLocaleString("th-TH", {
+                              dateStyle: "medium",
+                              timeStyle: "short"
+                            })}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Actions */}
+                      <div className={styles.r2FileActions}>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(file.url);
+                            success("คัดลอกลิงก์แล้ว!");
+                          }}
+                          className={styles.r2CopyBtn}
+                          title="คัดลอกลิงก์"
+                        >
+                          <Icon name="copy" size="0.8rem" />
+                        </button>
+                        <a 
+                          href={file.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className={styles.r2OpenBtn}
+                          title="เปิดไฟล์"
+                        >
+                          <Icon name="link" size="0.8rem" />
+                        </a>
+                        <button 
+                          onClick={() => handleDeleteR2File(file.key)}
+                          disabled={deletingR2File === file.key}
+                          className={styles.r2DeleteBtn}
+                          title="ลบไฟล์"
+                        >
+                          {deletingR2File === file.key ? (
+                            <Icon name="loading" size="0.8rem" />
+                          ) : (
+                            <Icon name="delete" size="0.8rem" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
         {/* USERS */}
         {activeTab === "users" && (
           <>
