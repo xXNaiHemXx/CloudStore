@@ -5,6 +5,7 @@ import Link from "next/link";
 import Layout from "../components/Layout";
 import styles from "../styles/Shop.module.css";
 import { useUser } from "../context/UserContext";
+import Icon from "../components/Icon";
 
 export default function Shop() {
   const { data: session } = useSession();
@@ -14,13 +15,11 @@ export default function Shop() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
-  // ✅ สร้าง Set ของ productId ที่ user มี
   const ownedProductIds = useMemo(() => {
     if (!userProducts) return new Set();
     return new Set(userProducts.map(p => p.productId));
   }, [userProducts]);
 
-  // Fetch products
   useEffect(() => {
     setLoading(true);
     axios.get("/api/items")
@@ -34,7 +33,6 @@ export default function Shop() {
       });
   }, []);
 
-  // Filter & Sort products
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
@@ -75,12 +73,10 @@ export default function Shop() {
     setSortBy("newest");
   };
 
-  // ✅ ตรวจสอบว่าสินค้าเป็นของ user หรือไม่
   const isProductOwned = (productId) => {
     return session && ownedProductIds.has(productId);
   };
 
-  // ✅ ตรวจสอบว่าเป็นสินค้าใหม่หรือไม่ (7 วันล่าสุด)
   const isNewProduct = (createdAt) => {
     if (!createdAt) return false;
     const sevenDaysAgo = new Date();
@@ -92,7 +88,6 @@ export default function Shop() {
     <Layout>
       <div className={styles.pageContainer}>
 
-        {/* Hero Banner */}
         <section className={styles.heroBanner}>
           <h1 className={styles.heroTitle}>
             Our{' '}
@@ -103,23 +98,24 @@ export default function Shop() {
           </p>
           <div className={styles.heroStats}>
             <div className={styles.heroStatItem}>
-              📦 <span className={styles.heroStatCount}>{products.length}</span> Products
+              <Icon name="product" size="1rem" /> <span className={styles.heroStatCount}>{products.length}</span> Products
             </div>
             <span className={styles.heroStatDivider}></span>
             <div className={styles.heroStatItem}>
-              ⭐ Quality Guaranteed
+              <Icon name="star" size="1rem" /> Quality Guaranteed
             </div>
             <span className={styles.heroStatDivider}></span>
             <div className={styles.heroStatItem}>
-              🔄 Lifetime Updates
+              <Icon name="refresh" size="1rem" /> Lifetime Updates
             </div>
           </div>
         </section>
 
-        {/* Toolbar */}
         <div className={styles.toolbar}>
           <div className={styles.searchWrapper}>
-            <span className={styles.searchIcon}>🔍</span>
+            <span className={styles.searchIcon}>
+              <Icon name="search" size="1rem" />
+            </span>
             <input
               type="text"
               className={styles.searchInput}
@@ -133,33 +129,29 @@ export default function Shop() {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
-            <option value="newest">🆕 ใหม่ล่าสุด</option>
-            <option value="price-asc">💰 ราคา: ต่ำ → สูง</option>
-            <option value="price-desc">💎 ราคา: สูง → ต่ำ</option>
-            <option value="name-asc">🔤 ชื่อ: ก → ฮ</option>
-            <option value="name-desc">🔤 ชื่อ: ฮ → ก</option>
+            <option value="newest"><Icon name="new" size="0.8rem" /> ใหม่ล่าสุด</option>
+            <option value="price-asc"><Icon name="money" size="0.8rem" /> ราคา: ต่ำ → สูง</option>
+            <option value="price-desc"><Icon name="money" size="0.8rem" /> ราคา: สูง → ต่ำ</option>
+            <option value="name-asc"><Icon name="sort" size="0.8rem" /> ชื่อ: ก → ฮ</option>
+            <option value="name-desc"><Icon name="sort" size="0.8rem" /> ชื่อ: ฮ → ก</option>
           </select>
         </div>
 
-        {/* Results Count */}
         {searchTerm && (
           <p className={styles.resultsCount}>
             พบ {filteredProducts.length} รายการ สำหรับ "{searchTerm}"
           </p>
         )}
 
-        {/* Product Grid */}
         <section className={styles.productSection}>
           {loading ? (
             <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>⏳</span>
+              <Icon name="loading" size="2rem" />
               <p className={styles.emptyTitle}>กำลังโหลดสินค้า...</p>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className={styles.emptyState}>
-              <span className={styles.emptyIcon}>
-                {searchTerm ? '🔍' : '📦'}
-              </span>
+              <Icon name={searchTerm ? "search" : "product"} size="3rem" />
               <p className={styles.emptyTitle}>
                 {searchTerm ? 'ไม่พบสินค้าที่ค้นหา' : 'ยังไม่มีสินค้าในขณะนี้'}
               </p>
@@ -170,7 +162,7 @@ export default function Shop() {
               </p>
               {searchTerm && (
                 <button className={styles.emptyResetBtn} onClick={resetFilters}>
-                  🔄 รีเซ็ตการค้นหา
+                  <Icon name="refresh" size="0.8rem" /> รีเซ็ตการค้นหา
                 </button>
               )}
             </div>
@@ -178,7 +170,7 @@ export default function Shop() {
             <div className={styles.productGrid}>
               {filteredProducts.map((product) => {
                 const isOwned = isProductOwned(product._id);
-                const isNew = !isOwned && isNewProduct(product.createdAt); // ✅ ถ้าเป็นเจ้าของแล้วไม่แสดง NEW
+                const isNew = !isOwned && isNewProduct(product.createdAt);
                 
                 return (
                   <Link
@@ -186,20 +178,19 @@ export default function Shop() {
                     href={`/products/${product._id}`}
                     className={styles.productCard}
                   >
-                    {/* ✅ New Badge - แสดงเฉพาะเมื่อไม่ใช่ของ user */}
                     {isNew && (
-                      <span className={styles.cardBadge}></span>
+                      <span className={styles.cardBadge}>
+                        <Icon name="new" size="0.6rem" /> NEW
+                      </span>
                     )}
                     
-                    {/* ✅ Owned Badge - แสดงเฉพาะเมื่อเป็นของ user */}
                     {isOwned && (
                       <div className={styles.ownedBadge}>
-                        <span className={styles.ownedIcon}></span>
+                        <Icon name="check" size="0.7rem" />
                         <span className={styles.ownedText}>IN LIBRARY</span>
                       </div>
                     )}
 
-                    {/* Image */}
                     <div className={styles.cardImage}>
                       <img
                         src={product.itemsimage}
@@ -208,7 +199,6 @@ export default function Shop() {
                       />
                     </div>
 
-                    {/* Info */}
                     <div className={styles.cardInfo}>
                       <p className={styles.cardTitle}>{product.itemstitle}</p>
                       <h3 className={styles.cardName}>{product.itemsname}</h3>
@@ -217,11 +207,12 @@ export default function Shop() {
                       )}
                       <div className={styles.cardFooter}>
                         <div className={styles.cardPrice}>
+                          <Icon name="coin" size="0.8rem" />
                           {product.itemsprice?.toLocaleString()}
                           <span className={styles.cardPriceCurrency}>฿</span>
                         </div>
                         <span className={styles.cardArrow}>
-                          {isOwned ? "ดูรายละเอียด →" : "ดูเพิ่มเติม →"}
+                          {isOwned ? "ดูรายละเอียด" : "ดูเพิ่มเติม"} <Icon name="arrow-right" size="0.7rem" />
                         </span>
                       </div>
                     </div>

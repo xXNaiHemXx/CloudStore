@@ -52,23 +52,19 @@ async function handleUpload(req, res) {
     }
 
     const originalName = file.originalFilename || 'file';
-    const ext = path.extname(originalName);
-    const baseName = path.basename(originalName, ext);
+
+    const ext = path.extname(originalName).toLowerCase();
+
+    // สร้างชื่อใหม่แทนใช้ชื่อเดิม
+    const uniqueId =
+      Date.now() +
+      "_" +
+      Math.random().toString(36).substring(2, 8);
+
+    const safeName = `${uniqueId}${ext}`;
+    const finalPath = path.join(uploadDir, safeName);
     
-    const cleanName = baseName
-      .replace(/[^a-zA-Z0-9ก-๙_\- ]/g, '')
-      .replace(/\s+/g, '_')
-      .substring(0, 100);
-    
-    let safeName = `${cleanName}${ext}`;
-    let finalPath = path.join(uploadDir, safeName);
-    
-    let counter = 1;
-    while (fs.existsSync(finalPath)) {
-      safeName = `${cleanName}(${counter})${ext}`;
-      finalPath = path.join(uploadDir, safeName);
-      counter++;
-    }
+
 
     fs.renameSync(file.filepath, finalPath);
 

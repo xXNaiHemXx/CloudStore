@@ -6,11 +6,16 @@ import Link from "next/link";
 import Layout from "../components/Layout";
 import styles from "../styles/Profile.module.css";
 import { useUser } from "../context/UserContext";
+import { useConfirm } from "../context/ConfirmContext";
+import { useToast } from "../context/ToastContext";
+import Icon from "../components/Icon";
 
 export default function Profile() {
   const { data: session } = useSession();
   const router = useRouter();
   const { userPoints, refreshPoints, isLoading, userProducts: contextUserProducts } = useUser();
+  const { confirm } = useConfirm();
+  const { success, error, warning, info } = useToast();
   
   const [activeTab, setActiveTab] = useState("products");
   const [file, setFile] = useState(null);
@@ -21,7 +26,6 @@ export default function Profile() {
   const [topups, setTopups] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   
-  // ✅ State สำหรับระบบอัปเดต
   const [myProducts, setMyProducts] = useState([]);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [availableUpdates, setAvailableUpdates] = useState([]);
@@ -29,12 +33,10 @@ export default function Profile() {
 
   const adminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
 
-  // ✅ เมื่อ contextUserProducts เปลี่ยน ให้อัปเดต myProducts
   useEffect(() => {
     setMyProducts(contextUserProducts || []);
   }, [contextUserProducts]);
 
-  // Fetch History when tab active
   useEffect(() => {
     if (!session || activeTab !== "history") return;
     setLoadingHistory(true);
@@ -50,104 +52,76 @@ export default function Profile() {
     }
   }, [session, activeTab]);
 
-  // =====================================================
-  // ✅ ระบบอัปเดตเวอร์ชัน (Auto Update)
-  // =====================================================
-
-  // ฟังก์ชันตรวจสอบอัปเดต
   const checkForUpdates = async (showAlert = false) => {
     if (!session) return;
-    
     setCheckingUpdates(true);
-    
     try {
       const res = await axios.post("/api/user/check-updates", {
         userId: session.user.discordId || session.user.id
       });
-      
       if (res.data.hasUpdates) {
         setAvailableUpdates(res.data.updates);
-        // ✅ แสดง alert เฉพาะเมื่อ showAlert = true (กดปุ่ม)
-        if (showAlert) {
-          alert(`📦 มีสินค้าที่อัปเดต ${res.data.updates.length} รายการ`);
-        }
+        if (showAlert) info(`มีสินค้าที่อัปเดต ${res.data.updates.length} รายการ`);
       } else {
-        // ✅ แสดง alert เฉพาะเมื่อ showAlert = true (กดปุ่ม)
-        if (showAlert) {
-          alert("✅ สินค้าทั้งหมดเป็นเวอร์ชันล่าสุดแล้ว");
-        }
+        if (showAlert) success("สินค้าทั้งหมดเป็นเวอร์ชันล่าสุดแล้ว");
       }
-    } catch (error) {
-      console.error("Check updates error:", error);
-      if (showAlert) {
-        alert("ตรวจสอบอัปเดตไม่สำเร็จ");
-      }
+    } catch (err) {
+      console.error("Check updates error:", err);
+      if (showAlert) error("ตรวจสอบอัปเดตไม่สำเร็จ");
     } finally {
       setCheckingUpdates(false);
     }
   };
 
-  // ✅ AUTO UPDATE: เมื่อโหลดหน้า Profile และเมื่อ refreshPoints ทำงาน
   useEffect(() => {
     if (session && activeTab === 'products') {
-      // รอให้โหลดข้อมูลเสร็จก่อน แล้วค่อยตรวจสอบอัปเดต
-      const timer = setTimeout(() => {
-        checkForUpdates(false); // false = ไม่แสดง alert
-      }, 500);
-      
+      const timer = setTimeout(() => checkForUpdates(false), 500);
       return () => clearTimeout(timer);
     }
   }, [session, activeTab, myProducts]);
 
-  // ✅ Auto Update: เมื่อมีสินค้าใหม่ (หลังจากซื้อหรือรีเฟรช)
   useEffect(() => {
     if (session && activeTab === 'products' && myProducts.length > 0) {
       checkForUpdates(false);
     }
   }, [myProducts.length]);
 
-  // ฟังก์ชันดาวน์โหลดอัปเดต
   const downloadUpdate = async (productId, productName) => {
-  if (!confirm(`ดาวน์โหลดเวอร์ชันล่าสุดของ ${productName}?`)) return;
-  
-  setDownloading(productId);
-  
-  try {
-    const res = await axios.post("/api/user/download-update", {
-      userId: session.user.discordId || session.user.id,
-      productId
+    const confirmed = await confirm({
+      title: "อัปเดตเวอร์ชัน",
+      message: `คุณต้องการดาวน์โหลดเวอร์ชันล่าสุดของ ${productName} ใช่หรือไม่?`,
+      confirmText: "ดาวน์โหลด",
+      cancelText: "ยกเลิก",
+      type: "info",
     });
-    
-    if (res.data.success) {
-      window.open(res.data.downloadUrl, "_blank");
-      alert(`✅ ดาวน์โหลด ${productName} เวอร์ชัน ${res.data.version} สำเร็จ`);
-      
-      // ✅ รีเฟรชข้อมูลทั้งหมด (จะโหลด myProducts ใหม่)
-      await refreshPoints();
-      
-      // ✅ ล้าง availableUpdates เพื่อให้ไปโหลดใหม่
-      setAvailableUpdates([]);
-      
-      // ✅ ตรวจสอบอัปเดตอีกครั้ง (ไม่แสดง alert)
-      setTimeout(() => {
-        checkForUpdates(false);
-      }, 1000);
+    if (!confirmed) return;
+    setDownloading(productId);
+    try {
+      const res = await axios.post("/api/user/download-update", {
+        userId: session.user.discordId || session.user.id,
+        productId
+      });
+      if (res.data.success) {
+        window.open(res.data.downloadUrl, "_blank");
+        success(`ดาวน์โหลด ${productName} เวอร์ชัน ${res.data.version} สำเร็จ`);
+        await refreshPoints();
+        setAvailableUpdates([]);
+        setTimeout(() => checkForUpdates(false), 1000);
+      }
+    } catch (err) {
+      console.error("Download error:", err);
+      error("ดาวน์โหลดไม่สำเร็จ");
+    } finally {
+      setDownloading(null);
     }
-  } catch (error) {
-    console.error("Download error:", error);
-    alert("ดาวน์โหลดไม่สำเร็จ");
-  } finally {
-    setDownloading(null);
-  }
-};
+  };
 
-  // handleFileChange function
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
     const allowedTypes = ["image/jpeg", "image/png", "image/jpg"];
     if (!allowedTypes.includes(selectedFile.type)) {
-      alert("กรุณาเลือกไฟล์ jpg, jpeg หรือ png เท่านั้น");
+      error("กรุณาเลือกไฟล์ jpg, jpeg หรือ png เท่านั้น");
       return;
     }
     setFile(selectedFile);
@@ -155,7 +129,6 @@ export default function Profile() {
     setPreviewUrl(URL.createObjectURL(selectedFile));
   };
 
-  // removeFile function
   const removeFile = () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setFile(null);
@@ -163,7 +136,6 @@ export default function Profile() {
     setPreviewUrl(null);
   };
 
-  // getStatusClass function
   const getStatusClass = (status) => {
     switch (status?.toLowerCase()) {
       case "success":
@@ -181,11 +153,11 @@ export default function Profile() {
 
   const handleSubmit = async () => {
     if (!file || !amount || !session?.user?.id) {
-      alert("กรุณากรอกข้อมูลให้ครบ");
+      error("กรุณากรอกข้อมูลให้ครบ");
       return;
     }
     if (parseFloat(amount) <= 0) {
-      alert("กรุณากรอกจำนวนเงินที่มากกว่า 0");
+      error("กรุณากรอกจำนวนเงินที่มากกว่า 0");
       return;
     }
 
@@ -202,7 +174,7 @@ export default function Profile() {
       });
       const uploadData = await uploadRes.json();
       if (!uploadRes.ok) {
-        alert(uploadData.error || "อัพโหลดไม่สำเร็จ");
+        error(uploadData.error || "อัพโหลดไม่สำเร็จ");
         setSubmitting(false);
         return;
       }
@@ -218,30 +190,29 @@ export default function Profile() {
       });
       const verifyData = await verifyRes.json();
       if (!verifyRes.ok) {
-        alert(verifyData.error || "การตรวจสอบไม่สำเร็จ");
+        error(verifyData.error || "การตรวจสอบไม่สำเร็จ");
         setSubmitting(false);
         return;
       }
 
-      alert(`✅ ส่งคำขอเติมเงินสำเร็จ! กรุณารอการตรวจสอบ`);
+      success("ส่งคำขอเติมเงินสำเร็จ! กรุณารอการตรวจสอบ");
       removeFile();
       setAmount("");
       await refreshPoints();
-    } catch (error) {
-      console.error("Top-up error:", error);
-      alert("เกิดข้อผิดพลาดในการดำเนินการ");
+    } catch (err) {
+      console.error("Top-up error:", err);
+      error("เกิดข้อผิดพลาดในการดำเนินการ");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // --- Redirect if not logged in ---
   if (!session) {
     return (
       <Layout>
         <div className={styles.pageContainer}>
           <div className={styles.loadingContainer}>
-            <span style={{ fontSize: '3rem' }}>🔒</span>
+            <Icon name="lock" size="3rem" />
             <h2 style={{ color: '#d1d5db', fontSize: '1.3rem' }}>กรุณาเข้าสู่ระบบ</h2>
             <Link href="/" style={{ color: '#818cf8', textDecoration: 'underline' }}>
               กลับไปหน้าหลัก
@@ -256,7 +227,6 @@ export default function Profile() {
     <Layout>
       <div className={styles.pageContainer}>
 
-        {/* ========== Profile Header ========== */}
         <div className={styles.profileHeader}>
           <div className={styles.profileCard}>
             <div className={styles.profileInfoRow}>
@@ -276,54 +246,51 @@ export default function Profile() {
             </div>
             <div className={styles.profileActions}>
               <div className={styles.pointsBadge}>
-                <span className={styles.pointsIcon}>💎</span>
-                {userPoints?.toLocaleString() || 0} Point
+                <Icon name="coin" size="1rem" />
+                <span>{userPoints?.toLocaleString() || 0} Point</span>
               </div>
               
               {adminIds.includes(session.user.id) && (
                 <Link href="/admin" className={styles.btnAdmin}>
-                  ⚙️ Admin Dashboard
+                  <Icon name="settings" size="1rem" />
+                  <span>Admin Dashboard</span>
                 </Link>
               )}
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 className={styles.btnLogout}
               >
-                🚪 Logout
+                <Icon name="logout" size="1rem" />
+                <span>Logout</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* ========== Tabs Navigation ========== */}
         <nav className={styles.tabsNav}>
           <button
             className={`${styles.tabBtn} ${activeTab === 'products' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('products')}
           >
-            📦 สินค้าของคุณ
+            <Icon name="product" size="1rem" /> สินค้าของคุณ
           </button>
           <button
             className={`${styles.tabBtn} ${activeTab === 'topup' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('topup')}
           >
-            💰 เติมพ้อยท์
+            <Icon name="money" size="1rem" /> เติมพ้อยท์
           </button>
           <button
             className={`${styles.tabBtn} ${activeTab === 'history' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('history')}
           >
-            📋 ธุรกรรมล่าสุด
+            <Icon name="history" size="1rem" /> ธุรกรรมล่าสุด
           </button>
         </nav>
 
-        {/* ========== Content Area ========== */}
         <div className={styles.contentArea}>
           <div className={styles.contentCard}>
 
-            {/* ========================================== */}
-            {/* PRODUCTS TAB                               */}
-            {/* ========================================== */}
             {activeTab === 'products' && (
               <>
                 {isLoading ? (
@@ -333,10 +300,9 @@ export default function Profile() {
                   </div>
                 ) : (
                   <>
-                    {/* ✅ แสดงแถบแจ้งเตือนเมื่อมีอัปเดต */}
                     {availableUpdates.length > 0 && (
                       <div className={styles.updateAlert}>
-                        <div className={styles.updateAlertIcon}>📢</div>
+                        <Icon name="bell" size="1.5rem" />
                         <div className={styles.updateAlertContent}>
                           <strong>มีเวอร์ชันใหม่!</strong>
                           <span>สินค้าที่คุณซื้อมีการอัปเดต {availableUpdates.length} รายการ</span>
@@ -352,27 +318,25 @@ export default function Profile() {
 
                     {!myProducts || myProducts.length === 0 ? (
                       <div className={styles.emptyState}>
-                        <span className={styles.emptyIcon}>🛍️</span>
+                        <Icon name="product" size="3rem" />
                         <p className={styles.emptyTitle}>ยังไม่มีสินค้า</p>
                         <p className={styles.emptyText}>
                           คุณยังไม่ได้ซื้อสินค้าใดๆ ไปเลือกซื้อสินค้ากันเลย!
                         </p>
                         <Link href="/shop" className={styles.emptyShopBtn}>
-                          🛒 ไปที่ร้านค้า
+                          <Icon name="cart" size="1rem" /> ไปที่ร้านค้า
                         </Link>
                       </div>
                     ) : (
                       <div className={styles.productGrid}>
                         {myProducts.map((product, index) => {
-                          // ✅ ตรวจสอบว่าสินค้านี้มีอัปเดตหรือไม่
                           const hasUpdate = availableUpdates.some(u => u.productId === product.productId);
                           
                           return (
                             <div key={`${product.productId}-${index}`} className={styles.productCard}>
-                              {/* ✅ Badge แจ้งเตือนอัปเดต */}
                               {hasUpdate && (
                                 <div className={styles.updateBadge}>
-                                  🔄 มีอัปเดต!
+                                  <Icon name="refresh" size="0.7rem" /> มีอัปเดต!
                                 </div>
                               )}
                               
@@ -394,7 +358,7 @@ export default function Profile() {
                                 <h3 className={styles.cardProductName}>{product.name}</h3>
                                 {product.version && (
                                   <span className={styles.cardVersion}>
-                                    📌 v{product.version}
+                                    <Icon name="version" size="0.7rem" /> v{product.version}
                                   </span>
                                 )}
                               </div>
@@ -405,7 +369,8 @@ export default function Profile() {
                                     disabled={downloading === product.productId}
                                     className={styles.updateDownloadBtn}
                                   >
-                                    {downloading === product.productId ? "⏳..." : "📥 อัปเดต"}
+                                    <Icon name="download" size="0.8rem" />
+                                    {downloading === product.productId ? "กำลังโหลด..." : "อัปเดต"}
                                   </button>
                                 ) : (
                                   <a
@@ -415,7 +380,7 @@ export default function Profile() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
-                                    📥 ดาวน์โหลด
+                                    <Icon name="download" size="0.8rem" /> ดาวน์โหลด
                                   </a>
                                 )}
                               </div>
@@ -429,27 +394,25 @@ export default function Profile() {
               </>
             )}
 
-            {/* ========================================== */}
-            {/* TOPUP TAB                                  */}
-            {/* ========================================== */}
             {activeTab === 'topup' && (
               <div className={styles.topupLayout}>
 
-                {/* QR Code */}
                 <div className={styles.qrSection}>
                   <img
                     src="/images/kbank-qr.png"
                     alt="KBank QR Code"
                     className={styles.qrImage}
                   />
-                  <p className={styles.qrHint}>📱 สแกน QR Code เพื่อโอนเงิน</p>
+                  <p className={styles.qrHint}>
+                    <Icon name="card" size="0.7rem" /> สแกน QR Code เพื่อโอนเงิน
+                  </p>
                 </div>
 
-                {/* Form */}
                 <div className={styles.formSection}>
-                  <h3 className={styles.formTitle}>💳 ข้อมูลการโอนเงิน</h3>
+                  <h3 className={styles.formTitle}>
+                    <Icon name="card" size="1rem" /> ข้อมูลการโอนเงิน
+                  </h3>
 
-                  {/* Bank Info */}
                   <div className={styles.bankCard}>
                     <img
                       src="/images/kbank.png"
@@ -465,13 +428,11 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  {/* Warning */}
                   <div className={styles.warningBox}>
-                    <span className={styles.warningIcon}>⚠️</span>
+                    <Icon name="warning" size="1rem" />
                     <span>เมื่อโอนเงินแล้ว ไม่มีนโยบายโอนคืน โปรดระบุยอดให้ตรงความต้องการ</span>
                   </div>
 
-                  {/* Upload */}
                   <div className={styles.uploadSection}>
                     <label className={styles.uploadLabel}>📎 อัพโหลดสลิป</label>
                     <label
@@ -496,7 +457,7 @@ export default function Profile() {
                         </div>
                       ) : (
                         <>
-                          <span className={styles.uploadIcon}>📤</span>
+                          <Icon name="upload" size="1.5rem" />
                           <span className={styles.uploadText}>กดเพื่ออัพโหลดสลิป</span>
                           <span className={styles.uploadHint}>ภาพความละเอียดสูง (jpg, jpeg, png)</span>
                         </>
@@ -510,9 +471,10 @@ export default function Profile() {
                     </label>
                   </div>
 
-                  {/* Amount */}
                   <div className={styles.amountSection}>
-                    <label className={styles.amountLabel}>💵 จำนวนเงินที่ต้องการเติม</label>
+                    <label className={styles.amountLabel}>
+                      <Icon name="money" size="0.7rem" /> จำนวนเงินที่ต้องการเติม
+                    </label>
                     <input
                       type="number"
                       className={styles.amountInput}
@@ -523,25 +485,22 @@ export default function Profile() {
                     />
                   </div>
 
-                  {/* Submit */}
                   <button
                     className={styles.submitBtn}
                     onClick={handleSubmit}
                     disabled={submitting}
                   >
-                    {submitting ? '⏳ กำลังดำเนินการ...' : '✅ ยืนยันการโอนเงิน'}
+                    {submitting ? <Icon name="loading" size="1rem" /> : <Icon name="check" size="1rem" />}
+                    {submitting ? 'กำลังดำเนินการ...' : 'ยืนยันการโอนเงิน'}
                   </button>
                 </div>
               </div>
             )}
 
-            {/* ========================================== */}
-            {/* HISTORY TAB                                */}
-            {/* ========================================== */}
             {activeTab === 'history' && (
               <>
                 <div className={styles.historyNotice}>
-                  <span>⚠️</span>
+                  <Icon name="warning" size="1rem" />
                   <span>หาก Status ขึ้น Pending แสดงว่าเรากำลังตรวจสอบข้อมูล ไม่จำเป็นต้องส่งสลิปซ้ำ!</span>
                 </div>
 
@@ -552,7 +511,7 @@ export default function Profile() {
                   </div>
                 ) : topups.length === 0 ? (
                   <div className={styles.emptyState}>
-                    <span className={styles.emptyIcon}>📋</span>
+                    <Icon name="history" size="3rem" />
                     <p className={styles.emptyTitle}>ยังไม่มีประวัติการเติมเงิน</p>
                     <p className={styles.emptyText}>
                       ไปเติมพ้อยท์กันเลย!
@@ -572,7 +531,9 @@ export default function Profile() {
                         </div>
                         <div className={styles.historyBody}>
                           <div className={styles.historyItem}>
-                            <p className={styles.historyItemLabel}>📅 วันที่</p>
+                            <p className={styles.historyItemLabel}>
+                              <Icon name="calendar" size="0.7rem" /> วันที่
+                            </p>
                             <p className={styles.historyItemValue}>
                               {new Date(topup.createdAt).toLocaleDateString("th-TH", {
                                 year: "numeric",
@@ -582,7 +543,9 @@ export default function Profile() {
                             </p>
                           </div>
                           <div className={styles.historyItem}>
-                            <p className={styles.historyItemLabel}>💰 จำนวนเงิน</p>
+                            <p className={styles.historyItemLabel}>
+                              <Icon name="money" size="0.7rem" /> จำนวนเงิน
+                            </p>
                             <p className={styles.historyItemValue}>
                               {topup.amount?.toLocaleString()} บาท
                             </p>
