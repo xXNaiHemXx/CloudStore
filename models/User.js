@@ -16,7 +16,7 @@ const UserSchema = new mongoose.Schema({
       purchaseDate: { type: Date, default: Date.now },
       currentVersion: { type: String },        // เวอร์ชันปัจจุบันที่ user มี
       hasUpdate: { type: Boolean, default: false }, // มีอัปเดตใหม่หรือไม่
-      currentVersion: { type: String }  // ✅ ต้องมี
+   
       
     }
   ],
