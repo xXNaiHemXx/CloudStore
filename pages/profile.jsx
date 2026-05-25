@@ -122,11 +122,21 @@ export default function Profile() {
       success("ส่งคำขอเติมเงินสำเร็จ! กรุณารอการตรวจสอบ");
       
       // ✅ Log เติมเงิน
-      await addLog(LOG_TYPES.TOPUP, "เติมเงิน", `${session.user.name} เติมเงิน ${amount} บาท`, session.user.name, { amount }).catch(() => {});
-      
-      removeFile();
-      setAmount("");
-      await refreshPoints();
+      await addLog(
+      LOG_TYPES.TOPUP,
+      "เติมเงิน",
+      `${session.user.name} เติมเงิน ${amount} บาท (${amount} Point)`,
+      session.user.name,
+      {
+        discordId: session.user.id,
+        amount: parseFloat(amount),
+        points: parseFloat(amount), // 1 บาท = 1 Point
+      }
+    ).catch(() => {});
+    
+    removeFile();
+    setAmount("");
+    await refreshPoints();
     } catch (err) {
       error("เกิดข้อผิดพลาดในการดำเนินการ");
       await addLog(LOG_TYPES.ERROR, "เติมเงินผิดพลาด", `${session.user.name} เติมเงิน ${amount} บาท ไม่สำเร็จ`, session.user.name, { amount, error: err.message }).catch(() => {});
