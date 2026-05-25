@@ -1,4 +1,4 @@
-import { getPresignedUploadUrl } from "@/utils/cloudflare";
+import { getPresignedUploadUrl } from "@/utils/r2";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 
@@ -24,25 +24,13 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing fileName" });
     }
 
-    // ✅ สร้าง key สำหรับเก็บใน R2
-    const timestamp = Date.now();
-    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const key = `products/${timestamp}_${safeName}`;
-    
-    const result = await getPresignedUploadUrl(key, contentType || "application/octet-stream", 3600);
-    
-    if (!result.success) {
-      return res.status(500).json({ error: result.error });
-    }
-    
-    // ✅ สร้าง public URL สำหรับดาวน์โหลด
-    const publicUrl = `${process.env.R2_PUBLIC_URL || `https://${process.env.R2_BUCKET_NAME}.${process.env.R2_ACCOUNT_ID}.r2.dev`}/${key}`;
+    const { uploadUrl, publicUrl, key } = await getPresignedUploadUrl(fileName, contentType);
     
     return res.status(200).json({
       success: true,
-      uploadUrl: result.url,
+      uploadUrl,
+      publicUrl,
       fileKey: key,
-      publicUrl: publicUrl,
     });
     
   } catch (error) {
