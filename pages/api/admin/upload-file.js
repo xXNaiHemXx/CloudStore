@@ -12,8 +12,9 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  req.setTimeout(10 * 60 * 1000); // 10 minutes
-
+  // ✅ ตั้ง timeout สูงสุด 30 นาที
+  req.setTimeout(30 * 60 * 1000); // 30 minutes
+  
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -38,18 +39,23 @@ export default async function handler(req, res) {
     const form = formidable({
       uploadDir: uploadDir,
       keepExtensions: true,
-      maxFileSize: 2000 * 1024 * 1024,
+      maxFileSize: 2000 * 1024 * 1024, // 2GB
       multiples: false,
       allowEmptyFiles: false,
+      // ✅ เพิ่ม timeout ให้ formidable
+      timeout: 30 * 60 * 1000, // 30 minutes
       filename: (name, ext, part, form) => {
         return part.originalFilename || "file";
       },
     });
 
-    let progress = 0;
+    let lastProgress = 0;
     form.on('progress', (bytesReceived, bytesExpected) => {
-      progress = (bytesReceived / bytesExpected) * 100;
-      console.log(`📤 Upload progress: ${progress.toFixed(2)}%`);
+      const percent = Math.round((bytesReceived / bytesExpected) * 100);
+      if (percent !== lastProgress && percent % 10 === 0) {
+        lastProgress = percent;
+        console.log(`📤 Upload progress: ${percent}% (${(bytesReceived / 1024 / 1024).toFixed(2)}MB / ${(bytesExpected / 1024 / 1024).toFixed(2)}MB)`);
+      }
     });
 
     const [fields, files] = await new Promise((resolve, reject) => {
@@ -64,7 +70,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // ✅ ตรวจสอบว่าไฟล์ต้นทางมีอยู่จริง
     if (!fs.existsSync(file.filepath)) {
       console.error("❌ Source file not found:", file.filepath);
       return res.status(500).json({ error: "Source file not found" });
@@ -73,7 +78,7 @@ export default async function handler(req, res) {
     const fileSizeMB = file.size / (1024 * 1024);
     
     if (file.size > 2000 * 1024 * 1024) {
-      fs.unlinkSync(file.filepath);
+      try { fs.unlinkSync(file.filepath); } catch(e) {}
       return res.status(413).json({ 
         error: `ไฟล์ใหญ่เกินไป: ${fileSizeMB.toFixed(2)}MB (สูงสุด 2GB)` 
       });
@@ -84,19 +89,16 @@ export default async function handler(req, res) {
     const finalFilePath = path.join(uploadDir, finalFileName);
     const finalFileUrl = `/uploads/${finalFileName}`;
 
-    // ✅ ถ้าชื่อไฟล์เดียวกัน ให้ข้ามการ rename
-    if (file.filepath === finalFilePath) {
-      console.log(`✅ File already in correct location: ${finalFileName}`);
-    } else {
-      // ✅ ถ้าไฟล์ปลายทางมีอยู่ ให้ลบก่อน
+    // ✅ ถ้าชื่อไฟล์เดียวกัน ให้ข้าม
+    if (file.filepath !== finalFilePath) {
       if (fs.existsSync(finalFilePath)) {
         fs.unlinkSync(finalFilePath);
         console.log(`📌 ลบไฟล์เก่า: ${finalFileName}`);
       }
-      
-      // ✅ ย้ายไฟล์
       fs.renameSync(file.filepath, finalFilePath);
       console.log(`📌 ย้ายไฟล์ไป: ${finalFilePath}`);
+    } else {
+      console.log(`✅ File already in correct location: ${finalFileName}`);
     }
 
     console.log(`✅ Upload success: ${finalFileName} (${fileSizeMB.toFixed(2)}MB)`);

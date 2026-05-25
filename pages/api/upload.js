@@ -22,7 +22,7 @@ export default async function handler(req, res) {
   return res.status(405).json({ error: 'Method not allowed' });
 }
 
-// ✅ ฟังก์ชันอัปโหลด (ไม่เปลี่ยนชื่อไฟล์)
+// ✅ ฟังก์ชันอัปโหลด
 async function handleUpload(req, res) {
   try {
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
@@ -36,7 +36,6 @@ async function handleUpload(req, res) {
       keepExtensions: true,
       maxFileSize: 2000 * 1024 * 1024,
       allowEmptyFiles: false,
-      // ✅ ไม่ต้องเพิ่ม unique id
     });
 
     const [fields, files] = await new Promise((resolve, reject) => {
@@ -53,27 +52,28 @@ async function handleUpload(req, res) {
     }
 
     const originalName = file.originalFilename || 'file';
-    
-    // ✅ ใช้ชื่อเดิม ไม่เปลี่ยน
-    const finalPath = path.join(uploadDir, originalName);
-    
-    // ✅ ถ้าไฟล์ชื่อซ้ำ ให้เขียนทับ
-    if (fs.existsSync(finalPath)) {
-      fs.unlinkSync(finalPath);
-      console.log(`📌 ลบไฟล์เก่า: ${originalName}`);
-    }
 
-    // ✅ ย้ายไฟล์ไปยังตำแหน่งสุดท้ายด้วยชื่อเดิม
+    const ext = path.extname(originalName).toLowerCase();
+
+    const uniqueId =
+      Date.now() +
+      "_" +
+      Math.random().toString(36).substring(2, 8);
+
+    const safeName = `${uniqueId}${ext}`;
+
+    const finalPath = path.join(uploadDir, safeName);
+
     fs.renameSync(file.filepath, finalPath);
 
-    const fileUrl = `/uploads/${originalName}`;
+    const fileUrl = `/uploads/${safeName}`;
 
-    console.log(`✅ Uploaded: ${originalName}`);
+    console.log(`✅ Uploaded: ${safeName}`);
 
     res.status(200).json({
       success: true,
       url: fileUrl,
-      fileName: originalName,
+      fileName: safeName,
       originalName: originalName,
     });
 
