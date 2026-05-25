@@ -9,6 +9,7 @@ import { useConfirm } from "../context/ConfirmContext";
 import { useToast } from "../context/ToastContext";
 import { groupFilesByCategory, isImageFile } from "../utils/fileCategories";
 import Icon from "../components/Icon";
+import R2Uploader from "../components/R2Uploader";
 
 // ==================== PRODUCT MODAL ====================
 function ProductModal({ editingItem, onClose, onSaved }) {
@@ -80,56 +81,6 @@ function ProductModal({ editingItem, onClose, onSaved }) {
     const filtered = newImages.filter((url) => url !== "");
     if (!filtered.includes("")) filtered.push("");
     setItemsimages(filtered);
-  };
-
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const MAX_SIZE = 2000 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-      const sizeGB = (file.size / (1024 * 1024 * 1024)).toFixed(2);
-      error(`ไฟล์ใหญ่เกินไป: ${sizeGB}GB (สูงสุด 2GB)`);
-      return;
-    }
-
-    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-    console.log(`📦 กำลังอัปโหลด: ${file.name} (${sizeMB}MB)`);
-
-    setUploadingFile(true);
-    setUploadProgress(0);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const res = await axios.post("/api/admin/upload-file", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        timeout: 30 * 60 * 1000, // ✅ 30 minutes timeout
-        onUploadProgress: (progressEvent) => {
-          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          setUploadProgress(percent);
-          console.log(`📤 Upload progress: ${percent}%`);
-        },
-      });
-
-      if (res.data.success) {
-        setItemsfile(res.data.url);
-        success(`อัปโหลดสำเร็จ! ${res.data.originalName} (${res.data.sizeMB}MB)`);
-      }
-    } catch (err) {
-      console.error(err);
-      if (err.code === 'ECONNABORTED') {
-        error("การอัปโหลดใช้เวลานานเกินไป กรุณาลองใหม่");
-      } else if (err.response?.status === 413) {
-        error("ไฟล์ใหญ่เกินไป (สูงสุด 2GB)");
-      } else {
-        error("อัปโหลดไม่สำเร็จ: " + (err.response?.data?.error || err.message));
-      }
-    } finally {
-      setUploadingFile(false);
-      setUploadProgress(0);
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -222,55 +173,38 @@ function ProductModal({ editingItem, onClose, onSaved }) {
             <input value={itemsfile} onChange={(e) => setItemsfile(e.target.value)} className={styles.modalInput} type="text" required />
           </div>
           <div className={styles.modalRow}>
-            <label className={styles.modalLabel}>หรืออัปโหลดไฟล์จากเครื่อง</label>
-            <label className={`custom-file-upload ${uploadingFile ? 'uploading' : ''} ${itemsfile && !uploadingFile ? 'has-file' : ''}`}>
-              {uploadingFile ? (
-                <>
-                  <span>⏳ กำลังอัปโหลด... {uploadProgress}%</span>
-                  <div className={styles.uploadProgressBar}>
-                    <div className={styles.uploadProgressFill} style={{ width: `${uploadProgress}%` }}></div>
-                  </div>
-                </>
-              ) : itemsfile ? (
-                <span>✅ อัปโหลดแล้ว - คลิกเพื่อเปลี่ยนไฟล์</span>
-              ) : (
-                <span>📦 อัปโหลดไฟล์ Mod (สูงสุด 2GB)</span>
-              )}
-              <input 
-                type="file" 
-                accept=".zip,.rar,.7z,.scs,.exe,.msi" 
-                onChange={handleFileUpload}
-                disabled={uploadingFile}
-              />
-            </label>
-            {uploadingFile && (
-              <small style={{ color: '#f59e0b', marginTop: '4px' }}>
-                ⏳ กำลังอัปโหลดไฟล์ขนาดใหญ่ กรุณารอสักครู่...
-              </small>
-            )}
+            <label className={styles.modalLabel}>หรืออัปโหลดไฟล์จากเครื่อง (R2)</label>
+            <R2Uploader
+              onUploadComplete={(publicUrl) => {
+                setItemsfile(publicUrl);
+                success("อัปโหลดไฟล์ไป R2 สำเร็จ!");
+              }}
+              accept=".zip,.rar,.7z,.scs,.exe,.msi"
+              maxSize={2000}
+            />
             {itemsfile && !uploadingFile && (
-              <small style={{ color: '#10b981', marginTop: '4px' }}>
-                ✅ ไฟล์พร้อมให้ดาวน์โหลดจากเซิร์ฟเวอร์
+              <small style={{ color: '#10b981', marginTop: '4px', display: 'block' }}>
+                ✅ ไฟล์พร้อมให้ดาวน์โหลดจาก R2
               </small>
             )}
-            <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px' }}>
-              💡 รองรับ .zip, .rar, .7z, .scs, .exe, .msi | สูงสุด 2GB
+            <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}>
+              💡 รองรับ .zip, .rar, .7z, .scs, .exe, .msi | อัปโหลดตรงไป Cloudflare R2
             </small>
-            <div className={styles.modalRow}>
-              <label className={styles.modalLabel}>ราคาสินค้า *</label>
-              <input 
-                value={itemsprice} 
-                onChange={(e) => setItemsprice(e.target.value)} 
-                className={styles.modalInput} 
-                type="number" 
-                required 
-                min="0"
-                step="1"
-              />
-              <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}>
-                💰 ราคาในหน่วย Point
-              </small>
-            </div>
+          </div>
+          <div className={styles.modalRow}>
+            <label className={styles.modalLabel}>ราคาสินค้า *</label>
+            <input 
+              value={itemsprice} 
+              onChange={(e) => setItemsprice(e.target.value)} 
+              className={styles.modalInput} 
+              type="number" 
+              required 
+              min="0"
+              step="1"
+            />
+            <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}>
+              💰 ราคาในหน่วย Point
+            </small>
           </div>
           <div className={styles.modalActions}>
             <button type="button" className={styles.cancelBtn} onClick={onClose}>Close</button>
@@ -294,7 +228,6 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const { success, error } = useToast();
 
-  // ✅ เพิ่มฟังก์ชัน handleFileUpload ใน VersionUpdateModal
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -314,7 +247,7 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
     try {
       const res = await axios.post("/api/admin/upload-file", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        timeout: 30 * 60 * 1000, // ✅ 30 minutes timeout
+        timeout: 30 * 60 * 1000,
         onUploadProgress: (progressEvent) => {
           const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           setUploadProgress(percent);
@@ -825,11 +758,11 @@ export default function Admin() {
               </h1>
             </section>
             <div className={styles.statsRow}>
-            {[
-              { value: `฿${totalRevenue.toLocaleString()}`, label: "ยอดขายรวม", icon: "money" },
-              { value: `${totalOrders} รายการ`, label: "จำนวนคำสั่งซื้อ", icon: "order" },
-              { value: topMod, label: "Mod ขายดีที่สุด", icon: "winner", small: true },
-            ].map((s, i) => (
+              {[
+                { value: `฿${totalRevenue.toLocaleString()}`, label: "ยอดขายรวม", icon: "money" },
+                { value: `${totalOrders} รายการ`, label: "จำนวนคำสั่งซื้อ", icon: "order" },
+                { value: topMod, label: "Mod ขายดีที่สุด", icon: "winner", small: true },
+              ].map((s, i) => (
                 <div key={i} className={styles.statCard}>
                   <div className={styles.statIcon}>
                     <Icon name={s.icon} size="1.5rem" />
@@ -843,7 +776,9 @@ export default function Admin() {
             </div>
             <div className={styles.tableWrapper}>
               <table className={styles.dataTable}>
-                <thead><tr><th>สินค้า</th><th>ผู้ซื้อ</th><th>ราคา</th><th>วันที่</th></tr></thead>
+                <thead>
+                  <tr><th>สินค้า</th><th>ผู้ซื้อ</th><th>ราคา</th><th>วันที่</th></tr>
+                </thead>
                 <tbody>
                   {orders.map((order, i) => (
                     <tr key={i}>
@@ -872,13 +807,15 @@ export default function Admin() {
               <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>กำลังโหลด...</p></div>
             ) : topups.length === 0 ? (
               <div className={styles.emptyState}>
-                <span className={styles.emptyIcon}>📋</span>
+                <Icon name="history" size="3rem" />
                 <p className={styles.emptyTitle}>ยังไม่มีประวัติการเติมเงิน</p>
               </div>
             ) : (
               <div className={styles.tableWrapper}>
                 <table className={styles.dataTable}>
-                  <thead><tr><th>วันที่</th><th>ผู้ใช้</th><th>จำนวนเงิน</th><th>Reference</th><th>สลิป</th><th>สถานะ</th></tr></thead>
+                  <thead>
+                    <tr><th>วันที่</th><th>ผู้ใช้</th><th>จำนวนเงิน</th><th>Reference</th><th>สลิป</th><th>สถานะ</th></tr>
+                  </thead>
                   <tbody>
                     {topups.map((topup) => {
                       const statusInfo = getStatusBadge(topup.status);
