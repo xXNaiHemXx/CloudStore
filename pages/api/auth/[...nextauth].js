@@ -43,13 +43,13 @@ export const authOptions = {
 
             const existingUser = await usersCollection.findOne({ discordId: user.id });
 
-            // ✅ ดึง Role ที่ user มีใน Discord
+            //  ดึง Role ที่ user มีใน Discord
             const userRoles = await getUserRoles(user.id);
             console.log("📌 User roles from Discord:", userRoles);
             
-            // ✅ หาสินค้าทั้งหมดที่ตรงกับ Role ที่ user มี
+            //  หาสินค้าทั้งหมดที่ตรงกับ Role ที่ user มี
             const productsWithMatchingRoles = await itemsCollection.find({
-                discordRoleIds: { $in: userRoles }  // ✅ ใช้ discordRoleIds (array)
+                discordRoleIds: { $in: userRoles }  //  ใช้ discordRoleIds (array)
             }).toArray();
             
             console.log("📌 Products matching user's roles:", productsWithMatchingRoles.map(p => p.itemsname));
@@ -75,7 +75,7 @@ export const authOptions = {
                 });
                 console.log(`✅ สร้างผู้ใช้ใหม่ ${user.name} และเพิ่มสินค้าจาก Role ${userRoles.length} รายการ`);
             } else {
-                // ✅ อัปเดตสินค้าให้ตรงกับ Role ที่มีใน Discord (sync)
+                //  อัปเดตสินค้าให้ตรงกับ Role ที่มีใน Discord (sync)
                 const existingProductIds = existingUser.products?.map(p => p.productId) || [];
                 const newProducts = productsWithMatchingRoles.filter(
                     p => !existingProductIds.includes(p._id.toString())

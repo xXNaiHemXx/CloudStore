@@ -41,7 +41,7 @@ export default function handler(req, res) {
   }
   
   if (req.method === 'POST') {
-    // ✅ เพิ่ม log ใหม่
+    //  เพิ่ม log ใหม่
     const { type, title, message, user, details } = req.body;
     
     if (!type || !title) {

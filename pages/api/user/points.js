@@ -2,7 +2,7 @@ import { connectToDB } from "../../../utils/db";
 import User from "../../../models/User";
 
 export default async function handler(req, res) {
-  // ✅ 必须是 PUT 方法
+  //  必须是 PUT 方法
   if (req.method !== "PUT") {
     return res.status(405).json({ error: "Method not allowed" });
   }

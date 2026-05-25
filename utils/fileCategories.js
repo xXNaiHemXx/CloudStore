@@ -40,7 +40,7 @@ const FILE_CATEGORIES = {
   },
 };
 
-// ✅ ย้ายมาอยู่ก่อน groupFilesByCategory
+//  ย้ายมาอยู่ก่อน groupFilesByCategory
 function getFileCategory(fileName) {
   if (!fileName) return FILE_CATEGORIES.others;
   
@@ -56,7 +56,7 @@ function getFileCategory(fileName) {
   return { key: 'others', ...FILE_CATEGORIES.others };
 }
 
-// ✅ groupFilesByCategory อยู่หลัง getFileCategory
+//  groupFilesByCategory อยู่หลัง getFileCategory
 export function groupFilesByCategory(urls) {
   if (!Array.isArray(urls)) return [];
   
@@ -70,7 +70,7 @@ export function groupFilesByCategory(urls) {
     
     if (!url || !fileName) return;
     
-    const category = getFileCategory(fileName); // ✅ ใช้ได้แล้ว
+    const category = getFileCategory(fileName); //  ใช้ได้แล้ว
     
     if (!grouped[category.key]) {
       grouped[category.key] = {

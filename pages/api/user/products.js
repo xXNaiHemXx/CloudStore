@@ -14,7 +14,7 @@ export default async function handler(req, res) {
             const user = await User.findOne({ discordId: userId });
             if (!user) return res.status(404).json({ error: "User not found" });
 
-            // ✅ ดึงสินค้าที่เป็นของผู้ใช้
+            //  ดึงสินค้าที่เป็นของผู้ใช้
             const userProducts = await Product.find({ owners: user._id });
 
             res.status(200).json({ products: userProducts });

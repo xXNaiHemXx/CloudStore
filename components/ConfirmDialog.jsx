@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import styles from "./ConfirmDialog.module.css";
-import Icon from "./Icon"; // ✅ เพิ่ม import Icon
+import Icon from "./Icon"; //  เพิ่ม import Icon
 
 export default function ConfirmDialog({
   isOpen,
@@ -25,7 +25,7 @@ export default function ConfirmDialog({
 
   if (!isOpen) return null;
 
-  // ✅ เปลี่ยนเป็นใช้ Icon Component
+  //  เปลี่ยนเป็นใช้ Icon Component
   const getIconName = () => {
     switch (type) {
       case "danger":

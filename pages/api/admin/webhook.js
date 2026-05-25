@@ -7,7 +7,7 @@ if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
   fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
 }
 if (!fs.existsSync(WEBHOOK_FILE)) {
-  // ✅ โครงสร้างใหม่: แต่ละ event มี webhook ของตัวเอง
+  //  โครงสร้างใหม่: แต่ละ event มี webhook ของตัวเอง
   fs.writeFileSync(WEBHOOK_FILE, JSON.stringify({
     enabled: false,
     webhooks: {

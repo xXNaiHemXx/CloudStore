@@ -7,29 +7,30 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { addLog, LOG_TYPES } from "../utils/logger";
 
-// ✅ Component สำหรับติดตาม Login/Logout
 function SessionLogger({ children }) {
   const { data: session } = useSession();
   const router = useRouter();
 
+  // ✅ Log เมื่อ login
   useEffect(() => {
     if (session?.user) {
-      // ✅ Log เมื่อ login
       addLog(
         LOG_TYPES.LOGIN,
         "ล็อคอิน",
         `${session.user.name} เข้าสู่ระบบ`,
         session.user.name,
-        { email: session.user.email, id: session.user.id }
-      ).catch(() => {}); // ไม่ต้องแสดง error ถ้า log ไม่สำเร็จ
+        {
+          discordId: session.user.id,
+          email: session.user.email,
+        }
+      ).catch(() => {});
     }
-  }, [session?.user?.id]);
+  }, [session?.user?.id]); // ✅ ทำงานเฉพาะเมื่อ user id เปลี่ยน
 
-  // ✅ Log เมื่อเปลี่ยนหน้า (สำหรับ track activity)
+  // ✅ Log เมื่อเปลี่ยนหน้า
   useEffect(() => {
     const handleRouteChange = (url) => {
       if (session?.user && !url.includes('/admin') && !url.includes('/api')) {
-        // Log เฉพาะหน้าที่สำคัญ
         const importantPages = ['/shop', '/profile', '/products'];
         if (importantPages.some(p => url.startsWith(p))) {
           addLog(

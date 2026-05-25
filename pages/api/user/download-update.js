@@ -32,7 +32,7 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    // ✅ อัปเดตข้อมูลใน user.products
+    //  อัปเดตข้อมูลใน user.products
     let updated = false;
     
     user.products = user.products.map(p => {
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
           version: latestProduct.itemsversion,
           currentVersion: latestProduct.itemsversion,
           fileUrl: latestProduct.itemsfile,
-          hasUpdate: false  // ✅ สำคัญ: ปิดการแจ้งเตือน
+          hasUpdate: false  //  สำคัญ: ปิดการแจ้งเตือน
         };
       }
       return p;

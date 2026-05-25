@@ -9,7 +9,7 @@ const PurchaseSchema = new mongoose.Schema({
     purchaseDate: { type: Date, default: Date.now },
 });
 
-// ✅ ตรวจสอบก่อนว่าโมเดลถูกโหลดหรือยัง เพื่อป้องกันข้อผิดพลาด
+//  ตรวจสอบก่อนว่าโมเดลถูกโหลดหรือยัง เพื่อป้องกันข้อผิดพลาด
 const Purchase = mongoose.models.Purchase || mongoose.model("Purchase", PurchaseSchema);
 
 export default Purchase;

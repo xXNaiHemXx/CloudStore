@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         const formattedImages = Array.isArray(itemsimages) ? itemsimages : [];
         const formattedurl = itemsurlyoutube && typeof itemsurlyoutube === "string" ? itemsurlyoutube : "";
         
-        // ✅ แปลง discordRoleIds ให้เป็น Array ของ String
+        //  แปลง discordRoleIds ให้เป็น Array ของ String
         let formattedRoleIds = [];
         if (Array.isArray(discordRoleIds)) {
           formattedRoleIds = discordRoleIds.filter(id => id && id.trim() !== "");
@@ -59,13 +59,13 @@ export default async function handler(req, res) {
           itemsfile,
           itemsversion,
           discordRoleIds: formattedRoleIds,
-          currentVersion: itemsversion,  // ✅ เพิ่ม: ใช้ version เดียวกับ itemsversion
-          latestUpdate: new Date(),       // ✅ เพิ่ม
-          versionStatus: "stable",       // ✅ เพิ่ม
-          totalDownloads: 0,             // ✅ เพิ่ม
-          totalUpdates: 0,               // ✅ เพิ่ม
-          tags: [],                      // ✅ เพิ่ม
-          versionHistory: []             // ✅ เพิ่ม
+          currentVersion: itemsversion,  //  เพิ่ม: ใช้ version เดียวกับ itemsversion
+          latestUpdate: new Date(),       //  เพิ่ม
+          versionStatus: "stable",       //  เพิ่ม
+          totalDownloads: 0,             //  เพิ่ม
+          totalUpdates: 0,               //  เพิ่ม
+          tags: [],                      //  เพิ่ม
+          versionHistory: []             //  เพิ่ม
         });
 
         await newItem.save();
@@ -83,12 +83,12 @@ export default async function handler(req, res) {
         const { 
           id, itemsname, itemsprice, itemsimage, itemsimages, 
           itemsurlyoutube, itemsdesc, itemstitle, itemsfile, 
-          itemsversion, discordRoleIds, currentVersion  // ✅ เพิ่ม currentVersion
+          itemsversion, discordRoleIds, currentVersion  //  เพิ่ม currentVersion
         } = req.body;
         
         if (!id) return res.status(400).json({ error: "Missing item ID" });
 
-        // ✅ แปลง discordRoleIds ให้เป็น Array ของ String
+        //  แปลง discordRoleIds ให้เป็น Array ของ String
         let formattedRoleIds = [];
         if (Array.isArray(discordRoleIds)) {
           formattedRoleIds = discordRoleIds.filter(id => id && id.trim() !== "");
@@ -108,8 +108,8 @@ export default async function handler(req, res) {
           itemstitle,
           itemsfile,
           discordRoleIds: formattedRoleIds,
-          currentVersion: currentVersion || itemsversion,  // ✅ เพิ่ม
-          latestUpdate: new Date()  // ✅ เพิ่ม 
+          currentVersion: currentVersion || itemsversion,  //  เพิ่ม
+          latestUpdate: new Date()  //  เพิ่ม 
         }, { new: true });
 
         if (!updatedItem) return res.status(404).json({ error: "Item not found" });

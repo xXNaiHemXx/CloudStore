@@ -15,7 +15,7 @@ const s3Client = new S3Client({
 const BUCKET_NAME = process.env.R2_BUCKET_NAME;
 const PUBLIC_URL = process.env.R2_PUBLIC_URL || `https://${BUCKET_NAME}.${process.env.R2_ACCOUNT_ID}.r2.dev`;
 
-// ✅ สร้าง presigned URL สำหรับอัปโหลด (วิธีง่าย - ไฟล์เดียว)
+//  สร้าง presigned URL สำหรับอัปโหลด (วิธีง่าย - ไฟล์เดียว)
 export async function getPresignedUploadUrl(key, contentType, expiresIn = 3600) {
   try {
     const command = new PutObjectCommand({
@@ -32,7 +32,7 @@ export async function getPresignedUploadUrl(key, contentType, expiresIn = 3600) 
   }
 }
 
-// ✅ เริ่มการอัปโหลดแบบ Multipart (สำหรับไฟล์ใหญ่)
+//  เริ่มการอัปโหลดแบบ Multipart (สำหรับไฟล์ใหญ่)
 export async function initiateMultipartUpload(key, contentType) {
   try {
     const command = new CreateMultipartUploadCommand({
@@ -49,7 +49,7 @@ export async function initiateMultipartUpload(key, contentType) {
   }
 }
 
-// ✅ อัปโหลด Part (ส่วนของไฟล์)
+//  อัปโหลด Part (ส่วนของไฟล์)
 export async function getPartUploadUrl(key, uploadId, partNumber, expiresIn = 3600) {
   try {
     const command = new UploadPartCommand({
@@ -67,7 +67,7 @@ export async function getPartUploadUrl(key, uploadId, partNumber, expiresIn = 36
   }
 }
 
-// ✅ เสร็จสิ้นการอัปโหลด Multipart
+//  เสร็จสิ้นการอัปโหลด Multipart
 export async function completeMultipartUpload(key, uploadId, parts) {
   try {
     const command = new CompleteMultipartUploadCommand({

@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
     if (req.method === "GET") {
         try {
-            const purchaseCount = await Purchase.countDocuments(); // ✅ นับจำนวนการซื้อทั้งหมด
+            const purchaseCount = await Purchase.countDocuments(); //  นับจำนวนการซื้อทั้งหมด
             res.status(200).json({ count: purchaseCount });
         } catch (error) {
             console.error("Error fetching purchase count:", error);

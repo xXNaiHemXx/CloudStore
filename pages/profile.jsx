@@ -9,7 +9,7 @@ import { useUser } from "../context/UserContext";
 import { useConfirm } from "../context/ConfirmContext";
 import { useToast } from "../context/ToastContext";
 import Icon from "../components/Icon";
-import { addLog, LOG_TYPES } from "../utils/logger"; // ✅ เพิ่ม
+import { addLog, LOG_TYPES } from "../utils/logger"; //  เพิ่ม
 
 export default function Profile() {
   const { data: session } = useSession();
@@ -51,7 +51,7 @@ export default function Profile() {
   const checkForUpdates = async (showAlert = false) => {
     if (!session) return;
     
-    // ✅ ป้องกันเรียกซ้ำภายใน 5 วิ
+    //  ป้องกันเรียกซ้ำภายใน 5 วิ
     const now = Date.now();
     if (now - lastCheckTime < 5000 && !showAlert) {
       console.log('⏭️ Skipping check (too soon)');
@@ -83,7 +83,7 @@ export default function Profile() {
   useEffect(() => {
   if (!session || activeTab !== 'products') return;
   
-  // ✅ ตรวจสอบอัปเดตอัตโนมัติ (รอ 2 วิ ให้ข้อมูลโหลดเสร็จ)
+  //  ตรวจสอบอัปเดตอัตโนมัติ (รอ 2 วิ ให้ข้อมูลโหลดเสร็จ)
   const timer = setTimeout(() => {
       checkForUpdates(false);
     }, 2000);
@@ -102,8 +102,12 @@ export default function Profile() {
         window.open(res.data.downloadUrl, "_blank");
         success(`ดาวน์โหลด ${productName} เวอร์ชัน ${res.data.version} สำเร็จ`);
         
-        // ✅ Log อัปเดต
-        await addLog('product_update', 'อัปเดตสินค้า', `${session.user.name} อัปเดต "${productName}" เป็น v${res.data.version}`, session.user.name, { productId, version: res.data.version }).catch(() => {});
+        //  Log อัปเดต
+        await addLog('product_update', "อัปเดตสินค้า", `...`, session.user.name, {
+          discordId: session.user.discordId || session.user.id, // 
+          productName: productName,
+          version: res.data.version,
+        }).catch(() => {});
         
         await refreshPoints();
         setAvailableUpdates([]);
@@ -152,18 +156,11 @@ export default function Profile() {
 
       success("ส่งคำขอเติมเงินสำเร็จ! กรุณารอการตรวจสอบ");
       
-      // ✅ Log เติมเงิน
-      await addLog(
-      LOG_TYPES.TOPUP,
-      "เติมเงิน",
-      `${session.user.name} เติมเงิน ${amount} บาท (${amount} Point)`,
-      session.user.name,
-      {
-        discordId: session.user.id,
+      //  Log เติมเงิน
+      await addLog(LOG_TYPES.TOPUP, "เติมเงิน", `...`, session.user.name, {
+        discordId: session.user.id, // 
         amount: parseFloat(amount),
-        points: parseFloat(amount), // 1 บาท = 1 Point
-      }
-    ).catch(() => {});
+      }).catch(() => {});
     
     removeFile();
     setAmount("");

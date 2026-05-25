@@ -11,7 +11,7 @@ import TopupHistory from "@/models/TopupHistory";
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 const BASE_URL = process.env.BASE_URL;
 
-// ✅ ชื่อบัญชีที่ถูกต้อง (ใช้ตรวจสอบแบบ contains)
+//  ชื่อบัญชีที่ถูกต้อง (ใช้ตรวจสอบแบบ contains)
 const EXPECTED_ACCOUNT_NAMES = ["อิบรอเหม", "Ibrohem", "อุสมา", "Usama"];
 
 function isNameMatch(receivedName) {
@@ -95,7 +95,7 @@ export default async function handler(req, res) {
     const slipData = await slipRes.json();
     console.log("📌 SlipOK Response:", JSON.stringify(slipData, null, 2));
 
-    // ✅ ตรวจสอบว่ามี data หรือไม่
+    //  ตรวจสอบว่ามี data หรือไม่
     if (!slipData?.data?.transRef) {
       await notifyDiscord("❌ ตรวจสอบสลิปล้มเหลว", slipData?.message || "ไม่สามารถตรวจสอบสลิปได้", 16711680, imageUrl);
 
@@ -122,7 +122,7 @@ export default async function handler(req, res) {
       accountValue: receiver?.account?.value
     });
 
-    // ✅ ตรวจสอบชื่อผู้รับ
+    //  ตรวจสอบชื่อผู้รับ
     let receiverName = receiver?.displayName || receiver?.name || "";
     let isValidTransfer = false;
     
@@ -131,7 +131,7 @@ export default async function handler(req, res) {
       console.log(`📌 ตรวจสอบชื่อ "${receiverName}": ${isValidTransfer ? "✅ ผ่าน" : "❌ ไม่ผ่าน"}`);
     }
     
-    // ✅ ถ้าชื่อผ่าน -> อนุมัติเลย
+    //  ถ้าชื่อผ่าน -> อนุมัติเลย
     if (!isValidTransfer) {
       const errorMsg = `ชื่อบัญชีผู้รับไม่ตรง: "${receiverName}"`;
       
@@ -157,7 +157,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ ตรวจสอบสลิปซ้ำ
+    //  ตรวจสอบสลิปซ้ำ
     await connectToDB();
 
     const duplicate = await SlipLog.findOne({ transRef });
@@ -185,7 +185,7 @@ export default async function handler(req, res) {
 
     await SlipLog.create({ transRef, userId });
 
-    // ✅ เติมเงิน
+    //  เติมเงิน
     const finalAmount = parseFloat(slipAmount) || parseFloat(amount);
     
     const updated = await User.findOneAndUpdate(

@@ -11,7 +11,7 @@ const nextConfig = {
   
   staticPageGenerationTimeout: 600,
   
-  // ✅ ให้ Next.js serve static files
+  //  ให้ Next.js serve static files
   output: 'standalone',
   
   experimental: {
