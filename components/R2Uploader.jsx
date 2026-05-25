@@ -35,8 +35,20 @@ export default function R2Uploader({ onUploadComplete, accept = "*", maxSize = 5
 
       // 2. อัปโหลดตรงไป R2 ผ่าน XMLHttpRequest (ไม่ผ่าน Vercel API)
       const xhr = new XMLHttpRequest();
-      xhr.open("PUT", uploadUrl);
-      xhr.setRequestHeader("Content-Type", file.type);
+
+      xhr.open("PUT", uploadUrl, true);
+
+      xhr.timeout = 1000 * 60 * 60 * 3; // 3 ชั่วโมง
+
+      xhr.setRequestHeader(
+        "Content-Type",
+        file.type || "application/octet-stream"
+      );
+
+      xhr.setRequestHeader(
+        "Cache-Control",
+        "no-cache"
+      );
       
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {
@@ -47,7 +59,7 @@ export default function R2Uploader({ onUploadComplete, accept = "*", maxSize = 5
       };
       
       xhr.onload = () => {
-        if (xhr.status === 200) {
+        if (xhr.status === 200 || xhr.status === 204) {
           console.log("✅ Upload to R2 successful");
           onUploadComplete(publicUrl);
           setUploading(false);
@@ -61,7 +73,10 @@ export default function R2Uploader({ onUploadComplete, accept = "*", maxSize = 5
         setError("Network error during upload");
         setUploading(false);
       };
-      
+      xhr.ontimeout = () => {
+        setError("Upload timeout");
+        setUploading(false);
+      };
       xhr.send(file);
 
     } catch (err) {
