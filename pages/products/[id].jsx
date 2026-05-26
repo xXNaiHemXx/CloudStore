@@ -34,6 +34,12 @@ export default function ProductDetail() {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [loadingRecommended, setLoadingRecommended] = useState(false);
 
+  // ✅ Coupon State
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [finalPrice, setFinalPrice] = useState(null);
+
   const ownedProductIds = new Set((userProducts || []).map(p => p.productId));
   const isProductOwned = (productId) => session && ownedProductIds.has(productId);
   const isNewProduct = (createdAt) => {
@@ -41,6 +47,37 @@ export default function ProductDetail() {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     return new Date(createdAt) > sevenDaysAgo;
+  };
+
+  // ✅ ตรวจสอบคูปอง
+  const handleValidateCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setValidatingCoupon(true);
+    try {
+      const res = await axios.post('/api/coupon/validate', {
+        code: couponCode.trim(),
+        totalPrice: product?.itemsprice || 0,
+      });
+      if (res.data.success) {
+        setAppliedCoupon(res.data.coupon);
+        setFinalPrice(res.data.coupon.finalPrice);
+        success(`ใช้คูปอง "${res.data.coupon.code}" ลด ${res.data.coupon.discount.toLocaleString()} Point!`);
+      }
+    } catch (err) {
+      error(err.response?.data?.error || "คูปองไม่ถูกต้อง");
+      setAppliedCoupon(null);
+      setFinalPrice(null);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  // ✅ กด Enter เพื่อตรวจสอบคูปอง
+  const handleCouponKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleValidateCoupon();
+    }
   };
 
   useEffect(() => {
@@ -82,15 +119,21 @@ export default function ProductDetail() {
 
     const currentPoints = Number(userPoints || 0);
     const productPrice = Number(product?.itemsprice || 0);
+    const priceToUse = appliedCoupon ? finalPrice : productPrice;
+    const discountAmount = appliedCoupon ? appliedCoupon.discount : 0;
 
-    if (currentPoints < productPrice) {
-      error(`แต้มไม่เพียงพอ! คุณมี ${currentPoints.toLocaleString()} แต้ม แต่ต้องใช้ ${productPrice.toLocaleString()} แต้ม`);
+    if (currentPoints < priceToUse) {
+      error(`แต้มไม่เพียงพอ! คุณมี ${currentPoints.toLocaleString()} แต้ม แต่ต้องใช้ ${priceToUse.toLocaleString()} แต้ม`);
       return;
     }
 
+    const couponText = appliedCoupon 
+      ? `\n\n🎫 ใช้คูปอง "${appliedCoupon.code}" ลด ${discountAmount.toLocaleString()} Point\n💰 ราคาสุทธิ: ${priceToUse.toLocaleString()} Point`
+      : '';
+
     const confirmed = await confirm({
       title: "ยืนยันการซื้อ",
-      message: `คุณต้องการซื้อ ${product?.itemsname} ราคา ${productPrice.toLocaleString()} Points ใช่หรือไม่?`,
+      message: `คุณต้องการซื้อ ${product?.itemsname} ราคา ${productPrice.toLocaleString()} Points${couponText} ใช่หรือไม่?`,
       confirmText: "ซื้อเลย",
       cancelText: "ยกเลิก",
       type: "info",
@@ -103,34 +146,41 @@ export default function ProductDetail() {
         userId: session.user.discordId || session.user.id,
         productId: id,
         price: productPrice,
+        finalPrice: priceToUse,
+        couponCode: appliedCoupon?.code || null,
+        discount: discountAmount,
       });
-      if (purchaseRes.data.success) {
-          await refreshPoints();
-          
-          //  Log พร้อมข้อมูลละเอียด
-            await addLog(
-              LOG_TYPES.PURCHASE,
-              "ซื้อสินค้า",
-              `${session.user.name} ซื้อ "${product?.itemsname}" ราคา ${productPrice} Point`,
-              session.user.name,
-              {
-                discordId: session.user.discordId || session.user.id, // 
-                productName: product?.itemsname,
-                price: productPrice,
-                roleIds: product?.discordRoleIds || [],
-                version: product?.itemsversion,
-              }
-            ).catch(() => {});
 
-          success(`ซื้อสินค้าสำเร็จ! คงเหลือ ${purchaseRes.data.remainingPoints?.toLocaleString()} Points`);
-          router.push("/profile");
-        }
+      if (purchaseRes.data.success) {
+        await refreshPoints();
+
+        // ✅ Log พร้อมข้อมูลละเอียด
+        await addLog(
+          LOG_TYPES.PURCHASE,
+          "ซื้อสินค้า",
+          `${session.user.name} ซื้อ "${product?.itemsname}" ราคา ${priceToUse} Point${appliedCoupon ? ` (ใช้คูปอง ${appliedCoupon.code} ลด ${discountAmount})` : ''}`,
+          session.user.name,
+          {
+            discordId: session.user.discordId || session.user.id,
+            productName: product?.itemsname,
+            price: priceToUse,
+            originalPrice: productPrice,
+            couponCode: appliedCoupon?.code || null,
+            discount: discountAmount,
+            roleIds: product?.discordRoleIds || [],
+            version: product?.itemsversion,
+          }
+        ).catch(() => {});
+
+        success(`ซื้อสินค้าสำเร็จ! คงเหลือ ${purchaseRes.data.remainingPoints?.toLocaleString()} Points`);
+        router.push("/profile");
+      }
     } catch (err) {
       const errorMsg = err.response?.data?.error || "เกิดข้อผิดพลาด";
       error(errorMsg);
-      
-      //  Log error
-      await addLog(LOG_TYPES.ERROR, "ซื้อสินค้าผิดพลาด", errorMsg, session.user.name).catch(() => {});
+      await addLog(LOG_TYPES.ERROR, "ซื้อสินค้าผิดพลาด", errorMsg, session.user.name, {
+        discordId: session.user.discordId || session.user.id,
+      }).catch(() => {});
     } finally {
       setIsPurchasing(false);
     }
@@ -210,14 +260,74 @@ export default function ProductDetail() {
             </div>
 
             <div className={styles.productSidebar}>
+              {/* PRICE BOX */}
               <div className={styles.priceBox}>
                 <Icon name="coin" size="1.5rem" />
                 <div className={styles.priceInfo}>
                   <p className={styles.priceLabel}>ราคา</p>
-                  <span className={styles.priceValue}>{product.itemsprice?.toLocaleString()}<span className={styles.priceUnit}>Point</span></span>
+                  <span className={styles.priceValue}>
+                    {appliedCoupon ? (
+                      <>
+                        <span style={{ textDecoration: 'line-through', color: '#6b7280', fontSize: '1rem' }}>
+                          {product.itemsprice?.toLocaleString()}
+                        </span>
+                        {' '}
+                        {finalPrice?.toLocaleString()}
+                      </>
+                    ) : (
+                      product.itemsprice?.toLocaleString()
+                    )}
+                    <span className={styles.priceUnit}>Point</span>
+                  </span>
+                  {appliedCoupon && (
+                    <p style={{ color: '#10b981', fontSize: '0.75rem', margin: '0.25rem 0 0' }}>
+                      <Icon name="discount" size="0.7rem" /> ลด {appliedCoupon.discount.toLocaleString()} Point
+                    </p>
+                  )}
                 </div>
               </div>
 
+              {/* ✅ COUPON INPUT */}
+              <div className={styles.couponSection}>
+                <label className={styles.couponLabel}>
+                  <Icon name="discount" size="0.8rem" /> โค้ดส่วนลด
+                </label>
+                <div className={styles.couponInputRow}>
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    onKeyDown={handleCouponKeyDown}
+                    placeholder="ใส่โค้ดส่วนลด"
+                    className={styles.couponInput}
+                    disabled={!!appliedCoupon}
+                  />
+                  {!appliedCoupon ? (
+                    <button 
+                      onClick={handleValidateCoupon} 
+                      disabled={validatingCoupon || !couponCode.trim()}
+                      className={styles.couponApplyBtn}
+                    >
+                      {validatingCoupon ? <Icon name="loading" size="0.7rem" /> : 'ใช้'}
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => { setAppliedCoupon(null); setFinalPrice(null); setCouponCode(''); }}
+                      className={styles.couponRemoveBtn}
+                    >
+                      <Icon name="close" size="0.7rem" />
+                    </button>
+                  )}
+                </div>
+                {appliedCoupon && (
+                  <div className={styles.couponApplied}>
+                    <Icon name="check" size="0.7rem" />
+                    <span>ใช้ "{appliedCoupon.code}" สำเร็จ! ลด {appliedCoupon.discount.toLocaleString()} Point</span>
+                  </div>
+                )}
+              </div>
+
+              {/* FEATURE BOX */}
               <div className={styles.featureBox}>
                 <p className={styles.featureTitle}><Icon name="star" size="0.8rem" /> สิ่งที่คุณจะได้รับ</p>
                 <ul className={styles.featureList}>
@@ -227,9 +337,18 @@ export default function ProductDetail() {
                 </ul>
               </div>
 
-              <button className={styles.buyButton} onClick={handlePurchase} disabled={isPurchasing || userPoints < (product?.itemsprice || 0)}>
+              {/* BUY BUTTON */}
+              <button 
+                className={styles.buyButton} 
+                onClick={handlePurchase} 
+                disabled={isPurchasing || userPoints < (appliedCoupon ? finalPrice : product?.itemsprice || 0)}
+              >
                 <span className={styles.buyButtonText}>
-                  {isPurchasing ? <><Icon name="loading" size="0.8rem" /> กำลังดำเนินการ...</> : <><Icon name="cart" size="0.9rem" /> ซื้อเลย - {product?.itemsprice?.toLocaleString()} Point</>}
+                  {isPurchasing ? (
+                    <><Icon name="loading" size="0.8rem" /> กำลังดำเนินการ...</>
+                  ) : (
+                    <><Icon name="cart" size="0.9rem" /> ซื้อเลย - {appliedCoupon ? finalPrice?.toLocaleString() : product?.itemsprice?.toLocaleString()} Point</>
+                  )}
                 </span>
               </button>
             </div>
@@ -264,7 +383,7 @@ export default function ProductDetail() {
                   return (
                     <Link key={recProduct._id} href={`/products/${recProduct._id}`} className={styles.recommendedCard}>
                       {isNew && <span className={styles.recommendedNewBadge}><Icon name="new" size="0.6rem" /> NEW</span>}
-                      {isOwned && <div className={styles.recommendedOwnedBadge}><Icon name="check" size="0.7rem" /> คุณเป็นเจ้าของแล้ว</div>}
+                      {isOwned && <div className={styles.recommendedOwnedBadge}><Icon name="check" size="0.7rem" /> IN LIBRARY</div>}
                       <div className={styles.recommendedImageWrapper}><img src={recProduct.itemsimage} alt={recProduct.itemsname} loading="lazy" /></div>
                       <div className={styles.recommendedInfo}>
                         <h3 className={styles.recommendedName}>{recProduct.itemsname}</h3>
