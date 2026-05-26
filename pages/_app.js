@@ -11,7 +11,7 @@ function SessionLogger({ children }) {
   const { data: session } = useSession();
   const router = useRouter();
 
-  // ✅ Log เมื่อ login
+  //  Log เมื่อ login
   useEffect(() => {
     if (session?.user) {
       addLog(
@@ -25,9 +25,9 @@ function SessionLogger({ children }) {
         }
       ).catch(() => {});
     }
-  }, [session?.user?.id]); // ✅ ทำงานเฉพาะเมื่อ user id เปลี่ยน
+  }, [session?.user?.id]); //  ทำงานเฉพาะเมื่อ user id เปลี่ยน
 
-  // ✅ Log เมื่อเปลี่ยนหน้า
+  //  Log เมื่อเปลี่ยนหน้า
   useEffect(() => {
     const handleRouteChange = (url) => {
       if (session?.user && !url.includes('/admin') && !url.includes('/api')) {
