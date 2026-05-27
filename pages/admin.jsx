@@ -217,8 +217,13 @@ export default function Admin() {
   const [loadingCoupons, setLoadingCoupons] = useState(false);
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null);
-  const [couponForm, setCouponForm] = useState({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '' });
+  const [couponForm, setCouponForm] = useState({ 
+    code: '', description: '', discountType: 'percentage', discountValue: '', 
+    minPurchase: 0, maxUsage: 0, expiresAt: '', 
+    productRestriction: 'all', allowedProductIds: [] 
+  });
   const [savingCoupon, setSavingCoupon] = useState(false);
+  const [allProducts, setAllProducts] = useState([]);
 
   // --- Sidebar Tabs ---
   const tabs = [
@@ -233,7 +238,13 @@ export default function Admin() {
     { key: "users", label: "Users", icon: "users", color: "#14b8a6" },
   ];
 
-  // --- Effects ---
+  // --- Effects ---  
+  useEffect(() => {
+    if (showCouponModal) {
+      axios.get("/api/items").then(res => setAllProducts(res.data || [])).catch(() => {});
+    }
+  }, [showCouponModal]);
+
   useEffect(() => {
     if (!session || activeTab !== "dashboard") return;
     Promise.all([axios.get("/api/items"), axios.get("/api/user/count"), axios.get("/api/user/purchase")])
@@ -338,13 +349,29 @@ export default function Admin() {
     if (!couponForm.code || !couponForm.discountValue) { error("กรุณากรอกโค้ดและส่วนลด"); return; }
     setSavingCoupon(true);
     try {
-      if (editingCoupon) { await axios.put('/api/admin/coupons', { id: editingCoupon._id, ...couponForm }); success("แก้ไขคูปองสำเร็จ!"); }
-      else { await axios.post('/api/admin/coupons', couponForm); success("เพิ่มคูปองสำเร็จ!"); }
-      setShowCouponModal(false); setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '' }); fetchCoupons();
+      const payload = { ...couponForm };
+      if (editingCoupon) { await axios.put('/api/admin/coupons', { id: editingCoupon._id, ...payload }); success("แก้ไขคูปองสำเร็จ!"); }
+      else { await axios.post('/api/admin/coupons', payload); success("เพิ่มคูปองสำเร็จ!"); }
+      setShowCouponModal(false); setEditingCoupon(null); 
+      setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '', productRestriction: 'all', allowedProductIds: [] }); 
+      fetchCoupons();
     } catch (err) { error(err.response?.data?.error || "บันทึกไม่สำเร็จ"); } finally { setSavingCoupon(false); }
   };
+  
   const handleDeleteCoupon = async (id) => { const confirmed = await confirm({ title: "ยืนยันการลบ", message: "ต้องการลบคูปองนี้?", confirmText: "ลบ", cancelText: "ยกเลิก", type: "danger" }); if (!confirmed) return; try { await axios.delete(`/api/admin/coupons?id=${id}`); success("ลบคูปองสำเร็จ!"); fetchCoupons(); } catch { error("ลบไม่สำเร็จ"); } };
-  const handleEditCoupon = (coupon) => { setEditingCoupon(coupon); setCouponForm({ code: coupon.code, description: coupon.description || '', discountType: coupon.discountType, discountValue: coupon.discountValue, minPurchase: coupon.minPurchase || 0, maxUsage: coupon.maxUsage || 0, expiresAt: coupon.expiresAt ? new Date(coupon.expiresAt).toISOString().slice(0, 10) : '' }); setShowCouponModal(true); };
+  
+  const handleEditCoupon = (coupon) => { 
+    setEditingCoupon(coupon); 
+    setCouponForm({ 
+      code: coupon.code, description: coupon.description || '', 
+      discountType: coupon.discountType, discountValue: coupon.discountValue, 
+      minPurchase: coupon.minPurchase || 0, maxUsage: coupon.maxUsage || 0, 
+      expiresAt: coupon.expiresAt ? new Date(coupon.expiresAt).toISOString().slice(0, 10) : '',
+      productRestriction: coupon.productRestriction || "all",
+      allowedProductIds: coupon.allowedProductIds?.map(p => p._id || p) || [],
+    }); 
+    setShowCouponModal(true); 
+  };
 
   // --- Pagination ---
   const totalPages = Math.ceil(logs.length / logsPerPage);
@@ -393,7 +420,6 @@ export default function Admin() {
 
       {/* ========== MAIN CONTENT ========== */}
       <div className={styles.mainWrapper}>
-        {/* Top Bar */}
         <header className={styles.topBar}>
           <div className={styles.topBarLeft}>
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className={styles.topBarMenuBtn}><Icon name="menu" size="1.2rem" /></button>
@@ -401,14 +427,13 @@ export default function Admin() {
           </div>
           <div className={styles.topBarRight}>
             <button onClick={() => { setActiveTab("products"); setEditingItem(null); setShowModal(true); }} className={styles.topBarAction}><Icon name="add" size="0.8rem" /><span>Add Product</span></button>
-            <button onClick={() => { setActiveTab("coupons"); setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '' }); setShowCouponModal(true); }} className={styles.topBarAction}><Icon name="discount" size="0.8rem" /><span>Add Coupon</span></button>
+            <button onClick={() => { setActiveTab("coupons"); setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '', productRestriction: 'all', allowedProductIds: [] }); setShowCouponModal(true); }} className={styles.topBarAction}><Icon name="discount" size="0.8rem" /><span>Add Coupon</span></button>
           </div>
         </header>
 
-        {/* Content */}
         <main className={styles.mainContent}>
           
-          {/* ==================== DASHBOARD ==================== */}
+          {/* DASHBOARD */}
           {activeTab === "dashboard" && (
             <div className={styles.dashboardGrid}>
               <div className={styles.statsGrid}>
@@ -428,12 +453,12 @@ export default function Admin() {
                 <h3 className={styles.sectionTitle}>Quick Actions</h3>
                 <div className={styles.quickActionsGrid}>
                   {[
-                    { icon: "add", label: "Add Product", tab: "products", color: "#10b981", action: () => { setActiveTab("products"); setEditingItem(null); setShowModal(true); } },
-                    { icon: "upload", label: "Upload Files", tab: "uploads", color: "#8b5cf6", action: () => setActiveTab("uploads") },
-                    { icon: "discount", label: "Create Coupon", tab: "coupons", color: "#ec4899", action: () => { setActiveTab("coupons"); setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '' }); setShowCouponModal(true); } },
-                    { icon: "users", label: "Manage Users", tab: "users", color: "#14b8a6", action: () => setActiveTab("users") },
-                    { icon: "order", label: "View Orders", tab: "orders", color: "#f59e0b", action: () => setActiveTab("orders") },
-                    { icon: "history", label: "View Logs", tab: "logs", color: "#f43f5e", action: () => setActiveTab("logs") },
+                    { icon: "add", label: "Add Product", color: "#10b981", action: () => { setActiveTab("products"); setEditingItem(null); setShowModal(true); } },
+                    { icon: "upload", label: "Upload Files", color: "#8b5cf6", action: () => setActiveTab("uploads") },
+                    { icon: "discount", label: "Create Coupon", color: "#ec4899", action: () => { setActiveTab("coupons"); setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '', productRestriction: 'all', allowedProductIds: [] }); setShowCouponModal(true); } },
+                    { icon: "users", label: "Manage Users", color: "#14b8a6", action: () => setActiveTab("users") },
+                    { icon: "order", label: "View Orders", color: "#f59e0b", action: () => setActiveTab("orders") },
+                    { icon: "history", label: "View Logs", color: "#f43f5e", action: () => setActiveTab("logs") },
                   ].map((action, i) => (
                     <button key={i} onClick={action.action} className={styles.quickActionBtn}>
                       <Icon name={action.icon} size="1.5rem" color={action.color} />
@@ -445,14 +470,14 @@ export default function Admin() {
             </div>
           )}
 
-          {/* ==================== ORDERS ==================== */}
+          {/* ORDERS */}
           {activeTab === "orders" && (
             <div className={styles.tabContent}>
               <div className={styles.statsGrid} style={{ marginBottom: '1.5rem' }}>
                 {[
-                  { value: `฿${totalRevenue.toLocaleString()}`, label: "Total Revenue", color: "#3b82f6" },
-                  { value: `${totalOrders} Orders`, label: "Total Orders", color: "#f59e0b" },
-                  { value: topMod, label: "Best Seller", color: "#10b981" },
+                  { value: `฿${totalRevenue.toLocaleString()}`, label: "Total Revenue" },
+                  { value: `${totalOrders} Orders`, label: "Total Orders" },
+                  { value: topMod, label: "Best Seller" },
                 ].map((s, i) => (
                   <div key={i} className={styles.statsCard}>
                     <div className={styles.statsCardInfo}><h3 style={{ fontSize: s.value.length > 15 ? '0.85rem' : '1.5rem' }}>{s.value}</h3><p>{s.label}</p></div>
@@ -463,7 +488,7 @@ export default function Admin() {
             </div>
           )}
 
-          {/* ==================== TOPUPS ==================== */}
+          {/* TOPUPS */}
           {activeTab === "topups" && (
             <div className={styles.tabContent}>
               {loadingTopups ? <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>Loading...</p></div> : topups.length === 0 ? <div className={styles.emptyState}><Icon name="history" size="3rem" /><p className={styles.emptyTitle}>No topup history</p></div> : (
@@ -472,7 +497,7 @@ export default function Admin() {
             </div>
           )}
 
-          {/* ==================== PRODUCTS ==================== */}
+          {/* PRODUCTS */}
           {activeTab === "products" && (
             <div className={styles.tabContent}>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
@@ -484,7 +509,7 @@ export default function Admin() {
             </div>
           )}
 
-          {/* ==================== UPLOADS ==================== */}
+          {/* UPLOADS */}
           {activeTab === "uploads" && (
             <div className={styles.tabContent}>
               <div className={styles.uploadSection}>
@@ -501,7 +526,7 @@ export default function Admin() {
             </div>
           )}
 
-          {/* ==================== R2 FILES ==================== */}
+          {/* R2 FILES */}
           {activeTab === "r2" && (
             <div className={styles.tabContent}>
               <div className={styles.r2UploadArea}><h3 style={{ margin: '0 0 1rem', fontSize: '0.95rem', color: '#e4e6f0' }}><Icon name="cloud" size="1rem" /> Upload to R2</h3><R2Uploader onUploadComplete={() => { success("Uploaded to R2!"); fetchR2Files(); }} accept="*/*" maxSize={5000} /><small style={{ color: '#6b7280', fontSize: '0.75rem', display: 'block', marginTop: '0.5rem' }}><Icon name="info" size="0.6rem" /> All file types, max 5GB</small></div>
@@ -510,7 +535,7 @@ export default function Admin() {
             </div>
           )}
 
-          {/* ==================== USERS ==================== */}
+          {/* USERS */}
           {activeTab === "users" && (
             <div className={styles.tabContent}>
               <div className={styles.userGrid}>{users.map(user => (<div key={user.id} className={styles.userCard} onClick={() => handleSelectUser(user)}><div className={styles.userInfoLeft}><h2 className={styles.userNameCard}>{user.name}</h2><p><Icon name="coin" size="0.7rem" /> {user.points?.toLocaleString() || 0} points</p></div><div className={styles.userInfoRight}><p>{user.email}</p><p className={styles.userDetailLink}><Icon name="info" size="0.7rem" /> View Details →</p></div></div>))}</div>
@@ -535,18 +560,18 @@ export default function Admin() {
             </div>
           )}
 
-          {/* ==================== COUPONS ==================== */}
+          {/* COUPONS */}
           {activeTab === "coupons" && (
             <div className={styles.tabContent}>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
-                <button onClick={() => { setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '' }); setShowCouponModal(true); }} className={styles.addButton}><Icon name="add" size="0.8rem" /> Add Coupon</button>
+                <button onClick={() => { setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '', productRestriction: 'all', allowedProductIds: [] }); setShowCouponModal(true); }} className={styles.addButton}><Icon name="add" size="0.8rem" /> Add Coupon</button>
               </div>
               {loadingCoupons ? <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>Loading...</p></div> : coupons.length === 0 ? <div className={styles.emptyState}><Icon name="discount" size="3rem" /><p className={styles.emptyTitle}>No coupons yet</p></div> : (
-                <div className={styles.tableWrapper}><table className={styles.dataTable}><thead><tr><th>Code</th><th>Discount</th><th>Type</th><th>Used</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody>{coupons.map((coupon) => { const now = new Date(); const isExpired = coupon.expiresAt && new Date(coupon.expiresAt) < now; const isMaxedOut = coupon.maxUsage > 0 && coupon.usedCount >= coupon.maxUsage; const isValid = coupon.isActive && !isExpired && !isMaxedOut; return (<tr key={coupon._id}><td><strong>{coupon.code}</strong></td><td>{coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `${coupon.discountValue?.toLocaleString() || 0} Point`}</td><td>{coupon.discountType === 'percentage' ? 'Percentage' : 'Fixed'}</td><td>{coupon.usedCount || 0} / {coupon.maxUsage > 0 ? coupon.maxUsage : '∞'}</td><td>{coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleDateString("th-TH") : 'Unlimited'}</td><td><span className={`${styles.statusBadge} ${isValid ? styles.statusSuccess : styles.statusFailed}`}>{!coupon.isActive ? 'Disabled' : isExpired ? 'Expired' : isMaxedOut ? 'Full' : 'Active'}</span></td><td><button onClick={() => handleEditCoupon(coupon)} className={styles.editBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}><Icon name="edit" size="0.7rem" /></button><button onClick={() => handleDeleteCoupon(coupon._id)} className={styles.deleteBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', marginLeft: '0.25rem' }}><Icon name="delete" size="0.7rem" /></button></td></tr>); })}</tbody></table></div>
+                <div className={styles.tableWrapper}><table className={styles.dataTable}><thead><tr><th>Code</th><th>Discount</th><th>Type</th><th>Used</th><th>Expires</th><th>Products</th><th>Status</th><th></th></tr></thead><tbody>{coupons.map((coupon) => { const now = new Date(); const isExpired = coupon.expiresAt && new Date(coupon.expiresAt) < now; const isMaxedOut = coupon.maxUsage > 0 && coupon.usedCount >= coupon.maxUsage; const isValid = coupon.isActive && !isExpired && !isMaxedOut; return (<tr key={coupon._id}><td><strong>{coupon.code}</strong></td><td>{coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `${coupon.discountValue?.toLocaleString() || 0} Point`}</td><td>{coupon.discountType === 'percentage' ? 'Percentage' : 'Fixed'}</td><td>{coupon.usedCount || 0} / {coupon.maxUsage > 0 ? coupon.maxUsage : '∞'}</td><td>{coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleDateString("th-TH") : 'Unlimited'}</td><td>{coupon.productRestriction === "all" ? <span style={{ color: '#10b981', fontSize: '0.75rem' }}>All Products</span> : coupon.allowedProductIds?.length > 0 ? <span style={{ fontSize: '0.7rem' }}>{coupon.allowedProductIds.map(p => p.itemsname || p).join(", ")}</span> : <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>None set</span>}</td><td><span className={`${styles.statusBadge} ${isValid ? styles.statusSuccess : styles.statusFailed}`}>{!coupon.isActive ? 'Disabled' : isExpired ? 'Expired' : isMaxedOut ? 'Full' : 'Active'}</span></td><td><button onClick={() => handleEditCoupon(coupon)} className={styles.editBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}><Icon name="edit" size="0.7rem" /></button><button onClick={() => handleDeleteCoupon(coupon._id)} className={styles.deleteBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', marginLeft: '0.25rem' }}><Icon name="delete" size="0.7rem" /></button></td></tr>); })}</tbody></table></div>
               )}
               {showCouponModal && (
                 <div className={styles.modalOverlay}>
-                  <div className={styles.modalContent} style={{ maxWidth: '500px' }}>
+                  <div className={styles.modalContent} style={{ maxWidth: '600px' }}>
                     <h2 className={styles.modalTitle}><Icon name="discount" size="1rem" /> {editingCoupon ? 'Edit Coupon' : 'Add Coupon'}</h2>
                     <form onSubmit={handleSaveCoupon} className={styles.modalForm}>
                       <div className={styles.modalRow}><label className={styles.modalLabel}>Code *</label><input value={couponForm.code} onChange={(e) => setCouponForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))} className={styles.modalInput} required /></div>
@@ -556,6 +581,37 @@ export default function Admin() {
                       <div className={styles.modalRow}><label className={styles.modalLabel}>Min Purchase (Point)</label><input value={couponForm.minPurchase} onChange={(e) => setCouponForm(prev => ({ ...prev, minPurchase: e.target.value }))} className={styles.modalInput} type="number" /></div>
                       <div className={styles.modalRow}><label className={styles.modalLabel}>Max Usage</label><input value={couponForm.maxUsage} onChange={(e) => setCouponForm(prev => ({ ...prev, maxUsage: e.target.value }))} className={styles.modalInput} type="number" /></div>
                       <div className={styles.modalRow}><label className={styles.modalLabel}>Expiry Date</label><input value={couponForm.expiresAt} onChange={(e) => setCouponForm(prev => ({ ...prev, expiresAt: e.target.value }))} className={styles.modalInput} type="date" /></div>
+                      
+                      {/* Product Restriction */}
+                      <div className={styles.modalRow}>
+                        <label className={styles.modalLabel}>Use With</label>
+                        <select value={couponForm.productRestriction || "all"} onChange={(e) => setCouponForm(prev => ({ ...prev, productRestriction: e.target.value, allowedProductIds: e.target.value === "all" ? [] : (prev.allowedProductIds || []) }))} className={styles.modalInput}>
+                          <option value="all">All Products</option>
+                          <option value="specific">Specific Products</option>
+                        </select>
+                      </div>
+
+                      {couponForm.productRestriction === "specific" && (
+                        <div className={styles.modalRow}>
+                          <label className={styles.modalLabel}>Select Products</label>
+                          <div style={{ maxHeight: '200px', overflowY: 'auto', background: '#0f1119', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '0.5rem' }}>
+                            {allProducts.length === 0 ? (
+                              <p style={{ color: '#52525b', fontSize: '0.8rem', textAlign: 'center', padding: '1rem' }}>Loading products...</p>
+                            ) : (
+                              allProducts.map(product => (
+                                <label key={product._id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.5rem', cursor: 'pointer', borderRadius: '6px', fontSize: '0.85rem', color: '#d1d5db' }}>
+                                  <input type="checkbox" checked={(couponForm.allowedProductIds || []).includes(product._id)} onChange={(e) => { const newIds = e.target.checked ? [...(couponForm.allowedProductIds || []), product._id] : (couponForm.allowedProductIds || []).filter(id => id !== product._id); setCouponForm(prev => ({ ...prev, allowedProductIds: newIds })); }} style={{ display: 'inline-block', width: 'auto' }} />
+                                  <img src={product.itemsimage} alt="" style={{ width: '30px', height: '20px', objectFit: 'cover', borderRadius: '4px' }} />
+                                  <span style={{ flex: 1 }}>{product.itemsname}</span>
+                                  <span style={{ color: '#52525b', fontSize: '0.7rem' }}>฿{product.itemsprice}</span>
+                                </label>
+                              ))
+                            )}
+                          </div>
+                          <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px' }}>Select at least 1 product, or choose "All Products"</small>
+                        </div>
+                      )}
+
                       <div className={styles.modalActions}><button type="button" className={styles.cancelBtn} onClick={() => { setShowCouponModal(false); setEditingCoupon(null); }}>Cancel</button><button type="submit" className={styles.submitBtn} disabled={savingCoupon}>{savingCoupon ? <Icon name="loading" size="0.8rem" /> : <Icon name="save" size="0.8rem" />} {editingCoupon ? 'Save' : 'Add'}</button></div>
                     </form>
                   </div>
@@ -564,7 +620,7 @@ export default function Admin() {
             </div>
           )}
 
-          {/* ==================== LOGS & WEBHOOK ==================== */}
+          {/* LOGS & WEBHOOK */}
           {activeTab === "logs" && (
             <div className={styles.tabContent}>
               <div className={styles.logFilterBar}>

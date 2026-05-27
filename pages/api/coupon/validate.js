@@ -8,58 +8,33 @@ export default async function handler(req, res) {
 
   await connectToDB();
 
-  const { code, totalPrice } = req.body;
+  const { code, totalPrice, productId } = req.body;
 
   if (!code) {
     return res.status(400).json({ error: "กรุณากรอกโค้ดคูปอง" });
   }
 
   try {
-    const coupon = await Coupon.findOne({ code: code.toUpperCase(), isActive: true });
+    const coupon = await Coupon.findOne({ code: code.toUpperCase().trim() });
 
     if (!coupon) {
       return res.status(404).json({ error: "ไม่พบโค้ดคูปองนี้" });
     }
 
-    // เช็ควันหมดอายุ
-    if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
-      return res.status(400).json({ error: "คูปองหมดอายุแล้ว" });
-    }
+    // ✅ ใช้ Method ตรวจสอบ (รวมทุกอย่างแล้ว)
+    const result = coupon.checkValidity(totalPrice || 0, productId);
 
-    // เช็คจำนวนการใช้
-    if (coupon.maxUsage > 0 && coupon.usedCount >= coupon.maxUsage) {
-      return res.status(400).json({ error: "คูปองถูกใช้ครบจำนวนแล้ว" });
+    if (!result.valid) {
+      return res.status(400).json({ error: result.error });
     }
-
-    // เช็คขั้นต่ำ
-    if (totalPrice && totalPrice < coupon.minPurchase) {
-      return res.status(400).json({ 
-        error: `ต้องซื้อขั้นต่ำ ${coupon.minPurchase.toLocaleString()} Point (ปัจจุบัน ${totalPrice.toLocaleString()} Point)` 
-      });
-    }
-
-    // คำนวณส่วนลด
-    let discount = 0;
-    if (coupon.discountType === "percentage") {
-      discount = Math.round((totalPrice * coupon.discountValue) / 100);
-    } else {
-      discount = coupon.discountValue;
-    }
-
-    const finalPrice = Math.max(0, totalPrice - discount);
 
     return res.status(200).json({
       success: true,
-      coupon: {
-        code: coupon.code,
-        discountType: coupon.discountType,
-        discountValue: coupon.discountValue,
-        discount: discount,
-        finalPrice: finalPrice,
-      },
+      coupon: result.coupon,
     });
 
   } catch (error) {
+    console.error("Validate coupon error:", error);
     return res.status(500).json({ error: error.message });
   }
 }

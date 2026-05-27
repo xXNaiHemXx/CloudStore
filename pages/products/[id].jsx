@@ -34,7 +34,7 @@ export default function ProductDetail() {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [loadingRecommended, setLoadingRecommended] = useState(false);
 
-  // ✅ Coupon State
+  // Coupon State
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
@@ -49,7 +49,7 @@ export default function ProductDetail() {
     return new Date(createdAt) > sevenDaysAgo;
   };
 
-  // ✅ ตรวจสอบคูปอง
+  // ตรวจสอบคูปอง
   const handleValidateCoupon = async () => {
     if (!couponCode.trim()) return;
     setValidatingCoupon(true);
@@ -57,6 +57,7 @@ export default function ProductDetail() {
       const res = await axios.post('/api/coupon/validate', {
         code: couponCode.trim(),
         totalPrice: product?.itemsprice || 0,
+        productId: id,
       });
       if (res.data.success) {
         setAppliedCoupon(res.data.coupon);
@@ -72,7 +73,6 @@ export default function ProductDetail() {
     }
   };
 
-  // ✅ กด Enter เพื่อตรวจสอบคูปอง
   const handleCouponKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -154,7 +154,6 @@ export default function ProductDetail() {
       if (purchaseRes.data.success) {
         await refreshPoints();
 
-        // ✅ Log พร้อมข้อมูลละเอียด
         await addLog(
           LOG_TYPES.PURCHASE,
           "ซื้อสินค้า",
@@ -287,7 +286,7 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              {/* ✅ COUPON INPUT */}
+              {/* COUPON INPUT */}
               <div className={styles.couponSection}>
                 <label className={styles.couponLabel}>
                   <Icon name="discount" size="0.8rem" /> โค้ดส่วนลด
