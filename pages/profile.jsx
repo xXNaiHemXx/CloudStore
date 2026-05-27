@@ -65,7 +65,25 @@ export default function Profile() {
       setIsUserAdmin(true);
     }
   };
-
+  // ✅ Sync สินค้าก่อนโหลด
+  useEffect(() => {
+    if (!session) return;
+    
+    const syncProducts = async () => {
+      try {
+        const res = await axios.post("/api/user/sync-products", {
+          userId: session.user.discordId || session.user.id
+        });
+        if (res.data.success) {
+          await refreshPoints(); // รีเฟรชข้อมูล
+        }
+      } catch (err) {
+        console.error("Sync error:", err);
+      }
+    };
+  
+  syncProducts();
+}, [session]);
   useEffect(() => { 
     setMyProducts(contextUserProducts || []); 
   }, [contextUserProducts]);
