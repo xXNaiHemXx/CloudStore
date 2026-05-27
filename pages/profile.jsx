@@ -178,44 +178,75 @@ export default function Profile() {
     }
   };
 
-const handleSubmit = async () => {
-  if (!payload || !amount || !session?.user?.id) {
-    error("กรุณากรอก QR payload และจำนวนเงิน");
-    return;
-  }
-
-  setSubmitting(true);
-
-  try {
-    const verifyRes = await fetch("/api/topup/verify-thunder", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: session.user.id,
-        amount: parseFloat(amount),
-        payload: payload, // QR payload
-        method: topupMethod === "bank" ? "bank" : "wallet",
-      }),
-    });
-
-    const data = await verifyRes.json();
-    
-    if (!verifyRes.ok) {
-      error(data.error || "การตรวจสอบไม่สำเร็จ");
-      setSubmitting(false);
-      return;
+  const handleSubmit = async () => {
+    if (!file || !amount || !session?.user?.id) { 
+      error("กรุณากรอกข้อมูลให้ครบ"); 
+      return; 
+    }
+    if (parseFloat(amount) <= 0) { 
+      error("กรุณากรอกจำนวนเงินที่มากกว่า 0"); 
+      return; 
     }
 
-    success(`✅ เติมเงินสำเร็จ! รับ ${data.amount} Point`);
-    setPayload("");
-    setAmount("");
-    await refreshPoints();
-  } catch (err) {
-    error("เกิดข้อผิดพลาดในการดำเนินการ");
-  } finally {
-    setSubmitting(false);
-  }
-};
+    setSubmitting(true);
+    const formData = new FormData();
+    formData.append("slip", file);
+    formData.append("userId", session.user.id);
+    formData.append("amount", amount);
+
+    try {
+      const uploadRes = await fetch("/api/topup/upload-slip", { method: "POST", body: formData });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) { 
+        error(uploadData.error || "อัพโหลดไม่สำเร็จ"); 
+        setSubmitting(false); 
+        return; 
+      }
+
+      const verifyRes = await fetch("/api/topup/verify-slipok", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ 
+          fileUrl: uploadData.fileUrl, 
+          amount, 
+          userId: session.user.id 
+        }) 
+      });
+      const verifyData = await verifyRes.json();
+      
+      if (!verifyRes.ok) {
+        if (verifyData.error?.includes('จำนวนเงิน')) {
+          error(`❌ ${verifyData.error}`);
+          warning("💡 กรุณากรอกจำนวนเงินให้ตรงกับสลิปที่โอน");
+        } else {
+          error(verifyData.error || "การตรวจสอบไม่สำเร็จ");
+        }
+        setSubmitting(false); 
+        return; 
+      }
+
+      // ✅ ใช้จำนวนเงินจริงจากสลิป (verifyData.amount)
+      const actualAmount = verifyData.amount || parseFloat(amount);
+      const actualPoints = verifyData.newPoints - (userPoints || 0);
+      
+      success(`✅ เติมเงินสำเร็จ! รับ ${actualPoints} Point (${actualAmount} บาท)`);
+      
+      await addLog(LOG_TYPES.TOPUP, "เติมเงิน", `${session.user.name} เติมเงิน ${actualAmount} บาท`, session.user.name, {
+        discordId: session.user.id,
+        amount: actualAmount,
+        points: actualPoints,
+      }).catch(() => {});
+    
+      removeFile();
+      setAmount("");
+      await refreshPoints();
+    } catch (err) {
+      error("เกิดข้อผิดพลาดในการดำเนินการ");
+      await addLog(LOG_TYPES.ERROR, "เติมเงินผิดพลาด", `${session.user.name} เติมเงิน ${amount} บาท ไม่สำเร็จ`, session.user.name, { amount, error: err.message }).catch(() => {});
+    } finally { 
+      setSubmitting(false); 
+    }
+  };
 
   if (!session) {
     return (
