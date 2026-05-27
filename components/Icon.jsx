@@ -92,6 +92,7 @@ export default function Icon({ name, size = "1rem", color = "currentColor" }) {
     "sort": "fi-rr-sort",                // 🔤 เรียงลำดับ
     "cloud": "fi-rr-cloud",              // ☁️ คลาวด์
     "discount": "fi-rr-credit-card",              // 💸 ส่วนลด
+    "wallet": "fi-rr-wallet",              // 👛 กระเป๋าเงิน
   };
 
   const iconClass = iconMap[name] || "fi-rr-question";
