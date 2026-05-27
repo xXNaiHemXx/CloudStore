@@ -20,6 +20,18 @@ const CouponSchema = new mongoose.Schema({
   usedCount: { type: Number, default: 0 },
   expiresAt: { type: Date, default: null },
   isActive: { type: Boolean, default: true },
+  
+  // ✅ เพิ่ม: กำหนดสินค้าที่ใช้ได้
+  productRestriction: {
+    type: String,
+    enum: ["all", "specific"], // all = ทุกสินค้า, specific = เฉพาะที่กำหนด
+    default: "all",
+  },
+  allowedProductIds: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "Item" 
+  }], // ✅ รายการสินค้าที่ใช้ได้ (ถ้าเป็น specific)
+  
   createdBy: { type: String, default: "Admin" },
   createdAt: { type: Date, default: Date.now },
 }, {
@@ -27,7 +39,7 @@ const CouponSchema = new mongoose.Schema({
   toObject: { virtuals: true },
 });
 
-// ✅ Virtual: isValid
+// Virtual: isValid
 CouponSchema.virtual("isValid").get(function () {
   const now = new Date();
   if (this.isActive === false) return false;
@@ -36,8 +48,8 @@ CouponSchema.virtual("isValid").get(function () {
   return true;
 });
 
-// ✅ Method: checkValidity
-CouponSchema.methods.checkValidity = function(totalPrice) {
+// Method: checkValidity
+CouponSchema.methods.checkValidity = function(totalPrice, productId) {
   const now = new Date();
   
   if (!this.isActive) {
@@ -53,6 +65,16 @@ CouponSchema.methods.checkValidity = function(totalPrice) {
   
   if (this.maxUsage > 0 && this.usedCount >= this.maxUsage) {
     return { valid: false, error: "คูปองถูกใช้ครบจำนวนแล้ว" };
+  }
+  
+  // ✅ เช็คข้อจำกัดสินค้า
+  if (this.productRestriction === "specific" && productId) {
+    const isAllowed = this.allowedProductIds.some(
+      id => id.toString() === productId.toString()
+    );
+    if (!isAllowed) {
+      return { valid: false, error: "คูปองนี้ใช้กับสินค้าที่กำหนดเท่านั้น" };
+    }
   }
   
   if (totalPrice && totalPrice < this.minPurchase) {

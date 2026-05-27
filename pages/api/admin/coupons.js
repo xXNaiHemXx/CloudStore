@@ -1,5 +1,6 @@
 import { connectToDB } from "@/utils/db";
 import Coupon from "@/models/Coupon";
+import Item from "@/models/Items"; // ✅ เพิ่ม
 
 export default async function handler(req, res) {
   await connectToDB();
@@ -7,7 +8,9 @@ export default async function handler(req, res) {
   // GET - ดึงคูปองทั้งหมด
   if (req.method === "GET") {
     try {
-      const coupons = await Coupon.find().sort({ createdAt: -1 });
+      const coupons = await Coupon.find()
+        .populate("allowedProductIds", "itemsname") // ✅ ดึงชื่อสินค้ามาด้วย
+        .sort({ createdAt: -1 });
       return res.status(200).json({ coupons });
     } catch (error) {
       return res.status(500).json({ error: error.message });
@@ -17,13 +20,12 @@ export default async function handler(req, res) {
   // POST - สร้างคูปองใหม่
   if (req.method === "POST") {
     try {
-      const { code, description, discountType, discountValue, minPurchase, maxUsage, expiresAt } = req.body;
+      const { code, description, discountType, discountValue, minPurchase, maxUsage, expiresAt, productRestriction, allowedProductIds } = req.body;
       
       if (!code || !discountValue) {
         return res.status(400).json({ error: "กรุณากรอกโค้ดและส่วนลด" });
       }
 
-      // เช็คโค้ดซ้ำ
       const existing = await Coupon.findOne({ code: code.toUpperCase() });
       if (existing) {
         return res.status(400).json({ error: "โค้ดนี้มีอยู่แล้ว" });
@@ -37,6 +39,8 @@ export default async function handler(req, res) {
         minPurchase,
         maxUsage,
         expiresAt: expiresAt || null,
+        productRestriction: productRestriction || "all", // ✅
+        allowedProductIds: productRestriction === "specific" ? allowedProductIds : [], // ✅
       });
 
       return res.status(201).json({ success: true, coupon });
@@ -49,6 +53,12 @@ export default async function handler(req, res) {
   if (req.method === "PUT") {
     try {
       const { id, ...updateData } = req.body;
+      
+      // ✅ ถ้าเปลี่ยนเป็น all → ล้าง allowedProductIds
+      if (updateData.productRestriction === "all") {
+        updateData.allowedProductIds = [];
+      }
+      
       const coupon = await Coupon.findByIdAndUpdate(id, updateData, { new: true });
       return res.status(200).json({ success: true, coupon });
     } catch (error) {
