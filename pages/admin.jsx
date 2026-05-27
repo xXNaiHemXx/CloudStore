@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router"; 
 import { useSession, signIn } from "next-auth/react";
 import axios from "axios";
 import Link from "next/link";
@@ -172,6 +173,7 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
 
 // ==================== MAIN ADMIN PAGE ====================
 export default function Admin() {
+  const router = useRouter(); // ✅ เพิ่มบรรทัดนี้
   const { data: session } = useSession();
   const { userPoints, refreshPoints } = useUser();
   const { confirm } = useConfirm();
@@ -236,6 +238,7 @@ export default function Admin() {
     { key: "logs", label: "Logs & Webhook", icon: "history", color: "#f43f5e" },
     { key: "coupons", label: "Coupons", icon: "discount", color: "#ec4899" },
     { key: "users", label: "Users", icon: "users", color: "#14b8a6" },
+    { key: "admins", label: "Admins", icon: "users", color: "#f43f5e" },
   ];
 
   // --- Effects ---  
@@ -372,11 +375,120 @@ export default function Admin() {
     }); 
     setShowCouponModal(true); 
   };
-
+  const [adminRole, setAdminRole] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminList, setAdminList] = useState([]);
   // --- Pagination ---
   const totalPages = Math.ceil(logs.length / logsPerPage);
   const paginatedLogs = logs.slice((logPage - 1) * logsPerPage, logPage * logsPerPage);
+  useEffect(() => {
+    if (session?.user?.id) {
+      checkAdminStatus();
+      if (activeTab === "admins") fetchAdmins();
+    }
+  }, [session, activeTab]);
 
+  const checkAdminStatus = async () => {
+    try {
+      // ✅ เช็คจาก Database ก่อน
+      const res = await axios.get(`/api/admin/check-admin?discordId=${session.user.id}`);
+      
+      if (res.data.isAdmin) {
+        setIsAdmin(true);
+        setAdminRole(res.data.role);
+        return;
+      }
+      
+      // ✅ Fallback: เช็คจาก .env (สำหรับ Head Admin ที่ยังไม่ได้ init)
+      const envAdminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
+      if (envAdminIds.includes(session.user.id)) {
+        setIsAdmin(true);
+        setAdminRole("head");
+        return;
+      }
+      
+      // ❌ ไม่ใช่ Admin
+      setIsAdmin(false);
+      setAdminRole(null);
+      error("คุณไม่มีสิทธิ์เข้าถึงหน้านี้");
+      router.push("/");
+      
+    } catch (err) {
+      // ✅ Fallback: ถ้า API error → เช็คจาก .env
+      const envAdminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
+      if (envAdminIds.includes(session.user.id)) {
+        setIsAdmin(true);
+        setAdminRole("head");
+      } else {
+        router.push("/");
+      }
+    }
+  };
+
+  const fetchAdmins = async () => {
+    try {
+      const res = await axios.get("/api/admin/admins");
+      setAdminList(res.data.admins || []);
+    } catch {}
+  };
+  // ✅ ฟังก์ชันแก้ไข Admin
+  const handleEditAdmin = async (admin) => {
+    const newRole = admin.role === "admin" ? "moderator" : "admin";
+    const confirmed = await confirm({
+      title: "เปลี่ยน Role",
+      message: `เปลี่ยน ${admin.name} จาก ${admin.role} เป็น ${newRole}?`,
+      confirmText: "เปลี่ยน",
+      cancelText: "ยกเลิก",
+      type: "info",
+    });
+    if (!confirmed) return;
+
+    try {
+      await axios.put("/api/admin/admins", {
+        id: admin._id,
+        role: newRole,
+        headId: session.user.id,
+      });
+      success("เปลี่ยน Role สำเร็จ!");
+      fetchAdmins();
+    } catch (err) { error(err.response?.data?.error || "เปลี่ยนไม่สำเร็จ"); }
+  };
+
+  // ✅ ฟังก์ชันลบ Admin
+  const handleDeleteAdmin = async (adminId) => {
+    const confirmed = await confirm({
+      title: "ยืนยันการลบ",
+      message: "ต้องการลบ Admin คนนี้?",
+      confirmText: "ลบ",
+      cancelText: "ยกเลิก",
+      type: "danger",
+    });
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(`/api/admin/admins?id=${adminId}&headId=${session.user.id}`);
+      success("ลบ Admin สำเร็จ!");
+      fetchAdmins();
+    } catch (err) { error(err.response?.data?.error || "ลบไม่สำเร็จ"); }
+  };
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminForm, setAdminForm] = useState({ discordId: '', name: '', role: 'admin' });
+  const handleAddAdmin = async (e) => {
+    e.preventDefault();
+    if (!adminForm.discordId) { error("กรุณากรอก Discord ID"); return; }
+    
+    try {
+      await axios.post("/api/admin/admins", {
+        ...adminForm,
+        headId: session.user.id,
+        addedBy: session.user.name,
+      });
+      success("เพิ่ม Admin สำเร็จ!");
+      setShowAdminModal(false);
+      setAdminForm({ discordId: '', name: '', role: 'admin' });
+      fetchAdmins();
+    } catch (err) { error(err.response?.data?.error || "เพิ่มไม่สำเร็จ"); }
+  };
   return (
     <div className={styles.adminLayout}>
       <Head><title>xCloud Studio Admin</title></Head>
@@ -619,7 +731,7 @@ export default function Admin() {
               )}
             </div>
           )}
-
+          
           {/* LOGS & WEBHOOK */}
           {activeTab === "logs" && (
             <div className={styles.tabContent}>
@@ -679,7 +791,92 @@ export default function Admin() {
               </div>
             </div>
           )}
-
+          {activeTab === "admins" && (
+            <div className={styles.tabContent}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+                {adminRole === "head" && (
+                  <button onClick={() => setShowAdminModal(true)} className={styles.addButton}>
+                    <Icon name="add" size="0.8rem" /> Add Admin
+                  </button>
+                )}
+              </div>
+              {showAdminModal && (
+  <div className={styles.modalOverlay}>
+    <div className={styles.modalContent} style={{ maxWidth: '450px' }}>
+      <h2 className={styles.modalTitle}><Icon name="users" size="1rem" /> Add Admin</h2>
+      <form onSubmit={handleAddAdmin} className={styles.modalForm}>
+        <div className={styles.modalRow}>
+          <label className={styles.modalLabel}>Discord ID *</label>
+          <input value={adminForm.discordId} onChange={(e) => setAdminForm(prev => ({ ...prev, discordId: e.target.value }))} className={styles.modalInput} placeholder="123456789012345678" required />
+        </div>
+        <div className={styles.modalRow}>
+          <label className={styles.modalLabel}>Name</label>
+          <input value={adminForm.name} onChange={(e) => setAdminForm(prev => ({ ...prev, name: e.target.value }))} className={styles.modalInput} placeholder="ชื่อ Admin" />
+        </div>
+        <div className={styles.modalRow}>
+          <label className={styles.modalLabel}>Role</label>
+          <select value={adminForm.role} onChange={(e) => setAdminForm(prev => ({ ...prev, role: e.target.value }))} className={styles.modalInput}>
+            <option value="admin">Admin</option>
+            <option value="moderator">Moderator</option>
+          </select>
+        </div>
+        <div className={styles.modalActions}>
+          <button type="button" className={styles.cancelBtn} onClick={() => setShowAdminModal(false)}>Cancel</button>
+          <button type="submit" className={styles.submitBtn}>Add Admin</button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+              <div className={styles.tableWrapper}>
+                <table className={styles.dataTable}>
+                  <thead>
+                    <tr>
+                      <th>Discord ID</th>
+                      <th>Name</th>
+                      <th>Role</th>
+                      <th>Added By</th>
+                      <th>Status</th>
+                      {adminRole === "head" && <th></th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminList.map(admin => (
+                      <tr key={admin._id}>
+                        <td><small style={{ fontFamily: 'monospace' }}>{admin.discordId}</small></td>
+                        <td>{admin.name}</td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${
+                            admin.role === "head" ? styles.statusSuccess : 
+                            admin.role === "admin" ? styles.statusPending : 
+                            styles.statusDuplicate
+                          }`}>
+                            {admin.role}
+                          </span>
+                        </td>
+                        <td>{admin.addedBy}</td>
+                        <td>
+                          <span className={`${styles.statusBadge} ${admin.isActive ? styles.statusSuccess : styles.statusFailed}`}>
+                            {admin.isActive ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                        {adminRole === "head" && admin.role !== "head" && (
+                          <td>
+                            <button onClick={() => handleEditAdmin(admin)} className={styles.editBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}>
+                              <Icon name="edit" size="0.7rem" />
+                            </button>
+                            <button onClick={() => handleDeleteAdmin(admin._id)} className={styles.deleteBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', marginLeft: '0.25rem' }}>
+                              <Icon name="delete" size="0.7rem" />
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>
