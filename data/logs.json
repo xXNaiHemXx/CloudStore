@@ -596,5 +596,17 @@
       "email": "hem.and.nas.and.rif@gmail.com"
     },
     "createdAt": "2026-05-27T19:15:30.351Z"
+  },
+  {
+    "_id": "mpog7oy4px4cq",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-05-27T19:19:49.516Z"
   }
 ]
