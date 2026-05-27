@@ -30,7 +30,7 @@ export default function Icon({ name, size = "1rem", color = "currentColor" }) {
     "delete": "fi-rr-trash",
     "add": "fi-rr-plus",
     "close": "fi-rr-cross",
-    "check": "fi-rr-check",
+    "check": "fi-rr-circle-check",
     "warning": "fi-rr-exclamation",
     "info": "fi-rr-info",
     "error": "fi-rr-octagon",
