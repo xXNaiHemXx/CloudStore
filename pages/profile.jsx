@@ -66,7 +66,9 @@ export default function Profile() {
     }
   };
 
-  useEffect(() => { setMyProducts(contextUserProducts || []); }, [contextUserProducts]);
+  useEffect(() => { 
+    setMyProducts(contextUserProducts || []); 
+  }, [contextUserProducts]);
 
   useEffect(() => {
     if (!session || activeTab !== "history") return;
@@ -77,7 +79,9 @@ export default function Profile() {
       .finally(() => setLoadingHistory(false));
   }, [session, activeTab]);
 
-  useEffect(() => { if (session && activeTab === 'products') refreshPoints(); }, [session, activeTab]);
+  useEffect(() => { 
+    if (session && activeTab === 'products') refreshPoints(); 
+  }, [session, activeTab]);
 
   const checkForUpdates = async (showAlert = false) => {
     if (!session) return;
@@ -286,7 +290,14 @@ export default function Profile() {
                         return (
                           <div key={`${product.productId}-${index}`} className={styles.productCard}>
                             {hasUpdate && <div className={styles.updateBadge}><Icon name="refresh" size="0.7rem" /> มีอัปเดต!</div>}
-                            <div className={styles.cardImageWrapper}><img src={product.itemsimage?.[0] || product.image || '/images/placeholder.png'} alt={product.name} loading="lazy" onError={(e) => { e.target.src = '/images/placeholder.png'; }} /></div>
+                            <div className={styles.cardImageWrapper}>
+                              <img 
+                                src={product.image || product.itemsimage?.[0] || '/images/placeholder.png'} 
+                                alt={product.name} 
+                                loading="lazy" 
+                                onError={(e) => { e.target.src = '/images/placeholder.png'; }} 
+                              />
+                            </div>
                             <div className={styles.cardBody}><h3 className={styles.cardProductName}>{product.name}</h3>{product.version && <span className={styles.cardVersion}><Icon name="version" size="0.7rem" /> v{product.version}</span>}</div>
                             <div className={styles.cardFooter}>
                               {hasUpdate ? (
