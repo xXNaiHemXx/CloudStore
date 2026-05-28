@@ -87,7 +87,7 @@ export default function Home() {
             <div className={styles.heroButtons}>
               <a
                 className={styles.btnDiscord}
-                href="https://discord.gg/G6Up8VDa5t"
+                href="https://discord.gg/ntGypaUBNG"
                 target="_blank"
                 rel="noopener noreferrer"
               >

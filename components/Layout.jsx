@@ -48,7 +48,7 @@ export default function Layout({ children }) {
           <div className="header-links">
             <Link href="/" className="headertext">Main</Link>
             <Link href="/shop" className="headertext">Products</Link>
-            <a href="https://discord.gg/G6Up8VDa5t" className="headertext" target="_blank" rel="noopener noreferrer">Discord</a>
+            <a href="https://discord.gg/ntGypaUBNG" className="headertext" target="_blank" rel="noopener noreferrer">Discord</a>
           </div>
 
           {/* ✅ Profile + Arrow */}

@@ -608,5 +608,39 @@
       "email": "hem.and.nas.and.rif@gmail.com"
     },
     "createdAt": "2026-05-27T19:19:49.516Z"
+  },
+  {
+    "_id": "mppohgq63co69",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-05-28T15:59:08.526Z"
+  },
+  {
+    "_id": "mppohgxrnpwng",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-05-28T15:59:08.799Z"
+  },
+  {
+    "_id": "mppohhrecs86j",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-05-28T15:59:09.866Z"
   }
 ]
