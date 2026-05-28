@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1053.0",
+    "@prakrit_m/slipok-sdk": "^1.1.1",
     "axios": "^1.8.2",
     "baseline-browser-mapping": "^2.10.32",
     "caniuse-lite": "^1.0.30001793",
