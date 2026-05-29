@@ -88,29 +88,6 @@ export default function Shop() {
     <Layout>
       <div className={styles.pageContainer}>
 
-        <section className={styles.heroBanner}>
-          <h1 className={styles.heroTitle}>
-            Our{' '}
-            <span className={styles.heroTitleAccent}>Products</span>
-          </h1>
-          <p className={styles.heroSubtitle}>
-            ค้นพบโมเดลและรถสำหรับเกม ETS2 คุณภาพสูงจากทีมพัฒนา ALLNEWOKBUS
-          </p>
-          <div className={styles.heroStats}>
-            <div className={styles.heroStatItem}>
-              <Icon name="product" size="1rem" /> <span className={styles.heroStatCount}>{products.length}</span> Products
-            </div>
-            <span className={styles.heroStatDivider}></span>
-            <div className={styles.heroStatItem}>
-              <Icon name="star" size="1rem" /> Quality Guaranteed
-            </div>
-            <span className={styles.heroStatDivider}></span>
-            <div className={styles.heroStatItem}>
-              <Icon name="refresh" size="1rem" /> Lifetime Updates
-            </div>
-          </div>
-        </section>
-
         <div className={styles.toolbar}>
           <div className={styles.searchWrapper}>
             <span className={styles.searchIcon}>
