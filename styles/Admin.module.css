@@ -532,3 +532,175 @@
 @media (min-width: 768px) { .galleryGrid { grid-template-columns: repeat(3, 1fr); } .r2FilesGrid { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1024px) { .galleryGrid { grid-template-columns: repeat(4, 1fr); } .r2FilesGrid { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 480px) { .galleryGrid { grid-template-columns: repeat(2, 1fr); } .r2FilesGrid { grid-template-columns: repeat(2, 1fr); } }
+
+
+/* ================================================================
+   USERS TAB - NEW UI
+   ================================================================ */
+
+/* User Cards Grid */
+.userGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: #0f1119;
+  border: 1px solid #1a1d2e;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.userCard:hover { border-color: #6366f1; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+
+.userCardAvatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 700; color: white;
+  flex-shrink: 0;
+}
+
+.userCardInfo { flex: 1; min-width: 0; }
+.userCardName { font-size: 0.95rem; font-weight: 700; color: #fafafa; margin: 0 0 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.userCardEmail { font-size: 0.78rem; color: #52525b; margin: 0 0 0.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.userCardPoints { font-size: 0.8rem; color: #10b981; font-weight: 600; display: flex; align-items: center; gap: 0.3rem; }
+.userCardArrow { color: #52525b; flex-shrink: 0; }
+
+/* ==================== USER DETAIL MODAL ==================== */
+.userModal {
+  background: #0f1119;
+  border: 1px solid #1a1d2e;
+  border-radius: 20px;
+  padding: 2rem;
+  width: 600px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+  color: #e4e6f0;
+  position: relative;
+  animation: modalSlideIn 0.3s ease-out;
+}
+@keyframes modalSlideIn { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.userModal::-webkit-scrollbar { width: 5px; }
+.userModal::-webkit-scrollbar-thumb { background: #1a1d2e; border-radius: 3px; }
+
+.userModalClose {
+  position: absolute; top: 1rem; right: 1rem;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  color: #52525b; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease; z-index: 2;
+}
+.userModalClose:hover { background: rgba(239,68,68,0.15); color: #f87171; }
+
+/* Modal Header */
+.userModalHeader {
+  display: flex; align-items: center; gap: 1rem;
+  margin-bottom: 1.5rem; padding-bottom: 1.25rem;
+  border-bottom: 1px solid #1a1d2e;
+}
+.userModalAvatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 700; color: white; flex-shrink: 0;
+}
+.userModalHeaderInfo { flex: 1; min-width: 0; }
+.userModalName { font-size: 1.2rem; font-weight: 700; color: #fafafa; margin: 0 0 0.15rem; }
+.userModalEmail { font-size: 0.8rem; color: #52525b; margin: 0 0 0.5rem; }
+.userModalBadge {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.2rem 0.6rem; background: rgba(99,102,241,0.1);
+  border: 1px solid rgba(99,102,241,0.2); border-radius: 6px;
+  font-size: 0.7rem; color: #a5b4fc; font-family: monospace;
+}
+
+/* Stats */
+.userModalStats {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.userModalStatCard {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 1rem; background: #0a0a0f;
+  border: 1px solid #1a1d2e; border-radius: 12px;
+}
+.userModalStatLabel { font-size: 0.7rem; color: #52525b; margin: 0 0 0.1rem; }
+.userModalStatValue { font-size: 1.1rem; font-weight: 700; color: #fafafa; margin: 0; }
+
+/* Section */
+.userModalSection {
+  margin-bottom: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #1a1d2e;
+}
+.userModalSectionTitle {
+  font-size: 0.9rem; font-weight: 700; color: #fafafa;
+  margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem;
+}
+
+/* Point Form */
+.userModalPointForm {
+  background: #0a0a0f; border: 1px solid #1a1d2e;
+  border-radius: 12px; padding: 1rem;
+}
+.userModalPointInput { margin-bottom: 0.75rem; }
+.userModalPointLabel { font-size: 0.75rem; color: #52525b; font-weight: 600; margin-bottom: 0.35rem; display: block; }
+.userModalPointButtons { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem; }
+
+/* Products List */
+.userModalProducts {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  max-height: 250px; overflow-y: auto; padding-right: 0.25rem;
+}
+.userModalProducts::-webkit-scrollbar { width: 4px; }
+.userModalProducts::-webkit-scrollbar-thumb { background: #1a1d2e; border-radius: 2px; }
+
+.purchasedItemCard {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem;
+  padding: 0.85rem; background: #0a0a0f; border: 1px solid #1a1d2e;
+  border-radius: 10px; transition: all 0.2s ease;
+}
+.purchasedItemCard:hover { border-color: #6366f1; }
+.purchasedItemInfo { flex: 1; min-width: 0; }
+.purchasedItemName { font-size: 0.85rem; font-weight: 700; color: #fafafa; margin: 0 0 0.35rem; }
+.purchasedItemMeta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem; }
+.purchasedItemVersion {
+  font-size: 0.7rem; color: #a5b4fc; background: rgba(99,102,241,0.1);
+  padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600;
+  display: flex; align-items: center; gap: 0.2rem;
+}
+.purchasedItemDate { font-size: 0.68rem; color: #52525b; display: flex; align-items: center; gap: 0.2rem; }
+.purchasedItemActions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.purchasedItemDownload {
+  font-size: 0.75rem; color: #10b981; text-decoration: none; font-weight: 600;
+  display: flex; align-items: center; gap: 0.2rem;
+  padding: 0.2rem 0.5rem; background: rgba(16,185,129,0.1); border-radius: 4px;
+}
+.purchasedItemDownload:hover { background: rgba(16,185,129,0.2); }
+.purchasedItemRoles {
+  font-size: 0.65rem; color: #a78bfa; background: rgba(139,92,246,0.1);
+  padding: 0.15rem 0.4rem; border-radius: 4px;
+  display: flex; align-items: center; gap: 0.2rem;
+}
+.purchasedItemRemove {
+  width: 32px; height: 32px; border-radius: 6px;
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+  color: #ef4444; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+}
+.purchasedItemRemove:hover:not(:disabled) { background: rgba(239,68,68,0.2); }
+.purchasedItemRemove:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.noPurchases { text-align: center; padding: 1.5rem; color: #52525b; }
+.noPurchases p { font-size: 0.8rem; margin: 0.5rem 0 0; }

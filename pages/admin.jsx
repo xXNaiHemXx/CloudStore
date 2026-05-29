@@ -650,22 +650,159 @@ export default function Admin() {
           {/* USERS */}
           {activeTab === "users" && (
             <div className={styles.tabContent}>
-              <div className={styles.userGrid}>{users.map(user => (<div key={user.id} className={styles.userCard} onClick={() => handleSelectUser(user)}><div className={styles.userInfoLeft}><h2 className={styles.userNameCard}>{user.name}</h2><p><Icon name="coin" size="0.7rem" /> {user.points?.toLocaleString() || 0} points</p></div><div className={styles.userInfoRight}><p>{user.email}</p><p className={styles.userDetailLink}><Icon name="info" size="0.7rem" /> View Details →</p></div></div>))}</div>
+              {/* User Cards Grid */}
+              <div className={styles.userGrid}>
+                {users.map(user => (
+                  <div key={user.id} className={styles.userCard} onClick={() => handleSelectUser(user)}>
+                    <div className={styles.userCardAvatar}>
+                      {user.name?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                    <div className={styles.userCardInfo}>
+                      <h3 className={styles.userCardName}>{user.name}</h3>
+                      <p className={styles.userCardEmail}>{user.email}</p>
+                      <span className={styles.userCardPoints}>
+                        <Icon name="coin" size="0.7rem" /> {user.points?.toLocaleString() || 0} Points
+                      </span>
+                    </div>
+                    <div className={styles.userCardArrow}>
+                      <Icon name="arrow-right" size="1rem" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* User Detail Modal */}
               {selectedUser && (
                 <div className={styles.modalOverlay} onClick={() => !actionLoading && setSelectedUser(null)}>
-                  <div className={styles.userDetailModal} onClick={(e) => e.stopPropagation()}>
-                    <button className={styles.modalCloseBtn} onClick={() => setSelectedUser(null)} disabled={actionLoading}><Icon name="close" size="0.8rem" /></button>
-                    <div className={styles.userDetailHeader}><div className={styles.userAvatarLarge}>{selectedUser.name?.charAt(0)?.toUpperCase() || '?'}</div><div><h2 className={styles.userDetailName}>{selectedUser.name}</h2><p className={styles.userDetailEmail}>{selectedUser.email}</p></div></div>
-                    <div className={styles.userInfoCards}><div className={styles.userInfoCard}><Icon name="user" size="1.2rem" /><div><p className={styles.userInfoCardLabel}>Discord ID</p><p className={styles.userInfoCardValue}>{selectedUser.id}</p></div></div><div className={styles.userInfoCard}><Icon name="coin" size="1.2rem" /><div><p className={styles.userInfoCardLabel}>Points</p><p className={styles.userInfoCardValueHighlight}>{selectedUser.points?.toLocaleString() || 0} Point</p></div></div></div>
-                    <div className={styles.userDetailDivider}><span><Icon name="settings" size="0.7rem" /> Manage Points</span></div>
-                    <div className={styles.pointAdjustSection}>
-                      <div className={styles.pointAdjustInput}><label className={styles.pointAdjustLabel}>Amount</label><input type="number" className={styles.pointInput} value={changeAmount} onChange={(e) => setChangeAmount(e.target.value)} min="1" /></div>
-                      <div className={styles.pointAdjustButtons}><button className={styles.pointAddBtn} onClick={() => applyPointChange("add")} disabled={actionLoading}><Icon name="add" size="0.8rem" /> Add</button><button className={styles.pointSubtractBtn} onClick={() => applyPointChange("subtract")} disabled={actionLoading}><Icon name="remove" size="0.8rem" /> Subtract</button></div>
-                      <div className={styles.pointPreview}><span className={styles.pointPreviewLabel}>New Points</span><span className={styles.pointPreviewValue}>{proposedPoints?.toLocaleString() || 0} Point</span></div>
-                      <div className={styles.pointActionButtons}><button className={styles.pointSaveBtn} onClick={handleSavePoints} disabled={actionLoading}>{actionLoading ? <Icon name="loading" size="0.8rem" /> : <Icon name="save" size="0.8rem" />} {actionLoading ? "Saving..." : "Confirm"}</button><button className={styles.pointCancelBtn} onClick={() => setSelectedUser(null)} disabled={actionLoading}>Cancel</button></div>
+                  <div className={styles.userModal} onClick={(e) => e.stopPropagation()}>
+                    
+                    {/* Close Button */}
+                    <button className={styles.userModalClose} onClick={() => setSelectedUser(null)} disabled={actionLoading}>
+                      <Icon name="close" size="1rem" />
+                    </button>
+
+                    {/* Header */}
+                    <div className={styles.userModalHeader}>
+                      <div className={styles.userModalAvatar}>
+                        {selectedUser.name?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <div className={styles.userModalHeaderInfo}>
+                        <h2 className={styles.userModalName}>{selectedUser.name}</h2>
+                        <p className={styles.userModalEmail}>{selectedUser.email}</p>
+                        <span className={styles.userModalBadge}>
+                          <Icon name="user" size="0.7rem" /> Discord ID: {selectedUser.id}
+                        </span>
+                      </div>
                     </div>
-                    <div className={styles.userDetailDivider}><span><Icon name="cart" size="0.7rem" /> Purchased ({userProducts.length})</span></div>
-                    <div className={styles.purchasedProducts}>{userProducts.length > 0 ? userProducts.map((item, index) => (<div key={index} className={styles.purchasedProductCard}><div className={styles.purchasedProductInfo}><h4 className={styles.purchasedProductName}>{item.name}</h4><div className={styles.purchasedProductMeta}><span className={styles.purchasedProductVersion}><Icon name="product" size="0.7rem" /> v{item.version}</span><span className={styles.purchasedProductDate}><Icon name="calendar" size="0.7rem" /> {new Date(item.purchaseDate).toLocaleString("th-TH", { dateStyle: "long", timeStyle: "short" })}</span></div><div className={styles.purchasedProductLinks}><a href={item.fileUrl} target="_blank" className={styles.purchasedProductDownload}><Icon name="download" size="0.8rem" /> Download</a>{item.discordRoleIds?.length > 0 && <span className={styles.purchasedProductRoles}><Icon name="role" size="0.7rem" /> {item.discordRoleIds.join(", ")}</span>}</div></div><button className={styles.purchasedProductRemoveBtn} onClick={() => handleRemoveProduct(item.productId, index, item.name)} disabled={actionLoading}><Icon name="delete" size="0.8rem" /></button></div>)) : <div className={styles.noProducts}><Icon name="product" size="2rem" /><p>No purchases</p></div>}</div>
+
+                    {/* Info Cards */}
+                    <div className={styles.userModalStats}>
+                      <div className={styles.userModalStatCard}>
+                        <Icon name="coin" size="1.2rem" color="#10b981" />
+                        <div>
+                          <p className={styles.userModalStatLabel}>Current Points</p>
+                          <p className={styles.userModalStatValue}>
+                            {selectedUser.points?.toLocaleString() || 0} Point
+                          </p>
+                        </div>
+                      </div>
+                      <div className={styles.userModalStatCard}>
+                        <Icon name="cart" size="1.2rem" color="#6366f1" />
+                        <div>
+                          <p className={styles.userModalStatLabel}>Purchased Items</p>
+                          <p className={styles.userModalStatValue}>{userProducts.length}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Manage Points */}
+                    <div className={styles.userModalSection}>
+                      <h3 className={styles.userModalSectionTitle}>
+                        <Icon name="settings" size="0.8rem" /> Manage Points
+                      </h3>
+                      <div className={styles.userModalPointForm}>
+                        <div className={styles.userModalPointInput}>
+                          <label className={styles.userModalPointLabel}>Amount</label>
+                          <input 
+                            type="number" 
+                            className={styles.pointInput} 
+                            value={changeAmount} 
+                            onChange={(e) => setChangeAmount(e.target.value)} 
+                            min="1" 
+                          />
+                        </div>
+                        <div className={styles.userModalPointButtons}>
+                          <button className={styles.pointAddBtn} onClick={() => applyPointChange("add")} disabled={actionLoading}>
+                            <Icon name="add" size="0.8rem" /> Add
+                          </button>
+                          <button className={styles.pointSubtractBtn} onClick={() => applyPointChange("subtract")} disabled={actionLoading}>
+                            <Icon name="remove" size="0.8rem" /> Subtract
+                          </button>
+                        </div>
+                        <div className={styles.pointPreview}>
+                          <span className={styles.pointPreviewLabel}>New Points</span>
+                          <span className={styles.pointPreviewValue}>{proposedPoints?.toLocaleString() || 0} Point</span>
+                        </div>
+                        <div className={styles.pointActionButtons}>
+                          <button className={styles.pointSaveBtn} onClick={handleSavePoints} disabled={actionLoading}>
+                            {actionLoading ? <Icon name="loading" size="0.8rem" /> : <Icon name="save" size="0.8rem" />}
+                            <span>{actionLoading ? "Saving..." : "Confirm"}</span>
+                          </button>
+                          <button className={styles.pointCancelBtn} onClick={() => setSelectedUser(null)} disabled={actionLoading}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Purchased Products */}
+                    <div className={styles.userModalSection}>
+                      <h3 className={styles.userModalSectionTitle}>
+                        <Icon name="cart" size="0.8rem" /> Purchased Products ({userProducts.length})
+                      </h3>
+                      <div className={styles.userModalProducts}>
+                        {userProducts.length > 0 ? (
+                          userProducts.map((item, index) => (
+                            <div key={index} className={styles.purchasedItemCard}>
+                              <div className={styles.purchasedItemInfo}>
+                                <h4 className={styles.purchasedItemName}>{item.name}</h4>
+                                <div className={styles.purchasedItemMeta}>
+                                  <span className={styles.purchasedItemVersion}>
+                                    <Icon name="product" size="0.6rem" /> v{item.version}
+                                  </span>
+                                  <span className={styles.purchasedItemDate}>
+                                    <Icon name="calendar" size="0.6rem" /> {new Date(item.purchaseDate).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" })}
+                                  </span>
+                                </div>
+                                <div className={styles.purchasedItemActions}>
+                                  <a href={item.fileUrl} target="_blank" className={styles.purchasedItemDownload}>
+                                    <Icon name="download" size="0.7rem" /> Download
+                                  </a>
+                                  {item.discordRoleIds?.length > 0 && (
+                                    <span className={styles.purchasedItemRoles}>
+                                      <Icon name="role" size="0.6rem" /> {item.discordRoleIds.join(", ")}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <button 
+                                className={styles.purchasedItemRemove} 
+                                onClick={() => handleRemoveProduct(item.productId, index, item.name)} 
+                                disabled={actionLoading}
+                              >
+                                <Icon name="delete" size="0.8rem" />
+                              </button>
+                            </div>
+                          ))
+                        ) : (
+                          <div className={styles.noPurchases}>
+                            <Icon name="product" size="1.5rem" />
+                            <p>No purchases yet</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               )}
@@ -801,33 +938,33 @@ export default function Admin() {
                 )}
               </div>
               {showAdminModal && (
-  <div className={styles.modalOverlay}>
-    <div className={styles.modalContent} style={{ maxWidth: '450px' }}>
-      <h2 className={styles.modalTitle}><Icon name="users" size="1rem" /> Add Admin</h2>
-      <form onSubmit={handleAddAdmin} className={styles.modalForm}>
-        <div className={styles.modalRow}>
-          <label className={styles.modalLabel}>Discord ID *</label>
-          <input value={adminForm.discordId} onChange={(e) => setAdminForm(prev => ({ ...prev, discordId: e.target.value }))} className={styles.modalInput} placeholder="123456789012345678" required />
-        </div>
-        <div className={styles.modalRow}>
-          <label className={styles.modalLabel}>Name</label>
-          <input value={adminForm.name} onChange={(e) => setAdminForm(prev => ({ ...prev, name: e.target.value }))} className={styles.modalInput} placeholder="ชื่อ Admin" />
-        </div>
-        <div className={styles.modalRow}>
-          <label className={styles.modalLabel}>Role</label>
-          <select value={adminForm.role} onChange={(e) => setAdminForm(prev => ({ ...prev, role: e.target.value }))} className={styles.modalInput}>
-            <option value="admin">Admin</option>
-            <option value="moderator">Moderator</option>
-          </select>
-        </div>
-        <div className={styles.modalActions}>
-          <button type="button" className={styles.cancelBtn} onClick={() => setShowAdminModal(false)}>Cancel</button>
-          <button type="submit" className={styles.submitBtn}>Add Admin</button>
-        </div>
-      </form>
-    </div>
-  </div>
-)}
+              <div className={styles.modalOverlay}>
+                <div className={styles.modalContent} style={{ maxWidth: '450px' }}>
+                  <h2 className={styles.modalTitle}><Icon name="users" size="1rem" /> Add Admin</h2>
+                  <form onSubmit={handleAddAdmin} className={styles.modalForm}>
+                    <div className={styles.modalRow}>
+                      <label className={styles.modalLabel}>Discord ID *</label>
+                      <input value={adminForm.discordId} onChange={(e) => setAdminForm(prev => ({ ...prev, discordId: e.target.value }))} className={styles.modalInput} placeholder="123456789012345678" required />
+                    </div>
+                    <div className={styles.modalRow}>
+                      <label className={styles.modalLabel}>Name</label>
+                      <input value={adminForm.name} onChange={(e) => setAdminForm(prev => ({ ...prev, name: e.target.value }))} className={styles.modalInput} placeholder="ชื่อ Admin" />
+                    </div>
+                    <div className={styles.modalRow}>
+                      <label className={styles.modalLabel}>Role</label>
+                      <select value={adminForm.role} onChange={(e) => setAdminForm(prev => ({ ...prev, role: e.target.value }))} className={styles.modalInput}>
+                        <option value="admin">Admin</option>
+                        <option value="moderator">Moderator</option>
+                      </select>
+                    </div>
+                    <div className={styles.modalActions}>
+                      <button type="button" className={styles.cancelBtn} onClick={() => setShowAdminModal(false)}>Cancel</button>
+                      <button type="submit" className={styles.submitBtn}>Add Admin</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
               <div className={styles.tableWrapper}>
                 <table className={styles.dataTable}>
                   <thead>
