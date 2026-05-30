@@ -702,7 +702,7 @@ const handleWalletSubmit = async () => {
                           </div>
                         </div>
                         <div className={styles.tutorialNote}>
-                          <Icon name="lightbulb" size="1rem" />
+                          <Icon name="more" size="1rem" />
                           <span> ลิงก์อังเปาจะอยู่ที่ url ของหน้า gift.truemoney.com</span>
                         </div>
                       </div>
