@@ -1,4 +1,4 @@
-export default function Icon({ name, size = "1rem", color = "currentColor", className = "" }) {
+export default function Icon({ name, size = "1rem", color = "currentColor" }) {
   const iconMap = {
     // การเงิน/สินค้า
     "money": "fi-rr-bank",
@@ -7,8 +7,6 @@ export default function Icon({ name, size = "1rem", color = "currentColor", clas
     "discount": "fi-rr-tag",
     "cart": "fi-rr-shopping-cart",
     "price": "fi-rr-bill",
-    "gift": "fi-rr-gift",
-    "ticket": "fi-rr-ticket",
     
     // ไฟล์/document
     "file": "fi-rr-file",
@@ -26,8 +24,6 @@ export default function Icon({ name, size = "1rem", color = "currentColor", clas
     "order": "fi-rr-box",
     "product": "fi-rr-cube",
     "category": "fi-rr-apps",
-    "role": "fi-rr-badge",
-    "version": "fi-rr-code-branch",
     
     // การกระทำ
     "edit": "fi-rr-pencil",
@@ -39,14 +35,6 @@ export default function Icon({ name, size = "1rem", color = "currentColor", clas
     "info": "fi-rr-info",
     "error": "fi-rr-octagon",
     "success": "fi-rr-circle-check",
-    "copy": "fi-rr-copy",
-    "paste": "fi-rr-paste",
-    "save": "fi-rr-save",
-    "print": "fi-rr-print",
-    "export": "fi-rr-export",
-    "import": "fi-rr-import",
-    "refresh": "fi-rr-refresh",
-    "search": "fi-rr-search",
     
     // สื่อ/โซเชียล
     "discord": "fi-brands-discord",
@@ -59,6 +47,7 @@ export default function Icon({ name, size = "1rem", color = "currentColor", clas
     "star": "fi-rr-star",
     "heart": "fi-rr-heart",
     "like": "fi-rr-thumbs-up",
+    "search": "fi-rr-search",
     "calendar": "fi-rr-calendar",
     "clock": "fi-rr-clock",
     "location": "fi-rr-marker",
@@ -72,41 +61,51 @@ export default function Icon({ name, size = "1rem", color = "currentColor", clas
     "arrow-right": "fi-rr-arrow-right",
     "arrow-up": "fi-rr-arrow-up",
     "arrow-down": "fi-rr-arrow-down",
+    "refresh": "fi-rr-refresh",
+    "copy": "fi-rr-copy",
+    "paste": "fi-rr-paste",
+    "save": "fi-rr-save",
+    "print": "fi-rr-print",
+    "export": "fi-rr-export",
+    "import": "fi-rr-import",
     
-    // รางวัลและสถานะ
-    "winner": "fi-rr-trophy",
-    "trophy": "fi-rr-trophy",
-    "crown": "fi-rr-crown",
-    "rocket": "fi-rr-rocket",
-    "history": "fi-rr-time-past",
-    "bell": "fi-rr-bell",
-    "logout": "fi-rr-exit",
-    "login": "fi-rr-enter",
-    "menu": "fi-rr-menu-burger",
-    "more": "fi-rr-menu-dots",
-    "link": "fi-rr-link",
-    "card": "fi-rr-credit-card",
-    "loading": "fi-rr-spinner",
-    "pending": "fi-rr-clock",
-    "new": "fi-rr-sparkles",
-    "sort": "fi-rr-sort",
-    "cloud": "fi-rr-cloud",
-    "lightbulb": "fi-rr-lightbulb",
-    "bulb": "fi-rr-lightbulb",
+    //  เพิ่มที่หายไป
+    "winner": "fi-rr-trophy",           // 🏆 ถ้วยรางวัล
+    "trophy": "fi-rr-trophy",            // 🏆 ถ้วยรางวัล
+    "crown": "fi-rr-crown",              // 👑 มงกุฎ
+    "rocket": "fi-rr-rocket",            // 🚀 จรวด
+    "gift": "fi-rr-gift",                // 🎁 ของขวัญ
+    "calendar": "fi-rr-calendar",        // 📅 ปฏิทิน
+    "history": "fi-rr-time-past",          // 📜 ประวัติ
+    "bell": "fi-rr-bell",                // 🔔 แจ้งเตือน
+    "logout": "fi-rr-exit",              // 🚪 ออกจากระบบ
+    "login": "fi-rr-enter",              // 🔐 เข้าสู่ระบบ
+    "menu": "fi-rr-menu-burger",         // ☰ เมนู
+    "more": "fi-rr-menu-dots",           // ⋯ จุดเพิ่มเติม
+    "link": "fi-rr-link",                // 🔗 ลิงก์
+    "role": "fi-rr-badge",               // 🎭 บทบาท
+    "version": "fi-rr-code-branch",      // 📌 เวอร์ชัน
+    "card": "fi-rr-credit-card",         // 💳 บัตรเครดิต
+    "loading": "fi-rr-spinner",          // ⏳ กำลังโหลด
+    "pending": "fi-rr-clock",            // ⏳ รอดำเนินการ
+    "new": "fi-rr-sparkles",             // ✨ ใหม่
+    "sort": "fi-rr-sort",                // 🔤 เรียงลำดับ
+    "cloud": "fi-rr-cloud",              // ☁️ คลาวด์
+    "discount": "fi-rr-credit-card",              // 💸 ส่วนลด
+    "wallet": "fi-rr-wallet",              // 👛 กระเป๋าเงิน
   };
 
   const iconClass = iconMap[name] || "fi-rr-question";
 
   return (
     <i 
-      className={`${iconClass} ${className}`}
+      className={iconClass} 
       style={{ 
         fontSize: size, 
         color: color,
         display: "inline-flex",
         alignItems: "center",
-        justifyContent: "center",
-        lineHeight: 1
+        justifyContent: "center"
       }} 
     />
   );
