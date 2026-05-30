@@ -32,17 +32,236 @@ export default function Profile() {
   const [lastCheckTime, setLastCheckTime] = useState(0);
   const [availableUpdates, setAvailableUpdates] = useState([]);
   const [downloading, setDownloading] = useState(null);
-  //  Wallet States
+  
+  // Wallet States
   const [topupMethod, setTopupMethod] = useState('bank'); // bank | wallet
-
-
-  //  Wallet Submit Handler
+  const [voucherCode, setVoucherCode] = useState(''); // ✅ เพิ่ม state สำหรับ voucher code
+  const [redeemStatus, setRedeemStatus] = useState(null); // ✅ เพิ่ม state สำหรับแสดงสถานะการรับเงิน
   
-  
-  //  เปลี่ยนจาก .env เป็นเช็คจาก API + Fallback
+  // เปลี่ยนจาก .env เป็นเช็คจาก API + Fallback
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  // เพิ่ม state สำหรับ TrueWallet Link
+const [trueWalletLink, setTrueWalletLink] = useState('');
+const [extractedCode, setExtractedCode] = useState('');
+const [extractedAmount, setExtractedAmount] = useState('');
 
-  //  เช็คสิทธิ์ Admin จาก Database + .env Fallback
+// ฟังก์ชันดึงรหัสจากลิงก์ TrueWallet
+const extractCodeFromLink = (link) => {
+  try {
+    // รูปแบบลิงก์: gift.truemoney.com/campaign/?v=xxxxxxxxxx
+    const urlPattern = /(?:gift\.truemoney\.com\/campaign\/\?v=|gift\.truemoney\.com\/\?v=)([a-zA-Z0-9]+)/;
+    const match = link.match(urlPattern);
+    
+    if (match && match[1]) {
+      return match[1];
+    }
+    
+    // ถ้าใส่แค่รหัสล้วนๆ
+    if (/^[a-zA-Z0-9]{10,}$/.test(link.trim())) {
+      return link.trim();
+    }
+    
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+// ฟังก์ชันดึงจำนวนเงินจาก API (optional)
+const fetchVoucherAmount = async (code) => {
+  try {
+    const response = await fetch(`https://tw.oiioioiiioooioio.de/api/voucher/${code}`);
+    if (response.ok) {
+      const data = await response.json();
+      return data.amount_baht;
+    }
+  } catch (error) {
+    console.error('Failed to fetch voucher amount:', error);
+  }
+  return null;
+};
+
+// จัดการการเปลี่ยนลิงก์
+const handleTrueWalletLinkChange = async (link) => {
+  setTrueWalletLink(link);
+  const code = extractCodeFromLink(link);
+  
+  if (code) {
+    setExtractedCode(code);
+    // option: ดึงจำนวนเงินจาก API
+    // const amount = await fetchVoucherAmount(code);
+    // if (amount) setExtractedAmount(amount);
+  } else {
+    setExtractedCode('');
+    setExtractedAmount('');
+  }
+};
+
+// คัดลอกข้อความ
+const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    success('คัดลอกรหัสสำเร็จ');
+  } catch (err) {
+    error('คัดลอกไม่สำเร็จ');
+  }
+};
+
+// Submit สำหรับ TrueWallet
+const handleWalletSubmit = async () => {
+  if (!extractedCode) {
+    error('กรุณาวางลิงก์อังเปา TrueWallet ให้ถูกต้อง');
+    return;
+  }
+
+  setSubmitting(true);
+  setRedeemStatus(null);
+
+  try {
+    const receiverMobile = '0800451901'; // เบอร์ TrueWallet ของร้านค้า
+    const redeemResult = await redeemTrueWalletVoucher(extractedCode, receiverMobile);
+
+    if (redeemResult.status?.code !== 'SUCCESS') {
+      const errorMessages = {
+        'TARGET_USER_REDEEMED': 'คุณรับอังเปานี้ไปแล้ว',
+        'VOUCHER_OUT_OF_STOCK': 'มีคนรับอังเปานี้ไปแล้ว',
+        'VOUCHER_EXPIRED': 'อังเปาหมดอายุแล้ว',
+        'VOUCHER_NOT_FOUND': 'ไม่พบอังเปาในระบบ',
+        'CANNOT_GET_OWN_VOUCHER': 'ไม่สามารถรับอังเปาของตัวเองได้',
+        'TARGET_USER_NOT_FOUND': 'ไม่พบเบอร์ผู้รับในระบบ',
+      };
+      const errorMsg = errorMessages[redeemResult.status?.code] || redeemResult.status?.message || 'การรับเงินล้มเหลว';
+      error(`❌ ${errorMsg}`);
+      setRedeemStatus({ success: false, message: errorMsg });
+      setSubmitting(false);
+      return;
+    }
+
+    const redeemedAmount = redeemResult.data?.my_ticket?.amount_baht || '0';
+    success(`✅ รับเงินสำเร็จ! จำนวน ${redeemedAmount} บาท`);
+    
+    // บันทึก log
+    await addLog(LOG_TYPES.TOPUP, "เติมเงิน TrueWallet", 
+      `${session.user.name} รับเงิน ${redeemedAmount} บาท จากลิงก์อังเปา`, 
+      session.user.name, {
+        discordId: session.user.id,
+        amount: redeemedAmount,
+        voucherCode: extractedCode,
+        method: 'wallet'
+      }
+    ).catch(() => {});
+
+    setRedeemStatus({ 
+      success: true, 
+      message: `รับเงินสำเร็จ ${redeemedAmount} บาท`,
+      amount: redeemedAmount 
+    });
+
+    // รีเฟรชพ้อยท์
+    await refreshPoints();
+    
+    // เคลียร์ฟอร์ม
+    setTrueWalletLink('');
+    setExtractedCode('');
+    setExtractedAmount('');
+
+    // รีเซ็ตสถานะหลังจาก 5 วินาที
+    setTimeout(() => setRedeemStatus(null), 5000);
+
+  } catch (err) {
+    console.error('Wallet submit error:', err);
+    error('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+    setRedeemStatus({ success: false, message: 'เกิดข้อผิดพลาด กรุณาลองใหม่' });
+  } finally {
+    setSubmitting(false);
+  }
+};
+  
+// Submit สำหรับธนาคาร (แยกจากเดิม)
+  const handleBankSubmit = async () => {
+    if (!file || !amount || !session?.user?.id) { 
+      error("กรุณากรอกข้อมูลให้ครบ"); 
+      return; 
+    }
+    if (parseFloat(amount) <= 0) { 
+      error("กรุณากรอกจำนวนเงินที่มากกว่า 0"); 
+      return; 
+    }
+
+    setSubmitting(true);
+    const formData = new FormData();
+    formData.append("slip", file);
+    formData.append("userId", session.user.id);
+    formData.append("amount", amount);
+
+    try {
+      const uploadRes = await fetch("/api/topup/upload-slip", { method: "POST", body: formData });
+      const uploadData = await uploadRes.json();
+      
+      if (!uploadRes.ok) { 
+        error(uploadData.error || "อัพโหลดไม่สำเร็จ"); 
+        setSubmitting(false); 
+        return; 
+      }
+
+      const verifyRes = await fetch("/api/topup/verify-slipok", { 
+        method: "POST", 
+        headers: { "Content-Type": "application/json" }, 
+        body: JSON.stringify({ 
+          fileUrl: uploadData.fileUrl, 
+          amount, 
+          userId: session.user.id 
+        }) 
+      });
+      const verifyData = await verifyRes.json();
+      
+      if (!verifyRes.ok) {
+        if (verifyData.error?.includes('จำนวนเงิน')) {
+          error(`❌ ${verifyData.error}`);
+          warning(" กรุณากรอกจำนวนเงินให้ตรงกับสลิปที่โอน");
+        } else {
+          error(verifyData.error || "การตรวจสอบไม่สำเร็จ");
+        }
+        setSubmitting(false); 
+        return; 
+      }
+
+      const actualAmount = verifyData.amount || parseFloat(amount);
+      const actualPoints = verifyData.newPoints - (userPoints || 0);
+      
+      success(`✅ เติมเงินสำเร็จ! รับ ${actualPoints} Point (${actualAmount} บาท)`);
+      
+      await addLog(LOG_TYPES.TOPUP, "เติมเงิน", `${session.user.name} เติมเงิน ${actualAmount} บาท`, session.user.name, {
+        discordId: session.user.id,
+        amount: actualAmount,
+        points: actualPoints,
+      }).catch(() => {});
+    
+      removeFile();
+      setAmount("");
+      await refreshPoints();
+    } catch (err) {
+      error("เกิดข้อผิดพลาดในการดำเนินการ");
+      await addLog(LOG_TYPES.ERROR, "เติมเงินผิดพลาด", `${session.user.name} เติมเงิน ${amount} บาท ไม่สำเร็จ`, session.user.name, { amount, error: err.message }).catch(() => {});
+    } finally { 
+      setSubmitting(false); 
+    }
+  };
+  // ฟังก์ชันเรียกใช้ API TrueWallet
+  const redeemTrueWalletVoucher = async (code, mobile) => {
+    try {
+      const response = await fetch(`https://tw.oiioioiiioooioio.de/api/${code}/${mobile}`, {
+        method: 'POST'
+      });
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('API Error:', error);
+      return { status: { code: 'INTERNAL_ERROR', message: 'เชื่อมต่อล้มเหลว' } };
+    }
+  };
+
+  // เช็คสิทธิ์ Admin จาก Database + .env Fallback
   useEffect(() => {
     if (session?.user?.id) {
       checkAdminStatus();
@@ -51,7 +270,6 @@ export default function Profile() {
 
   const checkAdminStatus = async () => {
     try {
-      // เช็คจาก Database ก่อน
       const res = await axios.get(`/api/admin/check-admin?discordId=${session.user.id}`);
       if (res.data.isAdmin) {
         setIsUserAdmin(true);
@@ -59,12 +277,12 @@ export default function Profile() {
       }
     } catch {}
     
-    // Fallback: เช็คจาก .env
     const envIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
     if (envIds.includes(session.user.id)) {
       setIsUserAdmin(true);
     }
   };
+  
   // ✅ Sync สินค้าก่อนโหลด
   useEffect(() => {
     if (!session) return;
@@ -75,15 +293,16 @@ export default function Profile() {
           userId: session.user.discordId || session.user.id
         });
         if (res.data.success) {
-          await refreshPoints(); // รีเฟรชข้อมูล
+          await refreshPoints();
         }
       } catch (err) {
         console.error("Sync error:", err);
       }
     };
   
-  syncProducts();
-}, [session]);
+    syncProducts();
+  }, [session]);
+  
   useEffect(() => { 
     setMyProducts(contextUserProducts || []); 
   }, [contextUserProducts]);
@@ -167,7 +386,12 @@ export default function Profile() {
     setFile(selectedFile); setFileName(selectedFile.name); setPreviewUrl(URL.createObjectURL(selectedFile));
   };
 
-  const removeFile = () => { if (previewUrl) URL.revokeObjectURL(previewUrl); setFile(null); setFileName(""); setPreviewUrl(null); };
+  const removeFile = () => { 
+    if (previewUrl) URL.revokeObjectURL(previewUrl); 
+    setFile(null); 
+    setFileName(""); 
+    setPreviewUrl(null); 
+  };
 
   const getStatusClass = (status) => {
     switch (status?.toLowerCase()) {
@@ -178,71 +402,156 @@ export default function Profile() {
     }
   };
 
+  // ✅ แก้ไข handleSubmit ให้รองรับการเติมเงินผ่าน TrueWallet
   const handleSubmit = async () => {
-    if (!file || !amount || !session?.user?.id) { 
-      error("กรุณากรอกข้อมูลให้ครบ"); 
+    // Validation
+    if (!file || !session?.user?.id) { 
+      error("กรุณาอัปโหลดสลิป"); 
       return; 
     }
-    if (parseFloat(amount) <= 0) { 
-      error("กรุณากรอกจำนวนเงินที่มากกว่า 0"); 
-      return; 
+    
+    if (topupMethod === 'wallet') {
+      // กรณีเติมเงินผ่าน TrueWallet ต้องมี voucher code
+      if (!voucherCode || voucherCode.trim() === '') {
+        error("กรุณากรอกรหัส Voucher จาก TrueWallet");
+        return;
+      }
+      if (!amount || parseFloat(amount) <= 0) {
+        error("กรุณากรอกจำนวนเงิน");
+        return;
+      }
+    } else {
+      // กรณีเติมเงินผ่านธนาคาร
+      if (!amount || parseFloat(amount) <= 0) { 
+        error("กรุณากรอกจำนวนเงินที่มากกว่า 0"); 
+        return; 
+      }
     }
 
     setSubmitting(true);
-    const formData = new FormData();
-    formData.append("slip", file);
-    formData.append("userId", session.user.id);
-    formData.append("amount", amount);
-
+    setRedeemStatus(null);
+    
     try {
+      // ✅ ถ้าเป็นการเติมเงินด้วย TrueWallet ให้เรียก API ก่อน
+      if (topupMethod === 'wallet') {
+        // เบอร์ผู้รับ (เบอร์ TrueWallet ของร้านค้า)
+        const receiverMobile = '0800451901'; // 🔧 แก้ไขเป็นเบอร์จริง
+        
+        const redeemResult = await redeemTrueWalletVoucher(voucherCode.trim(), receiverMobile);
+        
+        console.log('Redeem Result:', redeemResult);
+        
+        // ตรวจสอบผลลัพธ์จาก API
+        if (redeemResult.status?.code !== 'SUCCESS') {
+          const errorMessages = {
+            'TARGET_USER_REDEEMED': 'คุณรับซองนี้ไปแล้ว',
+            'VOUCHER_OUT_OF_STOCK': 'มีคนรับซองนี้ไปแล้ว',
+            'VOUCHER_EXPIRED': 'ซองวอเลทหมดอายุแล้ว',
+            'VOUCHER_NOT_FOUND': 'ไม่พบซองในระบบ',
+            'CANNOT_GET_OWN_VOUCHER': 'ไม่สามารถรับซองตัวเองได้',
+            'TARGET_USER_NOT_FOUND': 'ไม่พบเบอร์ผู้รับในระบบ',
+            'INTERNAL_ERROR': 'เกิดข้อผิดพลาดภายในระบบ'
+          };
+          const errorMsg = errorMessages[redeemResult.status?.code] || redeemResult.status?.message || 'การรับเงินล้มเหลว';
+          error(`❌ ${errorMsg}`);
+          setRedeemStatus({ success: false, message: errorMsg });
+          setSubmitting(false);
+          return;
+        }
+        
+        // ✅ รับเงินสำเร็จ
+        const redeemedAmount = redeemResult.data?.my_ticket?.amount_baht || amount;
+        success(`✅ รับเงินจาก TrueWallet สำเร็จ! จำนวน ${redeemedAmount} บาท`);
+        
+        // บันทึก log การรับเงิน
+        await addLog(LOG_TYPES.TOPUP, "เติมเงิน TrueWallet", `${session.user.name} รับเงิน ${redeemedAmount} บาท จากรหัส ${voucherCode}`, session.user.name, {
+          discordId: session.user.id,
+          amount: redeemedAmount,
+          voucherCode: voucherCode,
+          method: 'wallet'
+        }).catch(() => {});
+        
+        setRedeemStatus({ success: true, message: `รับเงินสำเร็จ ${redeemedAmount} บาท`, amount: redeemedAmount });
+      }
+      
+      // ✅ อัปโหลดสลิปไปยังระบบ (ทั้งสองกรณี)
+      const formData = new FormData();
+      formData.append("slip", file);
+      formData.append("userId", session.user.id);
+      formData.append("amount", amount);
+      if (topupMethod === 'wallet') {
+        formData.append("method", "wallet");
+        formData.append("voucherCode", voucherCode);
+      } else {
+        formData.append("method", "bank");
+      }
+
       const uploadRes = await fetch("/api/topup/upload-slip", { method: "POST", body: formData });
       const uploadData = await uploadRes.json();
+      
       if (!uploadRes.ok) { 
         error(uploadData.error || "อัพโหลดไม่สำเร็จ"); 
         setSubmitting(false); 
         return; 
       }
 
-      const verifyRes = await fetch("/api/topup/verify-slipok", { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify({ 
-          fileUrl: uploadData.fileUrl, 
-          amount, 
-          userId: session.user.id 
-        }) 
-      });
-      const verifyData = await verifyRes.json();
-      
-      if (!verifyRes.ok) {
-        if (verifyData.error?.includes('จำนวนเงิน')) {
-          error(`❌ ${verifyData.error}`);
-          warning("💡 กรุณากรอกจำนวนเงินให้ตรงกับสลิปที่โอน");
-        } else {
-          error(verifyData.error || "การตรวจสอบไม่สำเร็จ");
+      // ✅ ตรวจสอบสลิป (เฉพาะกรณีธนาคารเท่านั้น)
+      if (topupMethod === 'bank') {
+        const verifyRes = await fetch("/api/topup/verify-slipok", { 
+          method: "POST", 
+          headers: { "Content-Type": "application/json" }, 
+          body: JSON.stringify({ 
+            fileUrl: uploadData.fileUrl, 
+            amount, 
+            userId: session.user.id 
+          }) 
+        });
+        const verifyData = await verifyRes.json();
+        
+        if (!verifyRes.ok) {
+          if (verifyData.error?.includes('จำนวนเงิน')) {
+            error(`❌ ${verifyData.error}`);
+            warning(" กรุณากรอกจำนวนเงินให้ตรงกับสลิปที่โอน");
+          } else {
+            error(verifyData.error || "การตรวจสอบไม่สำเร็จ");
+          }
+          setSubmitting(false); 
+          return; 
         }
-        setSubmitting(false); 
-        return; 
-      }
 
-      // ✅ ใช้จำนวนเงินจริงจากสลิป (verifyData.amount)
-      const actualAmount = verifyData.amount || parseFloat(amount);
-      const actualPoints = verifyData.newPoints - (userPoints || 0);
+        // ✅ ใช้จำนวนเงินจริงจากสลิป
+        const actualAmount = verifyData.amount || parseFloat(amount);
+        const actualPoints = verifyData.newPoints - (userPoints || 0);
+        
+        success(`✅ เติมเงินสำเร็จ! รับ ${actualPoints} Point (${actualAmount} บาท)`);
+        
+        await addLog(LOG_TYPES.TOPUP, "เติมเงิน", `${session.user.name} เติมเงิน ${actualAmount} บาท`, session.user.name, {
+          discordId: session.user.id,
+          amount: actualAmount,
+          points: actualPoints,
+        }).catch(() => {});
+      } else {
+        // กรณี TrueWallet - ไม่ต้องตรวจสอบสลิป แค่บันทึกข้อมูล
+        success(`✅ บันทึกสลิปเรียบร้อย รอการยืนยัน`);
+      }
       
-      success(`✅ เติมเงินสำเร็จ! รับ ${actualPoints} Point (${actualAmount} บาท)`);
-      
-      await addLog(LOG_TYPES.TOPUP, "เติมเงิน", `${session.user.name} เติมเงิน ${actualAmount} บาท`, session.user.name, {
-        discordId: session.user.id,
-        amount: actualAmount,
-        points: actualPoints,
-      }).catch(() => {});
-    
+      // reset form
       removeFile();
       setAmount("");
+      setVoucherCode(""); // ✅ reset voucher code
       await refreshPoints();
+      
+      // รีเซ็ตสถานะ redeem หลังจาก 5 วินาที
+      setTimeout(() => setRedeemStatus(null), 5000);
+      
     } catch (err) {
+      console.error("Submit error:", err);
       error("เกิดข้อผิดพลาดในการดำเนินการ");
-      await addLog(LOG_TYPES.ERROR, "เติมเงินผิดพลาด", `${session.user.name} เติมเงิน ${amount} บาท ไม่สำเร็จ`, session.user.name, { amount, error: err.message }).catch(() => {});
+      await addLog(LOG_TYPES.ERROR, "เติมเงินผิดพลาด", `${session.user.name} เติมเงินไม่สำเร็จ`, session.user.name, { 
+        amount, 
+        method: topupMethod,
+        error: err.message 
+      }).catch(() => {});
     } finally { 
       setSubmitting(false); 
     }
@@ -262,7 +571,7 @@ export default function Profile() {
     );
   }
 
-    return (
+  return (
     <Layout>
       <div className={styles.pageContainer}>
         <div className={styles.profileHeader}>
@@ -333,33 +642,91 @@ export default function Profile() {
               </>
             )}
 
-            {/* TOPUP TAB */}
+           {/* TOPUP TAB */}
             {activeTab === 'topup' && (
               <div className={styles.topupContainer}>
                 <div className={styles.topupGrid}>
                   
-                  {/* ✅ Left: QR Code */}
+                  {/* Left: QR Code / Instruction Image */}
                   <div className={styles.topupQrSection}>
-                    <img 
-                      src={topupMethod === 'bank' ? '/images/kbank-qr.png' : '/images/truemoney-slip.png'} 
-                      alt={topupMethod === 'bank' ? "KBank Slip" : "TrueMoney Slip"} 
-                      className={styles.topupQrImage} 
-                    />
+                    {topupMethod === 'bank' ? (
+                      <img 
+                        src="/images/kbank-qr.png" 
+                        alt="KBank QR Code" 
+                        className={styles.topupQrImage} 
+                      />
+                    ) : (
+                      <div className={styles.tutorialSection}>
+                        <div className={styles.tutorialHeader}>
+                          <Icon name="gift" size="1.5rem" />
+                          <span>วิธีการทำลิงก์อังเปา TrueWallet</span>
+                        </div>
+                        <div className={styles.tutorialSteps}>
+                          <div className={styles.tutorialStep}>
+                            <div className={styles.stepNumber}>1</div>
+                            <div className={styles.stepContent}>
+                              <span className={styles.stepTitle}>เปิดแอป TrueMoney</span>
+                              <span className={styles.stepDesc}>กดที่เมนู "อังเปา" หรือ "สร้างอังเปา"</span>
+                            </div>
+                          </div>
+                          <div className={styles.tutorialStep}>
+                            <div className={styles.stepNumber}>2</div>
+                            <div className={styles.stepContent}>
+                              <span className={styles.stepTitle}>กรอกจำนวนเงิน</span>
+                              <span className={styles.stepDesc}>ใส่จำนวนเงินที่ต้องการส่ง (ขั้นต่ำ 1 บาท)</span>
+                            </div>
+                          </div>
+                          <div className={styles.tutorialStep}>
+                            <div className={styles.stepNumber}>3</div>
+                            <div className={styles.stepContent}>
+                              <span className={styles.stepTitle}>สร้างอังเปา</span>
+                              <span className={styles.stepDesc}>กดสร้างอังเปา แล้วระบบจะสร้างลิงก์ให้</span>
+                            </div>
+                          </div>
+                          <div className={styles.tutorialStep}>
+                            <div className={styles.stepNumber}>4</div>
+                            <div className={styles.stepContent}>
+                              <span className={styles.stepTitle}>คัดลอกลิงก์</span>
+                              <span className={styles.stepDesc}>
+                                ลิงก์จะมีลักษณะดังนี้:<br />
+                                <code className={styles.codeExample}>gift.truemoney.com/campaign/?v=xxxxxxxxxx</code>
+                              </span>
+                            </div>
+                          </div>
+                          <div className={styles.tutorialStep}>
+                            <div className={styles.stepNumber}>5</div>
+                            <div className={styles.stepContent}>
+                              <span className={styles.stepTitle}>วางลิงก์ในช่องด้านล่าง</span>
+                              <span className={styles.stepDesc}>ระบบจะดึงรหัสอังเปามาให้อัตโนมัติ</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className={styles.tutorialNote}>
+                          <Icon name="lightbulb" size="1rem" />
+                          <span> ลิงก์อังเปาจะอยู่ที่ url ของหน้า gift.truemoney.com</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* ✅ Right: Form */}
+                  {/* Right: Form */}
                   <div className={styles.topupFormWrapper}>
                     <div className={styles.topupForm}>
                       
                       {/* Payment Information */}
                       <span className={styles.topupFormTitle}>Payment Information</span>
 
-                      {/* ✅ Payment Methods */}
+                      {/* Payment Methods */}
                       <div className={styles.topupMethods}>
                         {/* KBank */}
                         <button
                           className={`${styles.topupMethodCard} ${topupMethod === 'bank' ? styles.topupMethodCardActive : ''}`}
-                          onClick={() => setTopupMethod('bank')}
+                          onClick={() => {
+                            setTopupMethod('bank');
+                            setTrueWalletLink('');
+                            setExtractedCode('');
+                            setRedeemStatus(null);
+                          }}
                         >
                           <div className={styles.topupMethodIcon}>
                             <img src="/images/kbank.png" alt="KBank" className={styles.topupMethodLogo} />
@@ -374,15 +741,21 @@ export default function Profile() {
                         {/* TrueMoney */}
                         <button
                           className={`${styles.topupMethodCard} ${topupMethod === 'wallet' ? styles.topupMethodCardActive : ''}`}
-                          onClick={() => setTopupMethod('wallet')}
+                          onClick={() => {
+                            setTopupMethod('wallet');
+                            setFile(null);
+                            setFileName('');
+                            setPreviewUrl(null);
+                            setRedeemStatus(null);
+                          }}
                         >
                           <div className={styles.topupMethodIcon}>
                             <img src="/images/truemoney.jpg" alt="TrueMoney" className={styles.topupMethodLogo} />
                           </div>
                           <div className={styles.topupMethodInfo}>
                             <span className={`${styles.topupMethodName} ${styles.topupMethodNameWallet}`}>ทรูมันนี่วอลเล็ท</span>
-                            <span className={styles.topupMethodDetail}>ชื่อบัญชี นาย อิบรอเหม อุสมา</span>
-                            <span className={styles.topupMethodDetail}>หมายเลขบัญชี 080-045-1901</span>
+                            <span className={styles.topupMethodDetail}>รับเงินผ่านลิงก์อังเปา TrueWallet</span>
+                            <span className={styles.topupMethodDetail}>รับเงินทันที ไม่ต้องรอตรวจสอบ</span>
                           </div>
                         </button>
                       </div>
@@ -390,49 +763,115 @@ export default function Profile() {
                       {/* Warning */}
                       <div className={styles.topupWarning}>
                         <Icon name="warning" size="0.8rem" />
-                        <span>เมื่อโอนเงินแล้ว ไม่มีนโยบายโอนคืน โปรดระบุยอดให้ตรงความต้องการ</span>
+                        <span>เมื่อโอนเงินแล้ว ไม่มีนโยบายโอนคืน โปรดตรวจสอบข้อมูลให้ถูกต้อง</span>
                       </div>
 
-                      {/* Upload Slip */}
-                      <div className={styles.topupUploadSection}>
-                        <span className={styles.topupUploadLabel}>อัพโหลดสลิป</span>
-                        <label className={`${styles.topupUploadBox} ${fileName ? styles.topupUploadBoxActive : ''}`}>
-                          {fileName ? (
-                            <div className={styles.topupPreviewContainer}>
-                              {previewUrl && <img src={previewUrl} alt="Preview" className={styles.topupPreviewImage} />}
-                              <span className={styles.topupPreviewName}>{fileName}</span>
-                              <button type="button" className={styles.topupRemoveBtn} onClick={(e) => { e.preventDefault(); removeFile(); }}>
-                                ✕ ลบไฟล์
-                              </button>
-                            </div>
-                          ) : (
-                            <div className={styles.topupUploadPlaceholder}>
-                              <svg xmlns="http://www.w3.org/2000/svg" className={styles.topupUploadIcon} viewBox="0 0 24 24" fill="currentColor">
-                                <path fillRule="evenodd" d="M1.5 6a2.25 2.25 0 0 1 2.25-2.25h16.5A2.25 2.25 0 0 1 22.5 6v12a2.25 2.25 0 0 1-2.25 2.25H3.75A2.25 2.25 0 0 1 1.5 18V6ZM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0 0 21 18v-1.94l-2.69-2.689a1.5 1.5 0 0 0-2.12 0l-.88.879.97.97a.75.75 0 1 1-1.06 1.06l-5.16-5.159a1.5 1.5 0 0 0-2.12 0L3 16.061Zm10.125-7.81a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Z" clipRule="evenodd" />
-                              </svg>
-                              <span className={styles.topupUploadText}>กดเพื่ออัพโหลดสลิป</span>
-                              <span className={styles.topupUploadHint}>ภาพความละเอียดสูง (jpeg, png, jpg)</span>
+                      {/* TrueWallet Link Input (เฉพาะเมื่อเลือก wallet) */}
+                      {topupMethod === 'wallet' && (
+                        <>
+                          <div className={styles.walletLinkSection}>
+                            <span className={styles.walletLinkLabel}>
+                              <Icon name="link" size="0.8rem" /> ลิงก์อังเปา TrueWallet
+                            </span>
+                            <textarea
+                              className={styles.walletLinkInput}
+                              placeholder="วางลิงก์อังเปาจาก TrueWallet ที่นี่..."
+                              value={trueWalletLink}
+                              onChange={(e) => handleTrueWalletLinkChange(e.target.value)}
+                              rows={3}
+                            />
+                            <span className={styles.walletLinkHint}>
+                               ระบบจะดึงรหัสอังเปาจากลิงก์ให้อัตโนมัติ
+                            </span>
+                          </div>
+
+                          {/* Extracted Code Display */}
+                          {extractedCode && (
+                            <div className={styles.extractedCodeSection}>
+                              <div className={styles.extractedCodeLabel}>
+                                <Icon name="check" size="0.8rem" />
+                                <span>รหัสอังเปาที่ตรวจพบ:</span>
+                              </div>
+                              <div className={styles.extractedCode}>
+                                <code>{extractedCode}</code>
+                                <button 
+                                  className={styles.copyCodeBtn}
+                                  onClick={() => copyToClipboard(extractedCode)}
+                                >
+                                  <Icon name="copy" size="0.8rem" />
+                                  คัดลอก
+                                </button>
+                              </div>
                             </div>
                           )}
-                          <input type="file" className={styles.uploadInput} accept="image/png, image/jpeg, image/jpg" onChange={handleFileChange} />
-                        </label>
-                      </div>
 
-                      {/* Amount */}
-                      <div className={styles.topupAmountSection}>
-                        <span className={styles.topupAmountLabel}>ระบุยอดที่โอนเข้ามา</span>
-                        <input 
-                          type="number" 
-                          className={styles.topupAmountInput} 
-                          placeholder="1 บาทเท่ากับ 1 Point" 
-                          value={amount} 
-                          onChange={(e) => setAmount(e.target.value)} 
-                          min="1" 
-                        />
-                      </div>
+                          {/* Amount Display from Link (ถ้าสามารถดึงได้) */}
+                          {extractedAmount && (
+                            <div className={styles.extractedAmountSection}>
+                              <span className={styles.amountDetected}>
+                                💰 จำนวนเงินจากอังเปา: <strong>{extractedAmount} บาท</strong>
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
 
-                      {/* Submit */}
-                      <button className={styles.topupSubmitBtn} onClick={handleSubmit} disabled={submitting}>
+                      {/* Upload Slip (เฉพาะเมื่อเลือก bank) */}
+                      {topupMethod === 'bank' && (
+                        <>
+                          <div className={styles.topupUploadSection}>
+                            <span className={styles.topupUploadLabel}>อัพโหลดสลิป</span>
+                            <label className={`${styles.topupUploadBox} ${fileName ? styles.topupUploadBoxActive : ''}`}>
+                              {fileName ? (
+                                <div className={styles.topupPreviewContainer}>
+                                  {previewUrl && <img src={previewUrl} alt="Preview" className={styles.topupPreviewImage} />}
+                                  <span className={styles.topupPreviewName}>{fileName}</span>
+                                  <button type="button" className={styles.topupRemoveBtn} onClick={(e) => { e.preventDefault(); removeFile(); }}>
+                                    ✕ ลบไฟล์
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className={styles.topupUploadPlaceholder}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" className={styles.topupUploadIcon} viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2m2.354 4.854-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708.708"/>
+                                  </svg>
+                                  <span className={styles.topupUploadText}>กดเพื่ออัพโหลดสลิป</span>
+                                  <span className={styles.topupUploadHint}>ภาพความละเอียดสูง (jpeg, png, jpg)</span>
+                                </div>
+                              )}
+                              <input type="file" className={styles.uploadInput} accept="image/png, image/jpeg, image/jpg" onChange={handleFileChange} />
+                            </label>
+                          </div>
+
+                          {/* Amount Input (เฉพาะเมื่อเลือก bank) */}
+                          <div className={styles.topupAmountSection}>
+                            <span className={styles.topupAmountLabel}>ระบุยอดที่โอนเข้ามา</span>
+                            <input 
+                              type="number" 
+                              className={styles.topupAmountInput} 
+                              placeholder="1 บาทเท่ากับ 1 Point" 
+                              value={amount} 
+                              onChange={(e) => setAmount(e.target.value)} 
+                              min="1" 
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {/* แสดงสถานะการรับเงิน */}
+                      {redeemStatus && (
+                        <div className={`${styles.redeemStatus} ${redeemStatus.success ? styles.redeemSuccess : styles.redeemError}`}>
+                          <Icon name={redeemStatus.success ? "success" : "error"} size="1rem" />
+                          <span>{redeemStatus.message}</span>
+                        </div>
+                      )}
+
+                      {/* Submit Button */}
+                      <button 
+                        className={styles.topupSubmitBtn} 
+                        onClick={topupMethod === 'wallet' ? handleWalletSubmit : handleBankSubmit} 
+                        disabled={submitting}
+                      >
                         {submitting ? (
                           <><Icon name="loading" size="0.8rem" /><span>กำลังดำเนินการ...</span></>
                         ) : (
@@ -440,7 +879,7 @@ export default function Profile() {
                             <svg xmlns="http://www.w3.org/2000/svg" className={styles.topupSubmitIcon} viewBox="0 0 16 16" fill="currentColor">
                               <path d="M8 2a5.53 5.53 0 0 0-3.594 1.342c-.766.66-1.321 1.52-1.464 2.383C1.266 6.095 0 7.555 0 9.318 0 11.366 1.708 13 3.781 13h8.906C14.502 13 16 11.57 16 9.773c0-1.636-1.242-2.969-2.834-3.194C12.923 3.999 10.69 2 8 2m2.354 4.854-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7 8.793l2.646-2.647a.5.5 0 0 1 .708.708" />
                             </svg>
-                            <span>ยืนยันข้อมูล</span>
+                            <span>{topupMethod === 'wallet' ? 'รับเงินจากอังเปา' : 'ยืนยันข้อมูล'}</span>
                           </>
                         )}
                       </button>
@@ -464,6 +903,9 @@ export default function Profile() {
                         <div className={styles.historyBody}>
                           <div className={styles.historyItem}><p className={styles.historyItemLabel}><Icon name="calendar" size="0.7rem" /> วันที่</p><p className={styles.historyItemValue}>{new Date(topup.createdAt).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })}</p></div>
                           <div className={styles.historyItem}><p className={styles.historyItemLabel}><Icon name="money" size="0.7rem" /> จำนวนเงิน</p><p className={styles.historyItemValue}>{topup.amount?.toLocaleString()} บาท</p></div>
+                          {topup.method === 'wallet' && (
+                            <div className={styles.historyItem}><p className={styles.historyItemLabel}><Icon name="ticket" size="0.7rem" /> วิธีชำระ</p><p className={styles.historyItemValue}>TrueWallet</p></div>
+                          )}
                         </div>
                       </div>
                     ))}
