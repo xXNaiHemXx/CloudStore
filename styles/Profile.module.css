@@ -264,3 +264,318 @@
   .profileActions { flex-direction: column; align-items: stretch; }
   .btnAdmin, .btnLogout { justify-content: center; }
 }
+
+
+/* Wallet Link Section - ปรับให้เหมือนช่องกรอกจำนวนเงิน */
+.walletLinkSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.walletLinkLabel {
+  font-size: 1rem;
+  color: #d1d5db;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.walletLinkInput {
+  background: #0a0a0f;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  outline: none;
+  border: 1px solid #1a1d2e;
+  font-family: 'Noto Sans Thai', monospace;
+  font-size: 0.875rem;
+  color: #fafafa;
+  resize: vertical;
+  transition: all 0.2s ease;
+  width: 100%;
+  line-height: 1.5;
+}
+
+.walletLinkInput::placeholder {
+  color: #52525b;
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 0.8rem;
+}
+
+.walletLinkInput:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.walletLinkHint {
+  font-size: 0.7rem;
+  color: #52525b;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+/* Extracted Code Section - ปรับให้เข้ากับดีไซน์ */
+.extractedCodeSection {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+  margin-bottom: 1rem;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.extractedCodeLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #10b981;
+  margin-bottom: 0.5rem;
+}
+
+.extractedCode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: #0a0a0f;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #1a1d2e;
+}
+
+.extractedCode code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #34d399;
+  word-break: break-all;
+  flex: 1;
+}
+
+.copyCodeBtn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 0.4rem 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+  font-family: 'Noto Sans Thai', sans-serif;
+}
+
+.copyCodeBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+/* Extracted Amount Section - ปรับให้เข้ากับดีไซน์ */
+.extractedAmountSection {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 0.75rem;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1rem;
+  animation: slideIn 0.3s ease;
+}
+
+.amountDetected {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.amountDetected i {
+  font-size: 1rem;
+}
+
+.amountDetected strong {
+  font-size: 1.1rem;
+  color: #f59e0b;
+  font-weight: 800;
+}
+
+/* Redeem Status - ปรับให้เข้ากับดีไซน์ */
+.redeemStatus {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  animation: slideIn 0.3s ease;
+}
+
+.redeemSuccess {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.redeemError {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Tutorial Section - ปรับให้ดูทันสมัย */
+.tutorialSection {
+  background: linear-gradient(135deg, #0a0a0f 0%, #1e1b4b 100%);
+  border: 1px solid #1a1d2e;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  color: #e4e6f0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.tutorialHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #1a1d2e;
+  color: #fafafa;
+}
+
+.tutorialHeader i {
+  color: #6366f1;
+}
+
+.tutorialSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.tutorialStep {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  transition: transform 0.2s ease;
+}
+
+.tutorialStep:hover {
+  transform: translateX(4px);
+}
+
+.stepNumber {
+  width: 2rem;
+  height: 2rem;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+  color: white;
+}
+
+.stepContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stepTitle {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #c7d2fe;
+}
+
+.stepDesc {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  line-height: 1.4;
+  color: #a1a1aa;
+}
+
+.codeExample {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-family: 'Courier New', monospace;
+  display: inline-block;
+  margin-top: 0.25rem;
+  word-break: break-all;
+  color: #34d399;
+  border: 1px solid #1a1d2e;
+}
+
+.tutorialNote {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #a5b4fc;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tutorialSection {
+    padding: 1rem;
+  }
+  
+  .stepNumber {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.75rem;
+  }
+  
+  .stepTitle {
+    font-size: 0.85rem;
+  }
+  
+  .stepDesc {
+    font-size: 0.7rem;
+  }
+  
+  .extractedCode {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .copyCodeBtn {
+    justify-content: center;
+  }
+}
