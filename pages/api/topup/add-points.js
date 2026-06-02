@@ -1,5 +1,5 @@
 // pages/api/topup/add-points.js
-import dbConnect from '../../../lib/db';
+import dbConnect from "@/utils/db";
 import User from '../../../models/User';
 import Topup from '../../../models/Topup';
 
