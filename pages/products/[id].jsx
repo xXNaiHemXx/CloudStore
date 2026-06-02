@@ -280,7 +280,7 @@ export default function ProductDetail() {
                   </span>
                   {appliedCoupon && (
                     <p style={{ color: '#10b981', fontSize: '0.75rem', margin: '0.25rem 0 0' }}>
-                      <Icon name="discount" size="0.7rem" /> ลด {appliedCoupon.discount.toLocaleString()} Point
+                      <Icon name="ticket" size="0.7rem" /> ลด {appliedCoupon.discount.toLocaleString()} Point
                     </p>
                   )}
                 </div>
@@ -289,7 +289,7 @@ export default function ProductDetail() {
               {/* COUPON INPUT */}
               <div className={styles.couponSection}>
                 <label className={styles.couponLabel}>
-                  <Icon name="discount" size="0.8rem" /> โค้ดส่วนลด
+                  <Icon name="ticket" size="0.8rem" /> โค้ดส่วนลด
                 </label>
                 <div className={styles.couponInputRow}>
                   <input

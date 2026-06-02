@@ -258,7 +258,7 @@ export default function Admin() {
     { key: "uploads", label: "Uploads", icon: "upload", color: "#8b5cf6" },
     { key: "r2", label: "R2 Files", icon: "cloud", color: "#06b6d4" },
     { key: "logs", label: "Logs & Webhook", icon: "history", color: "#f43f5e" },
-    { key: "coupons", label: "Coupons", icon: "discount", color: "#ec4899" },
+    { key: "coupons", label: "Coupons", icon: "ticket", color: "#ec4899" },
     { key: "users", label: "Users", icon: "users", color: "#14b8a6" },
     { key: "admins", label: "Admins", icon: "users", color: "#f43f5e" },
   ];
@@ -561,7 +561,7 @@ export default function Admin() {
           </div>
           <div className={styles.topBarRight}>
             <button onClick={() => { setActiveTab("products"); setEditingItem(null); setShowModal(true); }} className={styles.topBarAction}><Icon name="add" size="0.8rem" /><span>Add Product</span></button>
-            <button onClick={() => { setActiveTab("coupons"); setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '', productRestriction: 'all', allowedProductIds: [] }); setShowCouponModal(true); }} className={styles.topBarAction}><Icon name="discount" size="0.8rem" /><span>Add Coupon</span></button>
+            <button onClick={() => { setActiveTab("coupons"); setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '', productRestriction: 'all', allowedProductIds: [] }); setShowCouponModal(true); }} className={styles.topBarAction}><Icon name="ticket" size="0.8rem" /><span>Add Coupon</span></button>
           </div>
         </header>
 
@@ -589,7 +589,7 @@ export default function Admin() {
                   {[
                     { icon: "add", label: "Add Product", color: "#10b981", action: () => { setActiveTab("products"); setEditingItem(null); setShowModal(true); } },
                     { icon: "upload", label: "Upload Files", color: "#8b5cf6", action: () => setActiveTab("uploads") },
-                    { icon: "discount", label: "Create Coupon", color: "#ec4899", action: () => { setActiveTab("coupons"); setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '', productRestriction: 'all', allowedProductIds: [] }); setShowCouponModal(true); } },
+                    { icon: "ticket", label: "Create Coupon", color: "#ec4899", action: () => { setActiveTab("coupons"); setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '', productRestriction: 'all', allowedProductIds: [] }); setShowCouponModal(true); } },
                     { icon: "users", label: "Manage Users", color: "#14b8a6", action: () => setActiveTab("users") },
                     { icon: "order", label: "View Orders", color: "#f59e0b", action: () => setActiveTab("orders") },
                     { icon: "history", label: "View Logs", color: "#f43f5e", action: () => setActiveTab("logs") },
@@ -835,15 +835,15 @@ export default function Admin() {
           {activeTab === "coupons" && (
             <div className={styles.tabContent}>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
-                <button onClick={() => { setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '', productRestriction: 'all', allowedProductIds: [] }); setShowCouponModal(true); }} className={styles.addButton}><Icon name="add" size="0.8rem" /> Add Coupon</button>
+                <button onClick={() => { setEditingCoupon(null); setCouponForm({ code: '', description: '', discountType: 'percentage', discountValue: '', minPurchase: 0, maxUsage: 0, expiresAt: '', productRestriction: 'all', allowedProductIds: [] }); setShowCouponModal(true); }} className={styles.addButton}><Icon name="ticket" size="0.8rem" /> Add Coupon</button>
               </div>
-              {loadingCoupons ? <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>Loading...</p></div> : coupons.length === 0 ? <div className={styles.emptyState}><Icon name="discount" size="3rem" /><p className={styles.emptyTitle}>No coupons yet</p></div> : (
+              {loadingCoupons ? <div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>Loading...</p></div> : coupons.length === 0 ? <div className={styles.emptyState}><Icon name="ticket" size="3rem" /><p className={styles.emptyTitle}>No coupons yet</p></div> : (
                 <div className={styles.tableWrapper}><table className={styles.dataTable}><thead><tr><th>Code</th><th>Discount</th><th>Type</th><th>Used</th><th>Expires</th><th>Products</th><th>Status</th><th></th></tr></thead><tbody>{coupons.map((coupon) => { const now = new Date(); const isExpired = coupon.expiresAt && new Date(coupon.expiresAt) < now; const isMaxedOut = coupon.maxUsage > 0 && coupon.usedCount >= coupon.maxUsage; const isValid = coupon.isActive && !isExpired && !isMaxedOut; return (<tr key={coupon._id}><td><strong>{coupon.code}</strong></td><td>{coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `${coupon.discountValue?.toLocaleString() || 0} Point`}</td><td>{coupon.discountType === 'percentage' ? 'Percentage' : 'Fixed'}</td><td>{coupon.usedCount || 0} / {coupon.maxUsage > 0 ? coupon.maxUsage : '∞'}</td><td>{coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleDateString("th-TH") : 'Unlimited'}</td><td>{coupon.productRestriction === "all" ? <span style={{ color: '#10b981', fontSize: '0.75rem' }}>All Products</span> : coupon.allowedProductIds?.length > 0 ? <span style={{ fontSize: '0.7rem' }}>{coupon.allowedProductIds.map(p => p.itemsname || p).join(", ")}</span> : <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>None set</span>}</td><td><span className={`${styles.statusBadge} ${isValid ? styles.statusSuccess : styles.statusFailed}`}>{!coupon.isActive ? 'Disabled' : isExpired ? 'Expired' : isMaxedOut ? 'Full' : 'Active'}</span></td><td><button onClick={() => handleEditCoupon(coupon)} className={styles.editBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}><Icon name="edit" size="0.7rem" /></button><button onClick={() => handleDeleteCoupon(coupon._id)} className={styles.deleteBtn} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem', marginLeft: '0.25rem' }}><Icon name="delete" size="0.7rem" /></button></td></tr>); })}</tbody></table></div>
               )}
               {showCouponModal && (
                 <div className={styles.modalOverlay}>
                   <div className={styles.modalContent} style={{ maxWidth: '600px' }}>
-                    <h2 className={styles.modalTitle}><Icon name="discount" size="1rem" /> {editingCoupon ? 'Edit Coupon' : 'Add Coupon'}</h2>
+                    <h2 className={styles.modalTitle}><Icon name="ticket" size="1rem" /> {editingCoupon ? 'Edit Coupon' : 'Add Coupon'}</h2>
                     <form onSubmit={handleSaveCoupon} className={styles.modalForm}>
                       <div className={styles.modalRow}><label className={styles.modalLabel}>Code *</label><input value={couponForm.code} onChange={(e) => setCouponForm(prev => ({ ...prev, code: e.target.value.toUpperCase() }))} className={styles.modalInput} required /></div>
                       <div className={styles.modalRow}><label className={styles.modalLabel}>Description</label><input value={couponForm.description} onChange={(e) => setCouponForm(prev => ({ ...prev, description: e.target.value }))} className={styles.modalInput} /></div>
