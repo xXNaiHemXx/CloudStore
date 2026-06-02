@@ -107,75 +107,113 @@ const copyToClipboard = async (text) => {
   }
 };
 
-// Submit สำหรับ TrueWallet
-const handleWalletSubmit = async () => {
-  if (!extractedCode) {
-    error('กรุณาวางลิงก์อังเปา TrueWallet ให้ถูกต้อง');
-    return;
-  }
 
-  setSubmitting(true);
-  setRedeemStatus(null);
-
-  try {
-    const receiverMobile = '0800451901'; // เบอร์ TrueWallet ของร้านค้า
-    const redeemResult = await redeemTrueWalletVoucher(extractedCode, receiverMobile);
-
-    if (redeemResult.status?.code !== 'SUCCESS') {
-      const errorMessages = {
-        'TARGET_USER_REDEEMED': 'คุณรับอังเปานี้ไปแล้ว',
-        'VOUCHER_OUT_OF_STOCK': 'มีคนรับอังเปานี้ไปแล้ว',
-        'VOUCHER_EXPIRED': 'อังเปาหมดอายุแล้ว',
-        'VOUCHER_NOT_FOUND': 'ไม่พบอังเปาในระบบ',
-        'CANNOT_GET_OWN_VOUCHER': 'ไม่สามารถรับอังเปาของตัวเองได้',
-        'TARGET_USER_NOT_FOUND': 'ไม่พบเบอร์ผู้รับในระบบ',
-      };
-      const errorMsg = errorMessages[redeemResult.status?.code] || redeemResult.status?.message || 'การรับเงินล้มเหลว';
-      error(`❌ ${errorMsg}`);
-      setRedeemStatus({ success: false, message: errorMsg });
-      setSubmitting(false);
+  const handleWalletSubmit = async () => {
+    if (!extractedCode) {
+      error('กรุณาวางลิงก์อังเปา TrueWallet ให้ถูกต้อง');
       return;
     }
 
-    const redeemedAmount = redeemResult.data?.my_ticket?.amount_baht || '0';
-    success(`✅ รับเงินสำเร็จ! จำนวน ${redeemedAmount} บาท`);
-    
-    // บันทึก log
-    await addLog(LOG_TYPES.TOPUP, "เติมเงิน TrueWallet", 
-      `${session.user.name} รับเงิน ${redeemedAmount} บาท จากลิงก์อังเปา`, 
-      session.user.name, {
-        discordId: session.user.id,
-        amount: redeemedAmount,
-        voucherCode: extractedCode,
-        method: 'wallet'
+    setSubmitting(true);
+    setRedeemStatus(null);
+
+    try {
+      const receiverMobile = '0800451901';
+      const redeemResult = await redeemTrueWalletVoucher(extractedCode, receiverMobile);
+
+      if (redeemResult.status?.code !== 'SUCCESS') {
+        const errorMessages = {
+          'TARGET_USER_REDEEMED': 'คุณรับอังเปานี้ไปแล้ว',
+          'VOUCHER_OUT_OF_STOCK': 'มีคนรับอังเปานี้ไปแล้ว',
+          'VOUCHER_EXPIRED': 'อังเปาหมดอายุแล้ว',
+          'VOUCHER_NOT_FOUND': 'ไม่พบอังเปาในระบบ',
+          'CANNOT_GET_OWN_VOUCHER': 'ไม่สามารถรับอังเปาของตัวเองได้',
+          'TARGET_USER_NOT_FOUND': 'ไม่พบเบอร์ผู้รับในระบบ',
+        };
+        const errorMsg = errorMessages[redeemResult.status?.code] || redeemResult.status?.message || 'การรับเงินล้มเหลว';
+        error(`❌ ${errorMsg}`);
+        setRedeemStatus({ success: false, message: errorMsg });
+        setSubmitting(false);
+        return;
       }
-    ).catch(() => {});
 
-    setRedeemStatus({ 
-      success: true, 
-      message: `รับเงินสำเร็จ ${redeemedAmount} บาท`,
-      amount: redeemedAmount 
-    });
+      const redeemedAmount = redeemResult.data?.my_ticket?.amount_baht || '0';
+      
+      // ✅ เรียก API เพิ่มแต้มให้ผู้ใช้
+      const addPointsResponse = await fetch('/api/topup/add-points', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: session.user.id,
+          userName: session.user.name,
+          amount: redeemedAmount,
+          voucherCode: extractedCode,
+          provider: 'truemoney-api'
+        })
+      });
 
-    // รีเฟรชพ้อยท์
-    await refreshPoints();
-    
-    // เคลียร์ฟอร์ม
-    setTrueWalletLink('');
-    setExtractedCode('');
-    setExtractedAmount('');
+      const addPointsResult = await addPointsResponse.json();
 
-    // รีเซ็ตสถานะหลังจาก 5 วินาที
-    setTimeout(() => setRedeemStatus(null), 5000);
+      if (!addPointsResult.success) {
+        if (addPointsResult.alreadyRedeemed) {
+          error(`⚠️ รหัสอังเปานี้ถูกใช้ไปแล้ว`);
+          setRedeemStatus({ 
+            success: false, 
+            message: 'รหัสอังเปานี้ถูกใช้ไปแล้ว'
+          });
+        } else {
+          error(`⚠️ รับเงิน ${redeemedAmount} บาท แล้ว แต่ระบบเพิ่มแต้มไม่สำเร็จ กรุณาแจ้งแอดมิน`);
+          setRedeemStatus({ 
+            success: false, 
+            message: `รับเงิน ${redeemedAmount} บาท แล้ว แต่ระบบเพิ่มแต้มไม่สำเร็จ กรุณาแจ้งแอดมิน`
+          });
+        }
+      } else {
+        // ✅ สำเร็จ
+        success(`✅ รับเงินสำเร็จ! จำนวน ${redeemedAmount} บาท (เพิ่ม ${redeemedAmount} พ้อยท์)`);
+        
+        // บันทึก log
+        await addLog(LOG_TYPES.TOPUP, "เติมเงิน TrueWallet สำเร็จ", 
+          `${session.user.name} รับเงิน ${redeemedAmount} บาท และได้รับ ${redeemedAmount} พ้อยท์`, 
+          session.user.name, {
+            discordId: session.user.id,
+            amount: redeemedAmount,
+            points: redeemedAmount,
+            voucherCode: extractedCode,
+            method: 'wallet',
+            oldPoints: addPointsResult.data?.oldPoints,
+            newPoints: addPointsResult.data?.newPoints
+          }
+        ).catch(() => {});
 
-  } catch (err) {
-    console.error('Wallet submit error:', err);
-    error('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
-    setRedeemStatus({ success: false, message: 'เกิดข้อผิดพลาด กรุณาลองใหม่' });
-  } finally {
-    setSubmitting(false);
-  }
-};
+        setRedeemStatus({ 
+          success: true, 
+          message: `รับเงินสำเร็จ ${redeemedAmount} บาท (ได้รับ ${redeemedAmount} พ้อยท์)`,
+          amount: redeemedAmount 
+        });
+
+        // รีเฟรชพ้อยท์
+        await refreshPoints();
+      }
+      
+      // เคลียร์ฟอร์ม
+      setTrueWalletLink('');
+      setExtractedCode('');
+      setExtractedAmount('');
+
+      // รีเซ็ตสถานะหลังจาก 5 วินาที
+      setTimeout(() => setRedeemStatus(null), 5000);
+
+    } catch (err) {
+      console.error('Wallet submit error:', err);
+      error('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+      setRedeemStatus({ success: false, message: 'เกิดข้อผิดพลาด กรุณาลองใหม่' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
   
 // Submit สำหรับธนาคาร (แยกจากเดิม)
   const handleBankSubmit = async () => {
