@@ -827,5 +827,107 @@
       "url": "/profile"
     },
     "createdAt": "2026-06-02T13:59:08.214Z"
+  },
+  {
+    "_id": "mpwrc60kp56qm",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-06-02T14:53:23.444Z"
+  },
+  {
+    "_id": "mpwrsnipqkv2p",
+    "type": "product_add",
+    "title": "เพิ่มสินค้า",
+    "message": "เพิ่ม \"MAP ROAD TO THAILAND\"",
+    "user": "jayther",
+    "details": {
+      "productName": "MAP ROAD TO THAILAND",
+      "price": 5998,
+      "version": "1.0",
+      "roleIds": []
+    },
+    "createdAt": "2026-06-02T15:06:12.625Z"
+  },
+  {
+    "_id": "mpwrte8n46ixx",
+    "type": "product_edit",
+    "title": "แก้ไขสินค้า",
+    "message": "แก้ไข \"MAP ROAD TO THAILAND\"",
+    "user": "jayther",
+    "details": {
+      "productName": "MAP ROAD TO THAILAND",
+      "price": 6000,
+      "version": "1.0",
+      "roleIds": []
+    },
+    "createdAt": "2026-06-02T15:06:47.255Z"
+  },
+  {
+    "_id": "mpwrtq2093qgf",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-06-02T15:07:02.568Z"
+  },
+  {
+    "_id": "mpwrznhh1ktur",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-06-02T15:11:39.173Z"
+  },
+  {
+    "_id": "mpwrznsh77k8q",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-06-02T15:11:39.569Z"
+  },
+  {
+    "_id": "mpwrzpbnthgwk",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-06-02T15:11:41.555Z"
+  },
+  {
+    "_id": "mpws2oil8xsyp",
+    "type": "product_edit",
+    "title": "แก้ไขสินค้า",
+    "message": "แก้ไข \"MAP ROAD TO THAILAND\"",
+    "user": "jayther",
+    "details": {
+      "productName": "MAP ROAD TO THAILAND",
+      "price": 6000,
+      "version": "1.0",
+      "roleIds": [
+        "1468938176860258398"
+      ]
+    },
+    "createdAt": "2026-06-02T15:14:00.477Z"
   }
 ]

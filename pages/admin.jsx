@@ -101,13 +101,13 @@ function ProductModal({ editingItem, onClose, onSaved }) {
         <form onSubmit={handleSubmit} className={styles.modalForm}>
           <div className={styles.modalRow}><label className={styles.modalLabel}>ชื่อสินค้า *</label><input value={itemsname} onChange={(e) => setItemsname(e.target.value)} className={styles.modalInput} type="text" required /></div>
           <div className={styles.modalRow}><label className={styles.modalLabel}>หัวข้อสินค้า *</label><input value={itemstitle} onChange={(e) => setItemstitle(e.target.value)} className={styles.modalInput} type="text" required /></div>
-          <div className={styles.modalRow}><label className={styles.modalLabel}>เวอร์ชัน *</label><input value={itemsversion} onChange={(e) => setItemsversion(e.target.value)} className={styles.modalInput} type="text" required /></div>
+          <div className={styles.modalRow}><label className={styles.modalLabel}>เวอร์ชัน *</label><input value={itemsversion} onChange={(e) => setItemsversion(e.target.value)} className={styles.modalInput} type="text" required placeholder="1.0.0" /></div>
           <div className={styles.modalRow}><label className={styles.modalLabel}>ลิ้งค์รูปภาพหลัก *</label><input value={itemsimage} onChange={(e) => { setItemsimage(e.target.value); setPreviewImage(e.target.value); }} className={styles.modalInput} type="text" required /></div>
           <input type="file" accept="image/*" onChange={handleUpload} className={styles.modalFileInput} />
           {previewImage && <img src={previewImage} alt="preview" className={styles.previewImage} />}
           <div className={styles.modalRow}><label className={styles.modalLabel}>ลิ้งค์รูปเพิ่มเติม</label><div className={styles.modalImages}>{itemsimages.map((img, index) => (<div key={index} className={styles.imageInputContainer}><input value={img} onChange={(e) => handleImageChange(index, e.target.value)} className={styles.modalInput} type="text" placeholder={`ลิ้งค์รูปที่ ${index + 1}`} />{img && <img src={img} alt={`เพิ่มเติม ${index + 1}`} className={styles.previewImage} />}</div>))}</div></div>
           <div className={styles.modalRow}><label className={styles.modalLabel}>รายละเอียด *</label><textarea value={itemsdesc} onChange={(e) => setItemsdesc(e.target.value)} className={styles.modalTextarea} required /></div>
-          <div className={styles.modalRow}><label className={styles.modalLabel}>YouTube Video ID</label><input value={itemsurlyoutube} onChange={(e) => setItemsurlyoutube(e.target.value.trim())} className={styles.modalInput} type="text" /></div>
+          <div className={styles.modalRow}><label className={styles.modalLabel}>YouTube Video ID</label><input value={itemsurlyoutube} onChange={(e) => setItemsurlyoutube(e.target.value.trim())} className={styles.modalInput} type="text" placeholder="เช่น dQw4w9WgXcQ" /></div>
           <div className={styles.modalRow}><label className={styles.modalLabel}>ลิ้งไฟล์ *</label><input value={itemsfile} onChange={(e) => setItemsfile(e.target.value)} className={styles.modalInput} type="text" required /></div>
           <div className={styles.modalRow}>
             <label className={styles.modalLabel}>หรืออัปโหลดไฟล์จากเครื่อง (R2)</label>
@@ -116,7 +116,29 @@ function ProductModal({ editingItem, onClose, onSaved }) {
             <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}><Icon name="info" size="0.6rem" /> รองรับ .zip, .rar, .7z, .scs, .exe, .msi | อัปโหลดตรงไป Cloudflare R2</small>
           </div>
           <div className={styles.modalRow}><label className={styles.modalLabel}>ราคาสินค้า *</label><input value={itemsprice} onChange={(e) => setItemsprice(e.target.value)} className={styles.modalInput} type="number" required min="0" step="1" /><small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}><Icon name="coin" size="0.6rem" /> ราคาในหน่วย Point</small></div>
-          <div className={styles.modalActions}><button type="button" className={styles.cancelBtn} onClick={onClose}>Close</button><button type="submit" className={styles.submitBtn} disabled={saving}>{saving ? "Saving..." : isEdit ? "Save" : "Add Product"}</button></div>
+          
+          {/* ✅ เพิ่มช่อง Discord Role IDs */}
+          <div className={styles.modalRow}>
+            <label className={styles.modalLabel}>
+              <Icon name="role" size="0.8rem" /> Discord Role IDs
+            </label>
+            <textarea 
+              value={discordRoleIdsText} 
+              onChange={(e) => setDiscordRoleIdsText(e.target.value)} 
+              className={styles.modalTextarea} 
+              rows="2"
+              placeholder="ใส่ Role ID คั่นด้วยคอมม่า หรือเว้นวรรค
+เช่น: 123456789012345678, 876543210987654321"
+            />
+            <small style={{ color: '#6b7280', fontSize: '0.7rem', marginTop: '4px', display: 'block' }}>
+              <Icon name="info" size="0.6rem" /> Role ID ที่ผู้ซื้อจะได้รับอัตโนมัติ (รองรับหลาย ID)
+            </small>
+          </div>
+          
+          <div className={styles.modalActions}>
+            <button type="button" className={styles.cancelBtn} onClick={onClose}>Close</button>
+            <button type="submit" className={styles.submitBtn} disabled={saving}>{saving ? "Saving..." : isEdit ? "Save" : "Add Product"}</button>
+          </div>
         </form>
       </div>
     </div>
