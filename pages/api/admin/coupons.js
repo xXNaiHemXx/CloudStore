@@ -1,6 +1,6 @@
 import { connectToDB } from "@/utils/db";
 import Coupon from "@/models/Coupon";
-import Item from "@/models/Items"; // ✅ เพิ่ม
+import Item from "@/models/items"; // ✅ เพิ่ม
 
 export default async function handler(req, res) {
   await connectToDB();
