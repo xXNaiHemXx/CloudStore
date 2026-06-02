@@ -4,7 +4,6 @@ export default function Icon({ name, size = "1rem", color = "currentColor", clas
     "money": "fi-rr-bank",
     "wallet": "fi-rr-wallet",
     "coin": "fi-rr-coins",
-    "discount": "fi-rr-tag",
     "cart": "fi-rr-shopping-cart",
     "price": "fi-rr-bill",
     "bank": "fi-rr-building",           // 🏦 ธนาคาร
