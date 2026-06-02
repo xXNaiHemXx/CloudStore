@@ -4,11 +4,10 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 
-// ✅ เพิ่ม config สำหรับ API route
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '10mb',  // สำหรับ JSON body (ไม่ใช่ไฟล์)
+      sizeLimit: '10mb',
     },
     responseLimit: false,
     externalResolver: true,
@@ -22,14 +21,24 @@ const s3Client = new S3Client({
     accessKeyId: process.env.R2_ACCESS_KEY_ID,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
   },
-  maxAttempts: 5, // ✅ เพิ่ม retry
-  retryMode: 'adaptive',
-  requestHandler: {
-    timeout: 600000, // 10 นาที (สำหรับไฟล์ใหญ่)
-  },
 });
 
 const BUCKET_NAME = process.env.R2_BUCKET_NAME;
+
+// ✅ ฟังก์ชันตรวจสอบ Admin
+async function isAdminUser(discordId) {
+  const adminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
+  if (adminIds.includes(discordId)) return true;
+  
+  try {
+    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/admin/check-admin?discordId=${discordId}`);
+    const data = await response.json();
+    return data.isAdmin || false;
+  } catch (err) {
+    console.error("Admin check error:", err);
+    return false;
+  }
+}
 
 export default async function handler(req, res) {
   // ✅ เพิ่ม timeout handler
@@ -37,14 +46,17 @@ export default async function handler(req, res) {
     return res.status(408).json({ error: "Request timeout" });
   });
 
+  // ✅ ตรวจสอบ Session
   const session = await getServerSession(req, res, authOptions);
+  
   if (!session) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Unauthorized - Please login" });
   }
 
-  const adminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
-  if (!adminIds.includes(session.user.id)) {
-    return res.status(403).json({ error: "Admin only" });
+  // ✅ ตรวจสอบว่าเป็น Admin หรือไม่
+  const isAdmin = await isAdminUser(session.user.id);
+  if (!isAdmin) {
+    return res.status(403).json({ error: "Forbidden - Admin only" });
   }
 
   const { fileName, contentType, action, uploadId, key, partNumber, parts } = req.body;
@@ -81,7 +93,7 @@ export default async function handler(req, res) {
       });
       
       const partUrl = await getSignedUrl(s3Client, command, {
-        expiresIn: 7200, // 2 ชั่วโมง (เพิ่มจากเดิม)
+        expiresIn: 7200,
       });
       
       return res.status(200).json({
