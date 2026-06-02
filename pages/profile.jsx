@@ -139,8 +139,8 @@ const copyToClipboard = async (text) => {
 
       const redeemedAmount = redeemResult.data?.my_ticket?.amount_baht || '0';
       
-      // ✅ เรียก API เพิ่มแต้มให้ผู้ใช้
-      const addPointsResponse = await fetch('/api/topup/add-points', {
+      // ✅ เรียก API เพิ่มแต้ม (ใช้ endpoint ใหม่)
+      const addPointsResponse = await fetch('/api/topup/add-points-wallet', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,24 +157,15 @@ const copyToClipboard = async (text) => {
       const addPointsResult = await addPointsResponse.json();
 
       if (!addPointsResult.success) {
-        if (addPointsResult.alreadyRedeemed) {
-          error(`⚠️ รหัสอังเปานี้ถูกใช้ไปแล้ว`);
-          setRedeemStatus({ 
-            success: false, 
-            message: 'รหัสอังเปานี้ถูกใช้ไปแล้ว'
-          });
-        } else {
-          error(`⚠️ รับเงิน ${redeemedAmount} บาท แล้ว แต่ระบบเพิ่มแต้มไม่สำเร็จ กรุณาแจ้งแอดมิน`);
-          setRedeemStatus({ 
-            success: false, 
-            message: `รับเงิน ${redeemedAmount} บาท แล้ว แต่ระบบเพิ่มแต้มไม่สำเร็จ กรุณาแจ้งแอดมิน`
-          });
-        }
+        error(`⚠️ รับเงิน ${redeemedAmount} บาท แล้ว แต่ระบบเพิ่มแต้มไม่สำเร็จ: ${addPointsResult.message}`);
+        setRedeemStatus({ 
+          success: false, 
+          message: `รับเงิน ${redeemedAmount} บาท แล้ว แต่ระบบเพิ่มแต้มไม่สำเร็จ กรุณาแจ้งแอดมิน`
+        });
       } else {
         // ✅ สำเร็จ
         success(`✅ รับเงินสำเร็จ! จำนวน ${redeemedAmount} บาท (เพิ่ม ${redeemedAmount} พ้อยท์)`);
         
-        // บันทึก log
         await addLog(LOG_TYPES.TOPUP, "เติมเงิน TrueWallet สำเร็จ", 
           `${session.user.name} รับเงิน ${redeemedAmount} บาท และได้รับ ${redeemedAmount} พ้อยท์`, 
           session.user.name, {
@@ -194,7 +185,6 @@ const copyToClipboard = async (text) => {
           amount: redeemedAmount 
         });
 
-        // รีเฟรชพ้อยท์
         await refreshPoints();
       }
       
@@ -203,7 +193,6 @@ const copyToClipboard = async (text) => {
       setExtractedCode('');
       setExtractedAmount('');
 
-      // รีเซ็ตสถานะหลังจาก 5 วินาที
       setTimeout(() => setRedeemStatus(null), 5000);
 
     } catch (err) {
@@ -431,169 +420,26 @@ const copyToClipboard = async (text) => {
     setPreviewUrl(null); 
   };
 
+
   const getStatusClass = (status) => {
     switch (status?.toLowerCase()) {
-      case "success": case "approved": return styles.statusSuccess;
-      case "pending": return styles.statusPending;
-      case "failed": case "rejected": return styles.statusFailed;
-      default: return styles.statusPending;
+      case "success":
+        return styles.statusSuccess;
+      case "pending":
+        return styles.statusPending;
+      case "failed":
+      case "rejected":
+      case "error":
+        return styles.statusFailed;
+      case "duplicate":
+        return styles.statusDuplicate;
+      default:
+        return styles.statusPending;
     }
   };
 
-  // ✅ แก้ไข handleSubmit ให้รองรับการเติมเงินผ่าน TrueWallet
-  const handleSubmit = async () => {
-    // Validation
-    if (!file || !session?.user?.id) { 
-      error("กรุณาอัปโหลดสลิป"); 
-      return; 
-    }
-    
-    if (topupMethod === 'wallet') {
-      // กรณีเติมเงินผ่าน TrueWallet ต้องมี voucher code
-      if (!voucherCode || voucherCode.trim() === '') {
-        error("กรุณากรอกรหัส Voucher จาก TrueWallet");
-        return;
-      }
-      if (!amount || parseFloat(amount) <= 0) {
-        error("กรุณากรอกจำนวนเงิน");
-        return;
-      }
-    } else {
-      // กรณีเติมเงินผ่านธนาคาร
-      if (!amount || parseFloat(amount) <= 0) { 
-        error("กรุณากรอกจำนวนเงินที่มากกว่า 0"); 
-        return; 
-      }
-    }
-
-    setSubmitting(true);
-    setRedeemStatus(null);
-    
-    try {
-      // ✅ ถ้าเป็นการเติมเงินด้วย TrueWallet ให้เรียก API ก่อน
-      if (topupMethod === 'wallet') {
-        // เบอร์ผู้รับ (เบอร์ TrueWallet ของร้านค้า)
-        const receiverMobile = '0800451901'; // 🔧 แก้ไขเป็นเบอร์จริง
-        
-        const redeemResult = await redeemTrueWalletVoucher(voucherCode.trim(), receiverMobile);
-        
-        console.log('Redeem Result:', redeemResult);
-        
-        // ตรวจสอบผลลัพธ์จาก API
-        if (redeemResult.status?.code !== 'SUCCESS') {
-          const errorMessages = {
-            'TARGET_USER_REDEEMED': 'คุณรับซองนี้ไปแล้ว',
-            'VOUCHER_OUT_OF_STOCK': 'มีคนรับซองนี้ไปแล้ว',
-            'VOUCHER_EXPIRED': 'ซองวอเลทหมดอายุแล้ว',
-            'VOUCHER_NOT_FOUND': 'ไม่พบซองในระบบ',
-            'CANNOT_GET_OWN_VOUCHER': 'ไม่สามารถรับซองตัวเองได้',
-            'TARGET_USER_NOT_FOUND': 'ไม่พบเบอร์ผู้รับในระบบ',
-            'INTERNAL_ERROR': 'เกิดข้อผิดพลาดภายในระบบ'
-          };
-          const errorMsg = errorMessages[redeemResult.status?.code] || redeemResult.status?.message || 'การรับเงินล้มเหลว';
-          error(`❌ ${errorMsg}`);
-          setRedeemStatus({ success: false, message: errorMsg });
-          setSubmitting(false);
-          return;
-        }
-        
-        // ✅ รับเงินสำเร็จ
-        const redeemedAmount = redeemResult.data?.my_ticket?.amount_baht || amount;
-        success(`✅ รับเงินจาก TrueWallet สำเร็จ! จำนวน ${redeemedAmount} บาท`);
-        
-        // บันทึก log การรับเงิน
-        await addLog(LOG_TYPES.TOPUP, "เติมเงิน TrueWallet", `${session.user.name} รับเงิน ${redeemedAmount} บาท จากรหัส ${voucherCode}`, session.user.name, {
-          discordId: session.user.id,
-          amount: redeemedAmount,
-          voucherCode: voucherCode,
-          method: 'wallet'
-        }).catch(() => {});
-        
-        setRedeemStatus({ success: true, message: `รับเงินสำเร็จ ${redeemedAmount} บาท`, amount: redeemedAmount });
-      }
-      
-      // ✅ อัปโหลดสลิปไปยังระบบ (ทั้งสองกรณี)
-      const formData = new FormData();
-      formData.append("slip", file);
-      formData.append("userId", session.user.id);
-      formData.append("amount", amount);
-      if (topupMethod === 'wallet') {
-        formData.append("method", "wallet");
-        formData.append("voucherCode", voucherCode);
-      } else {
-        formData.append("method", "bank");
-      }
-
-      const uploadRes = await fetch("/api/topup/upload-slip", { method: "POST", body: formData });
-      const uploadData = await uploadRes.json();
-      
-      if (!uploadRes.ok) { 
-        error(uploadData.error || "อัพโหลดไม่สำเร็จ"); 
-        setSubmitting(false); 
-        return; 
-      }
-
-      // ✅ ตรวจสอบสลิป (เฉพาะกรณีธนาคารเท่านั้น)
-      if (topupMethod === 'bank') {
-        const verifyRes = await fetch("/api/topup/verify-slipok", { 
-          method: "POST", 
-          headers: { "Content-Type": "application/json" }, 
-          body: JSON.stringify({ 
-            fileUrl: uploadData.fileUrl, 
-            amount, 
-            userId: session.user.id 
-          }) 
-        });
-        const verifyData = await verifyRes.json();
-        
-        if (!verifyRes.ok) {
-          if (verifyData.error?.includes('จำนวนเงิน')) {
-            error(`❌ ${verifyData.error}`);
-            warning(" กรุณากรอกจำนวนเงินให้ตรงกับสลิปที่โอน");
-          } else {
-            error(verifyData.error || "การตรวจสอบไม่สำเร็จ");
-          }
-          setSubmitting(false); 
-          return; 
-        }
-
-        // ✅ ใช้จำนวนเงินจริงจากสลิป
-        const actualAmount = verifyData.amount || parseFloat(amount);
-        const actualPoints = verifyData.newPoints - (userPoints || 0);
-        
-        success(`✅ เติมเงินสำเร็จ! รับ ${actualPoints} Point (${actualAmount} บาท)`);
-        
-        await addLog(LOG_TYPES.TOPUP, "เติมเงิน", `${session.user.name} เติมเงิน ${actualAmount} บาท`, session.user.name, {
-          discordId: session.user.id,
-          amount: actualAmount,
-          points: actualPoints,
-        }).catch(() => {});
-      } else {
-        // กรณี TrueWallet - ไม่ต้องตรวจสอบสลิป แค่บันทึกข้อมูล
-        success(`✅ บันทึกสลิปเรียบร้อย รอการยืนยัน`);
-      }
-      
-      // reset form
-      removeFile();
-      setAmount("");
-      setVoucherCode(""); // ✅ reset voucher code
-      await refreshPoints();
-      
-      // รีเซ็ตสถานะ redeem หลังจาก 5 วินาที
-      setTimeout(() => setRedeemStatus(null), 5000);
-      
-    } catch (err) {
-      console.error("Submit error:", err);
-      error("เกิดข้อผิดพลาดในการดำเนินการ");
-      await addLog(LOG_TYPES.ERROR, "เติมเงินผิดพลาด", `${session.user.name} เติมเงินไม่สำเร็จ`, session.user.name, { 
-        amount, 
-        method: topupMethod,
-        error: err.message 
-      }).catch(() => {});
-    } finally { 
-      setSubmitting(false); 
-    }
-  };
+ 
+  
 
   if (!session) {
     return (
@@ -930,19 +776,147 @@ const copyToClipboard = async (text) => {
             {/* HISTORY TAB */}
             {activeTab === 'history' && (
               <>
-                <div className={styles.historyNotice}><Icon name="warning" size="1rem" /><span>หาก Status ขึ้น Pending แสดงว่าเรากำลังตรวจสอบข้อมูล ไม่จำเป็นต้องส่งสลิปซ้ำ!</span></div>
-                {loadingHistory ? (<div className={styles.loadingContainer}><div className={styles.loadingSpinner}></div><p>กำลังโหลดประวัติ...</p></div>) : topups.length === 0 ? (
-                  <div className={styles.emptyState}><Icon name="history" size="3rem" /><p className={styles.emptyTitle}>ยังไม่มีประวัติการเติมเงิน</p><p className={styles.emptyText}>ไปเติมพ้อยท์กันเลย!</p></div>
+                <div className={styles.historyNotice}>
+                  <Icon name="warning" size="1rem" />
+                  <span>หาก Status ขึ้น Pending แสดงว่าเรากำลังตรวจสอบข้อมูล ไม่จำเป็นต้องส่งสลิปซ้ำ!</span>
+                </div>
+                
+                {loadingHistory ? (
+                  <div className={styles.loadingContainer}>
+                    <div className={styles.loadingSpinner}></div>
+                    <p>กำลังโหลดประวัติ...</p>
+                  </div>
+                ) : topups.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <Icon name="history" size="3rem" />
+                    <p className={styles.emptyTitle}>ยังไม่มีประวัติการเติมเงิน</p>
+                    <p className={styles.emptyText}>ไปเติมพ้อยท์กันเลย!</p>
+                  </div>
                 ) : (
                   <div className={styles.historyList}>
                     {topups.map((topup) => (
                       <div key={topup._id} className={styles.historyCard}>
-                        <div className={styles.historyHeader}><span className={styles.historyRef}>#{topup.transRef || topup._id?.slice(-8)}</span><span className={`${styles.statusBadge} ${getStatusClass(topup.status)}`}>{topup.status || 'pending'}</span></div>
+                        <div className={styles.historyHeader}>
+                          <span className={styles.historyRef}>
+                            <Icon name="receipt" size="0.7rem" />
+                            #{topup.transRef || topup.voucherCode?.slice(-8) || topup._id?.slice(-8)}
+                          </span>
+                          <span className={`${styles.statusBadge} ${getStatusClass(topup.status)}`}>
+                            {topup.status === 'success' ? 'สำเร็จ' : 
+                            topup.status === 'pending' ? 'รอตรวจสอบ' : 
+                            topup.status === 'duplicate' ? 'สลิปซ้ำ' : 'ล้มเหลว'}
+                          </span>
+                        </div>
+                        
                         <div className={styles.historyBody}>
-                          <div className={styles.historyItem}><p className={styles.historyItemLabel}><Icon name="calendar" size="0.7rem" /> วันที่</p><p className={styles.historyItemValue}>{new Date(topup.createdAt).toLocaleDateString("th-TH", { year: "numeric", month: "short", day: "numeric" })}</p></div>
-                          <div className={styles.historyItem}><p className={styles.historyItemLabel}><Icon name="money" size="0.7rem" /> จำนวนเงิน</p><p className={styles.historyItemValue}>{topup.amount?.toLocaleString()} บาท</p></div>
-                          {topup.method === 'wallet' && (
-                            <div className={styles.historyItem}><p className={styles.historyItemLabel}><Icon name="ticket" size="0.7rem" /> วิธีชำระ</p><p className={styles.historyItemValue}>TrueWallet</p></div>
+                          {/* วันที่ */}
+                          <div className={styles.historyItem}>
+                            <p className={styles.historyItemLabel}>
+                              <Icon name="calendar" size="0.7rem" /> วันที่
+                            </p>
+                            <p className={styles.historyItemValue}>
+                              {new Date(topup.createdAt).toLocaleDateString("th-TH", { 
+                                year: "numeric", 
+                                month: "short", 
+                                day: "numeric" 
+                              })}
+                            </p>
+                          </div>
+                          
+                          {/* เวลา */}
+                          <div className={styles.historyItem}>
+                            <p className={styles.historyItemLabel}>
+                              <Icon name="clock" size="0.7rem" /> เวลา
+                            </p>
+                            <p className={styles.historyItemValue}>
+                              {new Date(topup.createdAt).toLocaleTimeString("th-TH", { 
+                                hour: "2-digit", 
+                                minute: "2-digit" 
+                              })}
+                            </p>
+                          </div>
+                          
+                          {/* จำนวนเงิน */}
+                          <div className={styles.historyItem}>
+                            <p className={styles.historyItemLabel}>
+                              <Icon name="money" size="0.7rem" /> จำนวนเงิน
+                            </p>
+                            <p className={styles.historyItemValue}>
+                              {topup.amount?.toLocaleString()} บาท
+                            </p>
+                          </div>
+                          
+                          {/* แต้มที่ได้รับ */}
+                          <div className={styles.historyItem}>
+                            <p className={styles.historyItemLabel}>
+                              <Icon name="coin" size="0.7rem" /> แต้มที่ได้รับ
+                            </p>
+                            <p className={styles.historyItemValue}>
+                              <span style={{ color: '#10b981', fontWeight: 'bold' }}>
+                                {topup.points?.toLocaleString() || topup.amount?.toLocaleString()} พ้อยท์
+                              </span>
+                            </p>
+                          </div>
+                          
+                          {/* วิธีชำระ */}
+                          <div className={styles.historyItem}>
+                            <p className={styles.historyItemLabel}>
+                              <Icon name="card" size="0.7rem" /> วิธีชำระ
+                            </p>
+                            <p className={styles.historyItemValue}>
+                              {topup.method === 'wallet' ? (
+                                <span style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                  <Icon name="gift" size="0.7rem" /> TrueWallet อังเปา
+                                </span>
+                              ) : (
+                                <span style={{ color: '#3b82f6', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                  <Icon name="bank" size="0.7rem" /> โอนผ่านธนาคาร
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          
+                          {/* รหัสอังเปา (เฉพาะ wallet) */}
+                          {topup.method === 'wallet' && topup.voucherCode && (
+                            <div className={styles.historyItemFull}>
+                              <p className={styles.historyItemLabel}>
+                                <Icon name="ticket" size="0.7rem" /> รหัสอังเปา
+                              </p>
+                              <p className={styles.historyItemValue} style={{ 
+                                fontSize: '0.7rem', 
+                                fontFamily: 'monospace',
+                                background: '#0a0a0f',
+                                padding: '0.25rem 0.5rem',
+                                borderRadius: '0.375rem',
+                                display: 'inline-block'
+                              }}>
+                                {topup.voucherCode}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* เลขอ้างอิงสลิป (เฉพาะ bank) */}
+                          {topup.method === 'bank' && topup.transRef && (
+                            <div className={styles.historyItemFull}>
+                              <p className={styles.historyItemLabel}>
+                                <Icon name="file" size="0.7rem" /> เลขอ้างอิง
+                              </p>
+                              <p className={styles.historyItemValue} style={{ fontSize: '0.7rem', fontFamily: 'monospace' }}>
+                                {topup.transRef}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {/* ข้อความ error (ถ้ามี) */}
+                          {topup.errorDetail && (
+                            <div className={styles.historyItemFull}>
+                              <p className={styles.historyItemLabel} style={{ color: '#ef4444' }}>
+                                <Icon name="error" size="0.7rem" /> ข้อผิดพลาด
+                              </p>
+                              <p className={styles.historyItemValue} style={{ color: '#f87171', fontSize: '0.75rem' }}>
+                                {topup.errorDetail}
+                              </p>
+                            </div>
                           )}
                         </div>
                       </div>

@@ -793,5 +793,39 @@
       "url": "/profile"
     },
     "createdAt": "2026-05-30T23:46:48.163Z"
+  },
+  {
+    "_id": "mpwpcls4qd78k",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-06-02T13:57:44.644Z"
+  },
+  {
+    "_id": "mpwpcq3p8qlsd",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-06-02T13:57:50.245Z"
+  },
+  {
+    "_id": "mpwpee9imzozu",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-06-02T13:59:08.214Z"
   }
 ]

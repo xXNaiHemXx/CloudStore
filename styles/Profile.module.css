@@ -579,3 +579,103 @@
     justify-content: center;
   }
 }
+
+
+/* History Item Full Width */
+.historyItemFull {
+  grid-column: 1 / -1;
+  background: #050508;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.historyItemFull .historyItemLabel {
+  font-size: 0.65rem;
+  color: #52525b;
+  margin-bottom: 0.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.historyItemFull .historyItemValue {
+  font-size: 0.8rem;
+  color: #a1a1aa;
+  word-break: break-all;
+}
+
+/* ปรับปรุง historyBody ให้รองรับ full width */
+.historyBody {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .historyBody {
+    grid-template-columns: 1fr;
+  }
+  
+  .historyItemFull {
+    grid-column: 1;
+  }
+}
+
+/* Status Badge สวยงามขึ้น */
+.statusBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.statusSuccess {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.statusPending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.statusFailed {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.statusDuplicate {
+  background: rgba(139, 92, 246, 0.1);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* History Header */
+.historyHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #1a1d2e;
+}
+
+.historyRef {
+  font-size: 0.75rem;
+  color: #52525b;
+  font-weight: 500;
+  font-family: monospace;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
