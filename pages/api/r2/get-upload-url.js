@@ -1,13 +1,12 @@
+// pages/api/r2/get-upload-url.js
 import { getPresignedUploadUrl } from "@/utils/r2";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { requireAdmin } from "@/utils/checkAdmin";
 
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '5mb',  // Request body limit (แค่ JSON ไม่ใช่ไฟล์)
+      sizeLimit: '10mb',
     },
-    responseLimit: false,
   },
 };
 
@@ -16,14 +15,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  const adminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
-  if (!adminIds.includes(session.user.id)) {
-    return res.status(403).json({ error: "Admin only" });
+  // ✅ ตรวจสอบสิทธิ์ Admin จาก Database
+  const auth = await requireAdmin(req, res);
+  if (auth.error) {
+    return res.status(auth.status).json({ error: auth.error });
   }
 
   try {
@@ -33,7 +28,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing fileName" });
     }
 
-    //  สร้าง Presigned URL สำหรับอัปโหลดไฟล์ขนาดใหญ่ (R2 รองรับ 5TB)
     const { uploadUrl, publicUrl, key } = await getPresignedUploadUrl(fileName, contentType);
     
     return res.status(200).json({

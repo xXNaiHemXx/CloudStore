@@ -1,8 +1,7 @@
 // pages/api/r2/create-multipart-upload.js
 import { S3Client, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand, AbortMultipartUploadCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { requireAdmin } from "@/utils/checkAdmin";
 
 export const config = {
   api: {
@@ -25,38 +24,15 @@ const s3Client = new S3Client({
 
 const BUCKET_NAME = process.env.R2_BUCKET_NAME;
 
-// ✅ ฟังก์ชันตรวจสอบ Admin
-async function isAdminUser(discordId) {
-  const adminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
-  if (adminIds.includes(discordId)) return true;
-  
-  try {
-    const response = await fetch(`${process.env.NEXTAUTH_URL}/api/admin/check-admin?discordId=${discordId}`);
-    const data = await response.json();
-    return data.isAdmin || false;
-  } catch (err) {
-    console.error("Admin check error:", err);
-    return false;
-  }
-}
-
 export default async function handler(req, res) {
-  // ✅ เพิ่ม timeout handler
   req.setTimeout(600000, () => {
     return res.status(408).json({ error: "Request timeout" });
   });
 
-  // ✅ ตรวจสอบ Session
-  const session = await getServerSession(req, res, authOptions);
-  
-  if (!session) {
-    return res.status(401).json({ error: "Unauthorized - Please login" });
-  }
-
-  // ✅ ตรวจสอบว่าเป็น Admin หรือไม่
-  const isAdmin = await isAdminUser(session.user.id);
-  if (!isAdmin) {
-    return res.status(403).json({ error: "Forbidden - Admin only" });
+  // ✅ ตรวจสอบสิทธิ์ Admin จาก Database
+  const auth = await requireAdmin(req, res);
+  if (auth.error) {
+    return res.status(auth.status).json({ error: auth.error });
   }
 
   const { fileName, contentType, action, uploadId, key, partNumber, parts } = req.body;
