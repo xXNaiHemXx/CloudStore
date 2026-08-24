@@ -3,15 +3,16 @@ import { SessionProvider, useSession } from "next-auth/react";
 import { UserProvider } from "../context/UserContext";
 import { ToastProvider } from "../context/ToastContext";
 import { ConfirmProvider } from "../context/ConfirmContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { addLog, LOG_TYPES } from "../utils/logger";
+import PageLoader from "../components/PageLoader";
 
+// ==================== SESSION LOGGER ====================
 function SessionLogger({ children }) {
   const { data: session } = useSession();
   const router = useRouter();
 
-  //  Log เมื่อ login
   useEffect(() => {
     if (session?.user) {
       addLog(
@@ -25,9 +26,8 @@ function SessionLogger({ children }) {
         }
       ).catch(() => {});
     }
-  }, [session?.user?.id]); //  ทำงานเฉพาะเมื่อ user id เปลี่ยน
+  }, [session?.user?.id]);
 
-  //  Log เมื่อเปลี่ยนหน้า
   useEffect(() => {
     const handleRouteChange = (url) => {
       if (session?.user && !url.includes('/admin') && !url.includes('/api')) {
@@ -51,9 +51,46 @@ function SessionLogger({ children }) {
   return children;
 }
 
+// ==================== MAIN APP ====================
 export default function App({ Component, pageProps: { session, ...pageProps } }) {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true); // ✅ เริ่มต้น true
+  const [isRouteChanging, setIsRouteChanging] = useState(false); // ✅ สำหรับเปลี่ยนหน้า
 
+  // ✅ ตั้งค่า isLoading เป็น false เมื่อโหลดหน้าแรกเสร็จ
+  useEffect(() => {
+    // รอให้ component mount ก่อน
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300); // ให้ loader แสดงครบก่อน
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // ✅ แสดง loader เมื่อเปลี่ยนหน้า
+  useEffect(() => {
+    const handleStart = () => {
+      setIsRouteChanging(true);
+    };
+    
+    const handleComplete = () => {
+      setTimeout(() => {
+        setIsRouteChanging(false);
+      }, 400); // แสดง loader ระหว่างเปลี่ยนหน้า
+    };
+
+    router.events.on("routeChangeStart", handleStart);
+    router.events.on("routeChangeComplete", handleComplete);
+    router.events.on("routeChangeError", handleComplete);
+
+    return () => {
+      router.events.off("routeChangeStart", handleStart);
+      router.events.off("routeChangeComplete", handleComplete);
+      router.events.off("routeChangeError", handleComplete);
+    };
+  }, [router]);
+
+  // ✅ Scroll restoration
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
@@ -69,13 +106,20 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
     return () => router.events.off("routeChangeComplete", handleRouteChange);
   }, [router]);
 
+  // ✅ แสดง loader ถ้ากำลังโหลดหน้าแรก หรือกำลังเปลี่ยนหน้า
+  const showLoader = isLoading || isRouteChanging;
+
   return (
     <SessionProvider session={session}>
       <UserProvider>
         <ToastProvider>
           <ConfirmProvider>
             <SessionLogger>
-              <Component {...pageProps} />
+              {showLoader ? (
+                <PageLoader />
+              ) : (
+                <Component {...pageProps} />
+              )}
             </SessionLogger>
           </ConfirmProvider>
         </ToastProvider>
