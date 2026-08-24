@@ -975,5 +975,1655 @@
       "url": "/products/6a12fc330a7cf3e32d4155d9"
     },
     "createdAt": "2026-06-02T16:00:09.288Z"
+  },
+  {
+    "_id": "mt7ppdta3fge6",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T20:52:15.790Z"
+  },
+  {
+    "_id": "mt7qvieto1crr",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T21:25:01.301Z"
+  },
+  {
+    "_id": "mt7rb0cfdi3h4",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T21:37:04.383Z"
+  },
+  {
+    "_id": "mt7rb2iccgb34",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T21:37:07.189Z"
+  },
+  {
+    "_id": "mt7rb5k2s392b",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T21:37:11.139Z"
+  },
+  {
+    "_id": "mt7rbfgpsb00m",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T21:37:23.977Z"
+  },
+  {
+    "_id": "mt7rd6soi25yv",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T21:38:46.056Z"
+  },
+  {
+    "_id": "mt7rdyupyh7v8",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T21:39:22.417Z"
+  },
+  {
+    "_id": "mt7re0mdwnzby",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T21:39:24.709Z"
+  },
+  {
+    "_id": "mt7re1wioi99y",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T21:39:26.370Z"
+  },
+  {
+    "_id": "mt7reb2p1scmx",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T21:39:38.257Z"
+  },
+  {
+    "_id": "mt7rm3st0r23p",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T21:45:42.077Z"
+  },
+  {
+    "_id": "mt7rmcw17ulys",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T21:45:53.857Z"
+  },
+  {
+    "_id": "mt7rplo02a381",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T21:48:25.200Z"
+  },
+  {
+    "_id": "mt7rqt1o796xm",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T21:49:21.420Z"
+  },
+  {
+    "_id": "mt7rx9fo7okmc",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T21:54:22.596Z"
+  },
+  {
+    "_id": "mt7ryj5xcfuv5",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T21:55:21.861Z"
+  },
+  {
+    "_id": "mt7s08kzrjhv2",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T21:56:41.459Z"
+  },
+  {
+    "_id": "mt7s4o09ij1cz",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:00:08.073Z"
+  },
+  {
+    "_id": "mt7sdfhfw2zb3",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:06:56.931Z"
+  },
+  {
+    "_id": "mt7sh5krr4xe4",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:09:50.715Z"
+  },
+  {
+    "_id": "mt7sk5gsdxt8x",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:12:10.540Z"
+  },
+  {
+    "_id": "mt7sl71sdp7w6",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:12:59.248Z"
+  },
+  {
+    "_id": "mt7smkh70uf4s",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T22:14:03.307Z"
+  },
+  {
+    "_id": "mt7smrn9g43n4",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:14:12.597Z"
+  },
+  {
+    "_id": "mt7svtjc2qxkk",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:21:14.952Z"
+  },
+  {
+    "_id": "mt7svw87dqen3",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T22:21:18.439Z"
+  },
+  {
+    "_id": "mt7svz7f60zsl",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:21:22.299Z"
+  },
+  {
+    "_id": "mt7sw0s0tzv50",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:21:24.336Z"
+  },
+  {
+    "_id": "mt7sw1he7np55",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:21:25.250Z"
+  },
+  {
+    "_id": "mt7t035cthjcq",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:24:34.032Z"
+  },
+  {
+    "_id": "mt7t1u2wvfpg0",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:25:55.592Z"
+  },
+  {
+    "_id": "mt7t1v70h4nbs",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T22:25:57.036Z"
+  },
+  {
+    "_id": "mt7t2pw26ep1e",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:26:36.818Z"
+  },
+  {
+    "_id": "mt7t5qu8xk7rx",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:28:58.016Z"
+  },
+  {
+    "_id": "mt7t5rruq56uo",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:28:59.226Z"
+  },
+  {
+    "_id": "mt7t5sff9aibb",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T22:29:00.075Z"
+  },
+  {
+    "_id": "mt7tgeq3xb3ut",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:37:15.531Z"
+  },
+  {
+    "_id": "mt7tixm37p39n",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:39:13.323Z"
+  },
+  {
+    "_id": "mt7tj6gylsjqk",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:39:24.802Z"
+  },
+  {
+    "_id": "mt7tkr679meim",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:40:38.287Z"
+  },
+  {
+    "_id": "mt7tkzx18g287",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:40:49.621Z"
+  },
+  {
+    "_id": "mt7tl0yhrdyje",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:40:50.969Z"
+  },
+  {
+    "_id": "mt7tl1yd1w8s0",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:40:52.261Z"
+  },
+  {
+    "_id": "mt7tlqot6wo3j",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:41:24.317Z"
+  },
+  {
+    "_id": "mt7ttmawafosu",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:47:31.880Z"
+  },
+  {
+    "_id": "mt7ttqi9vdbe6",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /products/6a1ef23ea5cab26c4ac0a366",
+    "user": "jayther",
+    "details": {
+      "url": "/products/6a1ef23ea5cab26c4ac0a366"
+    },
+    "createdAt": "2026-08-24T22:47:37.329Z"
+  },
+  {
+    "_id": "mt7ttxptbrmp6",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:47:46.673Z"
+  },
+  {
+    "_id": "mt7txe5579vj9",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /products/6a51f79b51586888755b1423",
+    "user": "jayther",
+    "details": {
+      "url": "/products/6a51f79b51586888755b1423"
+    },
+    "createdAt": "2026-08-24T22:50:27.929Z"
+  },
+  {
+    "_id": "mt7ty4s5uarar",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T22:51:02.453Z"
+  },
+  {
+    "_id": "mt7ty9zg4dh1j",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:51:09.196Z"
+  },
+  {
+    "_id": "mt7tzxd5xjgr9",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:52:26.153Z"
+  },
+  {
+    "_id": "mt7u07fugpc7i",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:52:39.210Z"
+  },
+  {
+    "_id": "mt7u087ybioc6",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /products/6a12f179cfd1bd3bbbfa4b8a",
+    "user": "jayther",
+    "details": {
+      "url": "/products/6a12f179cfd1bd3bbbfa4b8a"
+    },
+    "createdAt": "2026-08-24T22:52:40.222Z"
+  },
+  {
+    "_id": "mt7u09kx3jz6i",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:52:41.985Z"
+  },
+  {
+    "_id": "mt7u0a4xu2okp",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /products/6a51f79b51586888755b1423",
+    "user": "jayther",
+    "details": {
+      "url": "/products/6a51f79b51586888755b1423"
+    },
+    "createdAt": "2026-08-24T22:52:42.705Z"
+  },
+  {
+    "_id": "mt7u0knwq29ts",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:52:56.348Z"
+  },
+  {
+    "_id": "mt7u0n35bys9c",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T22:52:59.489Z"
+  },
+  {
+    "_id": "mt7u1437nh51b",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T22:53:21.523Z"
+  },
+  {
+    "_id": "mt7ub5hx8hixt",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T23:01:09.909Z"
+  },
+  {
+    "_id": "mt7uh30mpam5w",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:05:46.630Z"
+  },
+  {
+    "_id": "mt7uh441fqoky",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:05:48.049Z"
+  },
+  {
+    "_id": "mt7uhtw4fgduv",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:06:21.460Z"
+  },
+  {
+    "_id": "mt7ujsy9yqvnb",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:07:53.553Z"
+  },
+  {
+    "_id": "mt7ulm041f9rh",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:09:17.860Z"
+  },
+  {
+    "_id": "mt7undk5znj5g",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:10:40.229Z"
+  },
+  {
+    "_id": "mt7uq9yqpu02o",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:12:55.538Z"
+  },
+  {
+    "_id": "mt7uqberljoga",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:12:57.411Z"
+  },
+  {
+    "_id": "mt7uqowmx9eva",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:13:14.902Z"
+  },
+  {
+    "_id": "mt7urnc4jgzn3",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:13:59.524Z"
+  },
+  {
+    "_id": "mt7uy2ixf80fd",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:18:59.145Z"
+  },
+  {
+    "_id": "mt7uyhrbrlo4d",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:19:18.887Z"
+  },
+  {
+    "_id": "mt7v69vk1z57b",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:25:21.920Z"
+  },
+  {
+    "_id": "mt7vb28bguuzs",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:29:05.291Z"
+  },
+  {
+    "_id": "mt7vb3e7ypcqv",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:29:06.799Z"
+  },
+  {
+    "_id": "mt7vb6eews7hl",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:29:10.694Z"
+  },
+  {
+    "_id": "mt7vbamzaw70y",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:29:16.187Z"
+  },
+  {
+    "_id": "mt7vbd2hg8yse",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T23:29:19.337Z"
+  },
+  {
+    "_id": "mt7vbvlv1oxng",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:29:43.363Z"
+  },
+  {
+    "_id": "mt7vbwm3w09fi",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:29:44.667Z"
+  },
+  {
+    "_id": "mt7vcegv3ty0h",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:30:07.807Z"
+  },
+  {
+    "_id": "mt7vcgfwelv8o",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:30:10.364Z"
+  },
+  {
+    "_id": "mt7vdtllsgsvx",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:31:14.073Z"
+  },
+  {
+    "_id": "mt7vdvoap4j04",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:31:16.762Z"
+  },
+  {
+    "_id": "mt7vdxgb9mekm",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:31:19.067Z"
+  },
+  {
+    "_id": "mt7vfc7wmv1aq",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:32:24.860Z"
+  },
+  {
+    "_id": "mt7vfmqj8ngw9",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:32:38.491Z"
+  },
+  {
+    "_id": "mt7vgxgopii7o",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:33:39.048Z"
+  },
+  {
+    "_id": "mt7vh0kszcyp7",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:33:43.084Z"
+  },
+  {
+    "_id": "mt7vh4bhk3ksb",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T23:33:47.933Z"
+  },
+  {
+    "_id": "mt7vi9gys2agc",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:34:41.266Z"
+  },
+  {
+    "_id": "mt7vid78rgiv8",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:34:46.100Z"
+  },
+  {
+    "_id": "mt7vid7ssuh7y",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:34:46.120Z"
+  },
+  {
+    "_id": "mt7viey0lav3n",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:34:48.360Z"
+  },
+  {
+    "_id": "mt7vilwee6n4l",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:34:57.374Z"
+  },
+  {
+    "_id": "mt7vjas00ppfj",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:35:29.616Z"
+  },
+  {
+    "_id": "mt7vksk8odlrs",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:36:39.320Z"
+  },
+  {
+    "_id": "mt7vkuduczgn0",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:36:41.682Z"
+  },
+  {
+    "_id": "mt7vl8iumdkw5",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:37:00.006Z"
+  },
+  {
+    "_id": "mt7vl9lx86pk0",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:37:01.413Z"
+  },
+  {
+    "_id": "mt7vlb1moxl8g",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:37:03.274Z"
+  },
+  {
+    "_id": "mt7vld5kojgtt",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:37:06.008Z"
+  },
+  {
+    "_id": "mt7vlenb3cnc5",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:37:07.943Z"
+  },
+  {
+    "_id": "mt7vm8f7y02mh",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:37:46.531Z"
+  },
+  {
+    "_id": "mt7vmwob4esuj",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:38:17.963Z"
+  },
+  {
+    "_id": "mt7vn1gcs4kfo",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T23:38:24.156Z"
+  },
+  {
+    "_id": "mt7vn3xkirvu4",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:38:27.368Z"
+  },
+  {
+    "_id": "mt7vn5r652jt1",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /products/6a1ef23ea5cab26c4ac0a366",
+    "user": "jayther",
+    "details": {
+      "url": "/products/6a1ef23ea5cab26c4ac0a366"
+    },
+    "createdAt": "2026-08-24T23:38:29.730Z"
+  },
+  {
+    "_id": "mt7voqekmxm5v",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /products/6a1ef23ea5cab26c4ac0a366",
+    "user": "jayther",
+    "details": {
+      "url": "/products/6a1ef23ea5cab26c4ac0a366"
+    },
+    "createdAt": "2026-08-24T23:39:43.148Z"
+  },
+  {
+    "_id": "mt7vosgyi087x",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:39:45.826Z"
+  },
+  {
+    "_id": "mt7vp6lxehm99",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:40:04.150Z"
+  },
+  {
+    "_id": "mt7vpnts7lysl",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:40:26.464Z"
+  },
+  {
+    "_id": "mt7vrcffjmxdx",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:41:45.003Z"
+  },
+  {
+    "_id": "mt7vrfs4lafae",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:41:49.348Z"
+  },
+  {
+    "_id": "mt7vrot1tlyjp",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:01.045Z"
+  },
+  {
+    "_id": "mt7vrqeh7t3j6",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:03.113Z"
+  },
+  {
+    "_id": "mt7vry2bphd4t",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:13.043Z"
+  },
+  {
+    "_id": "mt7vs1wr8e4qw",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:18.027Z"
+  },
+  {
+    "_id": "mt7vs4b8cuf7r",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:21.140Z"
+  },
+  {
+    "_id": "mt7vs7wi7itod",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:42:25.794Z"
+  },
+  {
+    "_id": "mt7vsag7jnj44",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:29.095Z"
+  },
+  {
+    "_id": "mt7vshllxfntb",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:38.361Z"
+  },
+  {
+    "_id": "mt7vsjsuemx3l",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:41.214Z"
+  },
+  {
+    "_id": "mt7vslpo9qkkv",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:43.692Z"
+  },
+  {
+    "_id": "mt7vsrssisfka",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:51.580Z"
+  },
+  {
+    "_id": "mt7vsvo3zg9go",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:42:56.595Z"
+  },
+  {
+    "_id": "mt7vt32uaylk3",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:43:06.198Z"
+  },
+  {
+    "_id": "mt7vt98mn3wzt",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:43:14.182Z"
+  },
+  {
+    "_id": "mt7vtemssmxnb",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:43:21.172Z"
+  },
+  {
+    "_id": "mt7vthszsndys",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:43:25.283Z"
+  },
+  {
+    "_id": "mt7vtyixu4z6p",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:43:46.953Z"
+  },
+  {
+    "_id": "mt7vu595913mx",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-24T23:43:55.673Z"
+  },
+  {
+    "_id": "mt7vu67s335p7",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:43:56.920Z"
+  },
+  {
+    "_id": "mt7vu8hha7oav",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:43:59.861Z"
+  },
+  {
+    "_id": "mt7vuah8zlo7c",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:44:02.444Z"
+  },
+  {
+    "_id": "mt7vuck6gdeoa",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:44:05.142Z"
+  },
+  {
+    "_id": "mt7vueh9l33mu",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:44:07.629Z"
+  },
+  {
+    "_id": "mt7vugbjze64i",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:44:10.015Z"
+  },
+  {
+    "_id": "mt7vui8acqjh4",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:44:12.490Z"
+  },
+  {
+    "_id": "mt7vuk8g8cbky",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:44:15.088Z"
+  },
+  {
+    "_id": "mt7vumhsone6h",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:44:18.016Z"
+  },
+  {
+    "_id": "mt7vurrgwc2tc",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:44:24.844Z"
+  },
+  {
+    "_id": "mt7vwzfqahkso",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T23:46:08.102Z"
+  },
+  {
+    "_id": "mt7vyeltjmas6",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:47:14.417Z"
+  },
+  {
+    "_id": "mt7vyhwxi5t38",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-24T23:47:18.705Z"
+  },
+  {
+    "_id": "mt7vyq5amkk0i",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /shop",
+    "user": "jayther",
+    "details": {
+      "url": "/shop"
+    },
+    "createdAt": "2026-08-24T23:47:29.374Z"
   }
 ]

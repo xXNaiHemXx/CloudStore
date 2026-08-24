@@ -1,0 +1,376 @@
+/* ================================================================
+   SUPPORT PAGE - LIQUID GLASS
+   ================================================================ */
+
+.supportPage {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+/* ---------- HERO ---------- */
+.supportHero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem 2rem;
+  text-align: center;
+  overflow: hidden;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  margin-bottom: 2rem;
+}
+
+.supportHeroOrb {
+  position: absolute;
+  top: -30%;
+  right: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(244, 63, 94, 0.05) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.supportHeroContent {
+  position: relative;
+  z-index: 1;
+}
+
+.supportBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.8rem;
+  background: rgba(244, 63, 94, 0.08);
+  border: 1px solid rgba(244, 63, 94, 0.1);
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fb7185;
+  margin-bottom: 0.75rem;
+}
+
+.supportTitle {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #e4e6f0;
+  margin: 0;
+}
+
+.supportTitleAccent {
+  background: linear-gradient(135deg, #f43f5e, #fb7185);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.supportSubtitle {
+  font-size: 1rem;
+  color: rgba(107, 114, 128, 0.6);
+  margin: 0.25rem 0 0;
+}
+
+/* ---------- COMING SOON ---------- */
+.comingSoon {
+  text-align: center;
+  padding: 3rem 2rem;
+  margin-bottom: 2rem;
+}
+
+.comingSoonIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: rgba(99, 102, 241, 0.08);
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  animation: pulseIcon 2s ease-in-out infinite;
+}
+
+@keyframes pulseIcon {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+.comingSoon h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #e4e6f0;
+  margin: 0 0 0.5rem;
+}
+
+.comingSoon p {
+  font-size: 1rem;
+  color: rgba(107, 114, 128, 0.6);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.comingSoonSub {
+  color: rgba(107, 114, 128, 0.4) !important;
+  font-size: 0.9rem !important;
+  margin-top: 0.25rem !important;
+}
+
+.comingSoonActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.btnDiscord {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: #d1d5db;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btnDiscord:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.btnBack {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.5rem;
+  background: rgba(99, 102, 241, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(99, 102, 241, 0.1);
+  border-radius: 10px;
+  color: #a5b4fc;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btnBack:hover {
+  background: rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
+}
+
+/* ---------- FEATURES GRID ---------- */
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.featureCard {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: 1.25rem 1rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.featureCard:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.featureCard svg {
+  margin-bottom: 0.5rem;
+}
+
+.featureCard h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin: 0 0 0.25rem;
+}
+
+.featureCard p {
+  font-size: 0.75rem;
+  color: rgba(107, 114, 128, 0.6);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ---------- CONTACT SECTION ---------- */
+.contactSection {
+  margin-top: 1rem;
+}
+
+.glassCard {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 16px;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.glassCard:hover {
+  border-color: rgba(99, 102, 241, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.glassCard h3 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fafafa;
+  margin: 0 0 0.5rem;
+}
+
+.glassCard p {
+  font-size: 0.9rem;
+  color: rgba(209, 213, 219, 0.7);
+  margin: 0 0 1rem;
+}
+
+.contactLinks {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.contactLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  color: #d1d5db;
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.contactLink:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(99, 102, 241, 0.15);
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 1024px) {
+  .featuresGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .supportPage {
+    padding: 1rem 1rem 3rem;
+  }
+
+  .supportTitle {
+    font-size: 2rem;
+  }
+
+  .supportHero {
+    padding: 2rem 1.5rem;
+  }
+
+  .comingSoon {
+    padding: 2rem 1rem;
+  }
+
+  .comingSoon h2 {
+    font-size: 1.5rem;
+  }
+
+  .featuresGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .featureCard {
+    padding: 1rem 0.75rem;
+  }
+
+  .glassCard {
+    padding: 1rem 1.25rem;
+  }
+
+  .comingSoonActions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .comingSoonActions a {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .supportTitle {
+    font-size: 1.6rem;
+  }
+
+  .supportSubtitle {
+    font-size: 0.85rem;
+  }
+
+  .featuresGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .glassCard {
+    padding: 0.75rem 1rem;
+  }
+
+  .contactLinks {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .contactLink {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .comingSoonIcon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .comingSoonIcon svg {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .btnDiscord, .btnBack {
+    font-size: 0.8rem;
+    padding: 0.5rem 1rem;
+  }
+}
