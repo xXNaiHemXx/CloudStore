@@ -11,12 +11,11 @@ const nextConfig = {
   
   staticPageGenerationTimeout: 600,
   
-  //  ให้ Next.js serve static files
-  output: 'standalone',
+  // ❌ ลบหรือคอมเมนต์ output: 'standalone'
+  // output: 'standalone',
   
-  experimental: {
-    serverComponentsExternalPackages: ['formidable'],
-  },
+  // ✅ ใช้ serverExternalPackages แทน
+  serverExternalPackages: ['formidable', 'mongoose', 'mongodb'],
   
   poweredByHeader: false,
 };
