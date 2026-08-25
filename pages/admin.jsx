@@ -981,20 +981,21 @@ export default function Admin() {
     if (!isMounted) return;
     
     if (status === "loading") return;
-    
+    if (session) console.log("Session User ID:", session.user.id);
     if (!session) {
       setLoading(false);
       return;
     }
 
     checkAdminStatus();
+    
   }, [session, status, isMounted]);
 
   const checkAdminStatus = async () => {
     try {
       // Check from database first
       const res = await axios.get(`/api/admin/check-admin?discordId=${session.user.id}`);
-      
+      console.log("API Response:", res.data);
       if (res.data.isAdmin) {
         setIsAdmin(true);
         setAdminRole(res.data.role || "admin");
