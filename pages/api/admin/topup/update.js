@@ -1,11 +1,17 @@
 import { connectToDB } from "@/utils/db";
 import Topup from "@/models/Topup";
 import User from "@/models/User";
+import { requireAdmin } from "@/utils/checkAdmin";
 
 export default async function handler(req, res) {
 
   if (req.method !== "PUT") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) {
+    return res.status(auth.status).json({ error: auth.error });
   }
 
   try {

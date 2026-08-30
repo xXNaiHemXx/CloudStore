@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { requireAdmin } from '@/utils/checkAdmin';
 
 const LOG_FILE = path.join(process.cwd(), 'data', 'logs.json');
 
@@ -24,7 +25,16 @@ function writeLogs(logs) {
   fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2));
 }
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
+  // GET (ดูล็อก) และ DELETE (ล้างล็อกทั้งหมด) เป็นของ admin เท่านั้น
+  // ส่วน POST เปิดไว้ให้ผู้ใช้ทุกคนเรียกได้ เพราะใช้บันทึก login/กิจกรรมของตัวเอง (utils/logger.js)
+  if (req.method === 'GET' || req.method === 'DELETE') {
+    const auth = await requireAdmin(req, res);
+    if (!auth.isAdmin) {
+      return res.status(auth.status).json({ error: auth.error });
+    }
+  }
+
   if (req.method === 'GET') {
     const { type, limit = 100 } = req.query;
     let logs = readLogs();

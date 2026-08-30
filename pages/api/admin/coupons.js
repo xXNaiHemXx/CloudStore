@@ -1,8 +1,14 @@
 import { connectToDB } from "@/utils/db";
 import Coupon from "@/models/Coupon";
 import Item from "@/models/items"; // ✅ เพิ่ม
+import { requireAdmin } from "@/utils/checkAdmin";
 
 export default async function handler(req, res) {
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) {
+    return res.status(auth.status).json({ error: auth.error });
+  }
+
   await connectToDB();
 
   // GET - ดึงคูปองทั้งหมด
