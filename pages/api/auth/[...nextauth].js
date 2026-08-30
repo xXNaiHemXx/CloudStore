@@ -61,20 +61,6 @@ export const authOptions = {
 
             const discordId = user.id;
 
-            // Admin Discord ID จาก .env
-            const adminDiscordId = process.env.ADMIN_DISCORD_IDS;
-
-            console.log("========== ADMIN AUTH ==========");
-            console.log("Discord ID:", discordId);
-            console.log("Admin ID:", adminDiscordId);
-            console.log("Is Admin:", discordId === adminDiscordId);
-            console.log("================================");
-
-            // ถ้าไม่ใช่ Admin ไม่ให้เข้าสู่ระบบ
-            if (adminDiscordId && discordId !== adminDiscordId) {
-                console.log(`❌ Unauthorized admin login: ${discordId}`);
-                return true;
-            }
             //  ดึง Role ที่ user มีใน Discord
             const userRoles = await getUserRoles(user.id);
             console.log("📌 User roles from Discord:", userRoles);
