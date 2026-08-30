@@ -2910,5 +2910,74 @@
       "email": "hem.and.nas.and.rif@gmail.com"
     },
     "createdAt": "2026-08-27T21:41:54.401Z"
+  },
+  {
+    "_id": "mtf60zfxj3c9z",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-30T02:03:34.125Z"
+  },
+  {
+    "_id": "mtf611lznt8u1",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-30T02:03:36.935Z"
+  },
+  {
+    "_id": "mtf6154ukgjfi",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-30T02:03:41.502Z"
+  },
+  {
+    "_id": "mtf615fr6nfg7",
+    "type": "login",
+    "title": "ล็อคอิน",
+    "message": "jayther เข้าสู่ระบบ",
+    "user": "jayther",
+    "details": {
+      "discordId": "689667804462710835",
+      "email": "hem.and.nas.and.rif@gmail.com"
+    },
+    "createdAt": "2026-08-30T02:03:41.895Z"
+  },
+  {
+    "_id": "mtf616c4rj8im",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-30T02:03:43.060Z"
+  },
+  {
+    "_id": "mtf62ctcoz29j",
+    "type": "page_view",
+    "title": "ดูหน้าเว็บ",
+    "message": "jayther ดูหน้า /profile",
+    "user": "jayther",
+    "details": {
+      "url": "/profile"
+    },
+    "createdAt": "2026-08-30T02:04:38.112Z"
   }
 ]
