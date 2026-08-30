@@ -981,9 +981,10 @@ export default function Admin() {
     if (!isMounted) return;
     
     if (status === "loading") return;
-    if (session) console.log("Session User ID:", session.user.id);
+    
     if (!session) {
       setLoading(false);
+      setIsAdmin(false);
       return;
     }
 
@@ -993,34 +994,36 @@ export default function Admin() {
 
   const checkAdminStatus = async () => {
     try {
-      // Check from database first
+      console.log("🔍 Checking admin status for:", session.user.id);
+      
+      // เรียก API เพื่อตรวจสอบสิทธิ์ (ทั้ง Database และ Env ในฝั่ง Server)
       const res = await axios.get(`/api/admin/check-admin?discordId=${session.user.id}`);
-      console.log("API Response:", res.data);
+      
+      console.log("📡 API Response:", res.data);
+      
       if (res.data.isAdmin) {
+        console.log("✅ Admin access granted:", res.data.role);
         setIsAdmin(true);
         setAdminRole(res.data.role || "admin");
         setLoading(false);
-        return;
-      }
-      
-      // Fallback: check from .env
-      const envAdminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
-      if (envAdminIds.includes(session.user.id)) {
-        setIsAdmin(true);
-        setAdminRole("head");
+      } else {
+        console.log("❌ Admin access denied");
+        setIsAdmin(false);
+        setAdminRole(null);
         setLoading(false);
-        return;
       }
-      
-      // Not admin
-      setIsAdmin(false);
-      setAdminRole(null);
-      setLoading(false);
       
     } catch (err) {
-      // Fallback: if API error, check .env
-      const envAdminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
+      console.error("⚠️ Error checking admin status:", err);
+      
+      // Fallback: เช็คจาก Env ใน Client (กรณี API error)
+      const envAdminIds = (process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS || "")
+        .split(",")
+        .map(id => id.trim())
+        .filter(Boolean);
+      
       if (envAdminIds.includes(session.user.id)) {
+        console.log("✅ Admin access granted via Env fallback");
         setIsAdmin(true);
         setAdminRole("head");
       } else {
