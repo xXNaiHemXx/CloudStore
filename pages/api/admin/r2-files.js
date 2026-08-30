@@ -1,4 +1,5 @@
 import { S3Client, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { requireAdmin } from "@/utils/checkAdmin";
 
 const R2 = new S3Client({
   region: "auto",
@@ -10,6 +11,11 @@ const R2 = new S3Client({
 });
 
 export default async function handler(req, res) {
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) {
+    return res.status(auth.status).json({ error: auth.error });
+  }
+
   // GET - List files
   if (req.method === 'GET') {
     try {

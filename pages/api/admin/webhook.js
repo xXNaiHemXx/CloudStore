@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { requireAdmin } from '@/utils/checkAdmin';
 
 const WEBHOOK_FILE = path.join(process.cwd(), 'data', 'webhook.json');
 
@@ -28,6 +29,11 @@ if (!fs.existsSync(WEBHOOK_FILE)) {
 }
 
 export default async function handler(req, res) {
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) {
+    return res.status(auth.status).json({ error: auth.error });
+  }
+
   if (req.method === 'GET') {
     try {
       const config = JSON.parse(fs.readFileSync(WEBHOOK_FILE, 'utf-8'));

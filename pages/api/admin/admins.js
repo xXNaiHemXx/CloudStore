@@ -1,7 +1,13 @@
 import { connectToDB } from "@/utils/db";
 import Admin from "@/models/Admin";
+import { requireAdmin } from "@/utils/checkAdmin";
 
 export default async function handler(req, res) {
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) {
+    return res.status(auth.status).json({ error: auth.error });
+  }
+
   await connectToDB();
 
   // ✅ ฟังก์ชันเช็คว่าเป็น Head หรือไม่
