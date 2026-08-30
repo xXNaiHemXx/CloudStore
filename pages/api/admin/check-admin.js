@@ -3,33 +3,40 @@ import { connectToDB } from "@/utils/db";
 import Admin from "@/models/Admin";
 
 export default async function handler(req, res) {
-  // ตรวจสอบ Method
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
   const { discordId } = req.query;
   
+  // ============ DEBUG LOG (แสดงใน CMD) ============
+  console.log("========================================");
+  console.log("🔍 CHECK ADMIN API CALLED");
+  console.log("📌 Time:", new Date().toLocaleString("th-TH"));
+  console.log("📌 Discord ID:", discordId);
+  console.log("📌 Env Admin IDs:", process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS);
+  console.log("📌 MONGODB_URI:", process.env.MONGODB_URI ? "✅ Set" : "❌ Not Set");
+  console.log("========================================");
+  // ============================================
+  
   if (!discordId) {
+    console.log("❌ Missing discordId");
     return res.status(400).json({ error: "Missing discordId" });
   }
 
-  // Trim ค่า discordId เพื่อป้องกันช่องว่าง
-  const cleanDiscordId = String(discordId).trim();
-
   try {
+    console.log("🔄 Connecting to database...");
     await connectToDB();
+    console.log("✅ Database connected successfully");
     
-    // 1. เช็คจาก .env Head Admin (สิทธิ์สูงสุด)
+    // เช็คจาก .env Head Admin
     const envAdminIds = (process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS || "")
       .split(",")
-      .map(id => id.trim())  // Trim แต่ละ ID
-      .filter(Boolean);      // กรองค่าว่างออก
+      .map(id => id.trim())
+      .filter(Boolean);
     
-    console.log("📌 Checking Discord ID:", cleanDiscordId);
-    console.log("📌 Env Admin IDs:", envAdminIds);
+    console.log("📌 Parsed Env IDs:", envAdminIds);
+    console.log("📌 Discord ID (trimmed):", discordId.trim());
+    console.log("📌 Is in Env?", envAdminIds.includes(discordId.trim()));
     
-    if (envAdminIds.includes(cleanDiscordId)) {
+    if (envAdminIds.includes(discordId.trim())) {
+      console.log("✅ Admin found in ENV (Head Admin)");
       return res.status(200).json({ 
         isAdmin: true, 
         role: "head",
@@ -37,49 +44,28 @@ export default async function handler(req, res) {
       });
     }
     
-    // 2. เช็คจาก Database
+    // เช็คจาก Database
+    console.log("🔍 Searching in database...");
     const admin = await Admin.findOne({ 
-      discordId: cleanDiscordId, 
+      discordId: discordId.trim(), 
       isActive: true 
     });
     
     if (admin) {
+      console.log("✅ Admin found in DATABASE:", admin.name, "-", admin.role);
       return res.status(200).json({ 
         isAdmin: true, 
-        role: admin.role || "admin",
-        source: "database",
-        adminId: admin._id,
-        name: admin.name
+        role: admin.role,
+        source: "database"
       });
     }
     
-    // 3. ไม่พบสิทธิ์
-    return res.status(200).json({ 
-      isAdmin: false,
-      message: "No admin privileges found"
-    });
+    console.log("❌ Admin NOT FOUND in both Env and Database");
+    return res.status(200).json({ isAdmin: false });
     
   } catch (error) {
-    console.error("❌ Check admin error:", error);
-    
-    // Fallback: ถ้า DB error แต่ตรงกับ env ก็ให้ผ่าน
-    const envAdminIds = (process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS || "")
-      .split(",")
-      .map(id => id.trim())
-      .filter(Boolean);
-    
-    if (envAdminIds.includes(cleanDiscordId)) {
-      return res.status(200).json({ 
-        isAdmin: true, 
-        role: "head",
-        source: "env_fallback",
-        message: "Head Admin from environment (DB error)"
-      });
-    }
-    
-    return res.status(500).json({ 
-      error: error.message,
-      isAdmin: false 
-    });
+    console.error("❌ Check admin error:", error.message);
+    console.error("❌ Full error:", error);
+    return res.status(500).json({ error: error.message });
   }
 }

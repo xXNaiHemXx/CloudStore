@@ -991,42 +991,43 @@ export default function Admin() {
     checkAdminStatus();
     
   }, [session, status, isMounted]);
-
   const checkAdminStatus = async () => {
     try {
-      console.log("🔍 Checking admin status for:", session.user.id);
+      console.log("🔍 [Client] Checking admin status for:", session.user.id);
       
-      // เรียก API เพื่อตรวจสอบสิทธิ์ (ทั้ง Database และ Env ในฝั่ง Server)
       const res = await axios.get(`/api/admin/check-admin?discordId=${session.user.id}`);
       
-      console.log("📡 API Response:", res.data);
+      console.log("📡 [Client] API Response:", res.data);
       
       if (res.data.isAdmin) {
-        console.log("✅ Admin access granted:", res.data.role);
+        console.log("✅ [Client] Admin access granted:", res.data.role);
         setIsAdmin(true);
         setAdminRole(res.data.role || "admin");
         setLoading(false);
       } else {
-        console.log("❌ Admin access denied");
+        console.log("❌ [Client] Admin access denied");
         setIsAdmin(false);
         setAdminRole(null);
         setLoading(false);
       }
       
     } catch (err) {
-      console.error("⚠️ Error checking admin status:", err);
+      console.error("⚠️ [Client] Error checking admin status:", err.message);
       
-      // Fallback: เช็คจาก Env ใน Client (กรณี API error)
+      // Fallback: เช็คจาก Env ใน Client
       const envAdminIds = (process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS || "")
         .split(",")
         .map(id => id.trim())
         .filter(Boolean);
       
+      console.log("📌 [Client] Env Admin IDs:", envAdminIds);
+      
       if (envAdminIds.includes(session.user.id)) {
-        console.log("✅ Admin access granted via Env fallback");
+        console.log("✅ [Client] Admin access granted via Env fallback");
         setIsAdmin(true);
         setAdminRole("head");
       } else {
+        console.log("❌ [Client] Admin access denied (fallback)");
         setIsAdmin(false);
         setAdminRole(null);
       }
