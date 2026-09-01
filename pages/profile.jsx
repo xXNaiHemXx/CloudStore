@@ -489,7 +489,7 @@ const copyToClipboard = async (text) => {
               </div>
               <div className={styles.profileActions}>
                 {isUserAdmin && (
-                  <Link href="/admin" className={styles.glassBtn}>
+                  <Link href="/adminsudlor" className={styles.glassBtn}>
                     <Icon name="settings" size="0.8rem" />
                     Admin
                   </Link>

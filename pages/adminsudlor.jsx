@@ -973,67 +973,41 @@ export default function Admin() {
   ];
 
   // ==================== AUTH CHECK ====================
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+useEffect(() => {
+  setIsMounted(true);
+}, []);
 
-  useEffect(() => {
-    if (!isMounted) return;
-    
-    if (status === "loading") return;
-    
-    if (!session) {
-      setLoading(false);
-      setIsAdmin(false);
-      return;
-    }
+useEffect(() => {
+  if (!isMounted) return;
+  
+  if (status === "loading") return;
+  
+  if (!session) {
+    setLoading(false);
+    setIsAdmin(false);
+    return;
+  }
 
-    checkAdminStatus();
-    
-  }, [session, status, isMounted]);
-  const checkAdminStatus = async () => {
-    try {
-      console.log("🔍 [Client] Checking admin status for:", session.user.id);
-      
-      const res = await axios.get(`/api/admin/check-admin?discordId=${session.user.id}`);
-      
-      console.log("📡 [Client] API Response:", res.data);
-      
-      if (res.data.isAdmin) {
-        console.log("✅ [Client] Admin access granted:", res.data.role);
-        setIsAdmin(true);
-        setAdminRole(res.data.role || "admin");
-        setLoading(false);
-      } else {
-        console.log("❌ [Client] Admin access denied");
-        setIsAdmin(false);
-        setAdminRole(null);
-        setLoading(false);
-      }
-      
-    } catch (err) {
-      console.error("⚠️ [Client] Error checking admin status:", err.message);
-      
-      // Fallback: เช็คจาก Env ใน Client
-      const envAdminIds = (process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS || "")
-        .split(",")
-        .map(id => id.trim())
-        .filter(Boolean);
-      
-      console.log("📌 [Client] Env Admin IDs:", envAdminIds);
-      
-      if (envAdminIds.includes(session.user.id)) {
-        console.log("✅ [Client] Admin access granted via Env fallback");
-        setIsAdmin(true);
-        setAdminRole("head");
-      } else {
-        console.log("❌ [Client] Admin access denied (fallback)");
-        setIsAdmin(false);
-        setAdminRole(null);
-      }
-      setLoading(false);
-    }
-  };
+  // ✅ ใช้เฉพาะ Environment Variable เท่านั้น (ไม่เรียก API)
+  const envAdminIds = (process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS || "")
+    .split(",")
+    .map(id => id.trim())
+    .filter(Boolean);
+  
+  console.log("📌 [Client] รายชื่อ Admin จาก .env:", envAdminIds);
+  
+  if (envAdminIds.includes(session.user.id)) {
+    console.log("✅ [Client] เข้าสู่ระบบ Admin สำเร็จ");
+    setIsAdmin(true);
+    setAdminRole("admin");
+  } else {
+    console.log("❌ [Client] ไม่มีสิทธิ์เข้า Admin");
+    setIsAdmin(false);
+    setAdminRole(null);
+  }
+  setLoading(false);
+  
+}, [session, status, isMounted]);
 
   // ==================== FETCH FUNCTIONS ====================
   const fetchItems = async () => { 
