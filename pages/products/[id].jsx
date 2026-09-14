@@ -142,34 +142,20 @@ export default function ProductDetail() {
 
     setIsPurchasing(true);
     try {
+      // ⚠️ ไม่ส่ง price / finalPrice / discount ไปแล้ว — เซิร์ฟเวอร์คำนวณเองจากฐานข้อมูล
+      // ส่ง couponCode ไปแค่เพื่อให้เซิร์ฟเวอร์ไปตรวจสอบและคำนวณส่วนลดเองอีกที
       const purchaseRes = await axios.post("/api/user/purchase", {
         userId: session.user.discordId || session.user.id,
         productId: id,
-        price: productPrice,
-        finalPrice: priceToUse,
         couponCode: appliedCoupon?.code || null,
-        discount: discountAmount,
       });
 
       if (purchaseRes.data.success) {
         await refreshPoints();
 
-        await addLog(
-          LOG_TYPES.PURCHASE,
-          "ซื้อสินค้า",
-          `${session.user.name} ซื้อ "${product?.itemsname}" ราคา ${priceToUse} Point${appliedCoupon ? ` (ใช้คูปอง ${appliedCoupon.code} ลด ${discountAmount})` : ''}`,
-          session.user.name,
-          {
-            discordId: session.user.discordId || session.user.id,
-            productName: product?.itemsname,
-            price: priceToUse,
-            originalPrice: productPrice,
-            couponCode: appliedCoupon?.code || null,
-            discount: discountAmount,
-            roleIds: product?.discordRoleIds || [],
-            version: product?.itemsversion,
-          }
-        ).catch(() => {});
+        // ไม่ต้องยิง addLog()/webhook จาก browser อีกต่อไป
+        // เซิร์ฟเวอร์ (/api/user/purchase) เป็นคนบันทึก log และแจ้งเตือน Discord ให้เอง
+        // ทำให้แจ้งเตือนได้ครบทุกครั้งไม่ว่าเป็นแอดมินหรือลูกค้าทั่วไป
 
         success(`ซื้อสินค้าสำเร็จ! คงเหลือ ${purchaseRes.data.remainingPoints?.toLocaleString()} Points`);
         router.push("/profile");
