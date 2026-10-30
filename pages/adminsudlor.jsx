@@ -12,6 +12,7 @@ import { groupFilesByCategory, isImageFile } from "../utils/fileCategories";
 import { addLog, LOG_TYPES } from "../utils/logger";
 import Icon from "../components/Icon";
 import R2Uploader from "../components/R2Uploader";
+import { thumb } from "../utils/imageUrl";
 
 // ==================== LOADING SCREEN ====================
 function AdminLoading() {
@@ -2081,10 +2082,11 @@ useEffect(() => {
                       {/* Product Image */}
                       <div className={styles.productCardImageWrapper}>
                         <img 
-                          src={item.itemsimage} 
+                          src={thumb(item.itemsimage)} 
                           alt={item.itemsname} 
                           className={styles.productCardImage}
                           loading="lazy"
+                          decoding="async"
                           onError={(e) => {
                             e.target.src = '/images/placeholder.png';
                           }}
@@ -3120,7 +3122,7 @@ useEffect(() => {
                               allProducts.map(product => (
                                 <label key={product._id} className={styles.productCheckboxItem}>
                                   <input type="checkbox" checked={(couponForm.allowedProductIds || []).includes(product._id)} onChange={(e) => { const newIds = e.target.checked ? [...(couponForm.allowedProductIds || []), product._id] : (couponForm.allowedProductIds || []).filter(id => id !== product._id); setCouponForm(prev => ({ ...prev, allowedProductIds: newIds })); }} />
-                                  <img src={product.itemsimage} alt="" className={styles.productCheckboxImage} />
+                                  <img src={thumb(product.itemsimage, 256)} alt="" className={styles.productCheckboxImage} loading="lazy" decoding="async" />
                                   <span>{product.itemsname}</span>
                                   <span className={styles.productCheckboxPrice}>฿{product.itemsprice}</span>
                                 </label>

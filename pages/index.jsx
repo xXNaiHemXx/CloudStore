@@ -6,6 +6,7 @@ import styles from "../styles/Home.module.css";
 import { useUser } from "../context/UserContext";
 import Icon from "../components/Icon";
 import Link from "next/link";
+import { thumb } from "../utils/imageUrl";
 
 export default function Home() {
   const { data: session } = useSession();
@@ -177,9 +178,10 @@ export default function Home() {
                     {/* Image */}
                     <div className={styles.productImageWrapper}>
                       <img 
-                        src={product.itemsimage} 
+                        src={thumb(product.itemsimage)} 
                         alt={product.itemsname} 
                         loading="lazy"
+                        decoding="async"
                         onError={(e) => { e.target.src = '/images/placeholder.png'; }}
                       />
                     </div>
@@ -234,8 +236,10 @@ export default function Home() {
                 <Link key={product._id} href={`/products/${product._id}`} className={styles.recommendedCard}>
                   <div className={styles.recommendedImage}>
                     <img 
-                      src={product.itemsimage} 
+                      src={thumb(product.itemsimage, 384)} 
                       alt={product.itemsname}
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => { e.target.src = '/images/placeholder.png'; }}
                     />
                   </div>

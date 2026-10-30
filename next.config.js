@@ -26,6 +26,13 @@ const nextConfig = {
   
   poweredByHeader: false,
 
+  // ตัวย่อรูปสินค้า (ดู utils/imageUrl.js) อนุญาตเฉพาะโดเมนไฟล์ของร้าน
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "files.xcloud-studio.store", pathname: "/**" }],
+    formats: ["image/webp"],
+    minimumCacheTTL: 86400,
+  },
+
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

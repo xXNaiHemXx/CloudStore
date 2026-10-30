@@ -20,7 +20,7 @@ export default function PageLoader() {
     }
 
     const melt = setTimeout(() => setPhase("melt"), 1500);
-    const gone = setTimeout(() => setPhase("gone"), 2300);
+    const gone = setTimeout(() => setPhase("gone"), 2200);
     return () => {
       clearTimeout(melt);
       clearTimeout(gone);
@@ -54,14 +54,6 @@ export default function PageLoader() {
       <div className={styles.progress}>
         <span className={styles.progressFill} />
       </div>
-
-      {/* filter สำหรับเอฟเฟกต์ "หยดน้ำรวมตัว" (gooey) */}
-      <svg width="0" height="0" style={{ position: "absolute" }}>
-        <filter id="lg-goo">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
-          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
-        </filter>
-      </svg>
     </div>
   );
 }

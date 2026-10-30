@@ -10,6 +10,7 @@ import { useConfirm } from "../../context/ConfirmContext";
 import { useToast } from "../../context/ToastContext";
 import Icon from "../../components/Icon";
 import { addLog, LOG_TYPES } from "../../utils/logger";
+import { thumb } from "../../utils/imageUrl";
 
 const convertToEmbedURL = (videoId) => {
   if (!videoId || videoId.length === 0) return null;
@@ -228,7 +229,7 @@ export default function ProductDetail() {
                 <div className={styles.slideshow}>
                   <div className={styles.slideshowTrack} style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
                     {images.map((image, index) => (
-                      <img key={index} src={image} alt={`${product.itemsname} - ${index + 1}`} className={styles.slideImage} loading={index === 0 ? "eager" : "lazy"} />
+                      <img key={index} src={thumb(image, 1200)} alt={`${product.itemsname} - ${index + 1}`} className={styles.slideImage} loading={index === 0 ? "eager" : "lazy"} decoding="async" />
                     ))}
                   </div>
                   {images.length > 1 && (
@@ -352,7 +353,7 @@ export default function ProductDetail() {
               </div>
             )}
             {activeTab === "screenshots" && (
-              <div className={styles.galleryGrid}>{images.map((img, i) => <img key={i} src={img} alt={`Screenshot ${i + 1}`} className={styles.galleryImage} loading="lazy" onClick={() => setLightboxImage(img)} />)}</div>
+              <div className={styles.galleryGrid}>{images.map((img, i) => <img key={i} src={thumb(img)} alt={`Screenshot ${i + 1}`} className={styles.galleryImage} loading="lazy" decoding="async" onClick={() => setLightboxImage(img)} />)}</div>
             )}
           </div>
         </div>
@@ -369,7 +370,7 @@ export default function ProductDetail() {
                     <Link key={recProduct._id} href={`/products/${recProduct._id}`} className={styles.recommendedCard}>
                       {isNew && <span className={styles.recommendedNewBadge}><Icon name="new" size="0.6rem" /> NEW</span>}
                       {isOwned && <div className={styles.recommendedOwnedBadge}><Icon name="check" size="0.7rem" /> IN LIBRARY</div>}
-                      <div className={styles.recommendedImageWrapper}><img src={recProduct.itemsimage} alt={recProduct.itemsname} loading="lazy" /></div>
+                      <div className={styles.recommendedImageWrapper}><img src={thumb(recProduct.itemsimage)} alt={recProduct.itemsname} loading="lazy" decoding="async" /></div>
                       <div className={styles.recommendedInfo}>
                         <h3 className={styles.recommendedName}>{recProduct.itemsname}</h3>
                         <p className={styles.recommendedTitle}>{recProduct.itemstitle}</p>

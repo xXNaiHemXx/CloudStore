@@ -6,6 +6,7 @@ import Layout from "../components/Layout";
 import styles from "../styles/Shop.module.css";
 import { useUser } from "../context/UserContext";
 import Icon from "../components/Icon";
+import { thumb } from "../utils/imageUrl";
 
 export default function Shop() {
   const { data: session } = useSession();
@@ -170,9 +171,10 @@ export default function Shop() {
 
                     <div className={styles.cardImage}>
                       <img
-                        src={product.itemsimage}
+                        src={thumb(product.itemsimage)}
                         alt={product.itemsname}
                         loading="lazy"
+                        decoding="async"
                       />
                     </div>
 
