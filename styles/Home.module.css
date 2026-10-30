@@ -1261,12 +1261,18 @@
   border: 1px solid var(--lg-edge);
   box-shadow: var(--lg-shadow);
   border-radius: var(--lg-radius);
+  /* กะพริบด้วย opacity (GPU ทำให้) แทนการเลื่อน background-position
+     ที่ต้องวาดหน้าใหม่ทั้งหน้าทุกเฟรมระหว่างรอโหลดสินค้า */
+  animation: lg-skeleton 1.4s ease-in-out infinite alternate;
 }
 
 .skeletonImage, .skeletonText, .skeletonTitle, .skeletonPrice, .skeletonLine, .skeletonLineShort, .skeletonName, .skeletonPill, .skeletonStat {
-  background: linear-gradient(100deg, rgba(255, 255, 255, 0.04) 20%, rgba(255, 255, 255, 0.12) 40%, rgba(255, 255, 255, 0.04) 60%);
-  background-size: 200% 100%;
-  animation: lg-shimmer 1.6s linear infinite;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+@keyframes lg-skeleton {
+  from { opacity: 0.45; }
+  to { opacity: 0.9; }
 }
 
 .scrollMouse {

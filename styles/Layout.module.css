@@ -21,45 +21,46 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  padding: 14px 16px 0;
-  transition: transform 0.55s var(--ease-out), padding 0.45s var(--ease-out);
+  padding: 12px 16px 0;
+  transition: transform 0.55s var(--ease-out);
   pointer-events: none;
 }
 
+/* ตอนเลื่อน header ไม่เปลี่ยนขนาด (width/height/padding ทำให้ต้องคำนวณ layout + วาดใหม่ทุกเฟรม)
+   แต่ให้ "แคปซูลแก้ว" ใน ::before ค่อยๆ โผล่ด้วย opacity + transform ซึ่ง GPU ทำให้ */
 .headerWrap {
   pointer-events: auto;
   position: relative;
-  max-width: 1200px;
+  max-width: 1120px;
   margin: 0 auto;
-  height: 64px;
+  height: 60px;
   padding: 0 10px 0 16px;
   display: flex;
   align-items: center;
   gap: 1rem;
-  border-radius: 22px;
-  border: 1px solid transparent;
-  transition:
-    max-width 0.55s var(--ease-out),
-    height 0.45s var(--ease-out),
-    background 0.45s var(--ease-out),
-    border-color 0.45s,
-    box-shadow 0.45s,
-    border-radius 0.45s var(--ease-out);
+  isolation: isolate;
 }
 
-.headerScrolled {
-  padding-top: 10px;
-}
-
-.headerScrolled .headerWrap {
-  max-width: 1080px;
-  height: 58px;
+.headerWrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
   border-radius: 999px;
   background: var(--lg-fill-dark);
   backdrop-filter: var(--lg-blur-heavy);
   -webkit-backdrop-filter: var(--lg-blur-heavy);
-  border-color: var(--lg-edge);
+  border: 1px solid var(--lg-edge);
   box-shadow: var(--lg-shadow);
+  opacity: 0;
+  transform: scale(1.03, 1.12);
+  transition: opacity 0.4s var(--ease-out), transform 0.5s var(--ease-out);
+  pointer-events: none;
+}
+
+.headerScrolled .headerWrap::before {
+  opacity: 1;
+  transform: none;
 }
 
 .headerHidden {
@@ -143,6 +144,10 @@
     width 0.55s var(--ease-spring),
     opacity 0.3s;
   pointer-events: none;
+}
+
+.navIndicator[data-instant] {
+  transition: opacity 0.3s;
 }
 
 .navLink {

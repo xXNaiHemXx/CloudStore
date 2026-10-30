@@ -22,6 +22,8 @@ export default function Layout({ children }) {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 });
+  // วางตำแหน่งแรกแบบไม่มี transition (ไม่งั้น width จะ animate ตอนโหลดหน้า = layout + วาดใหม่ทุกเฟรม)
+  const [indicatorInstant, setIndicatorInstant] = useState(true);
   const navRef = useRef(null);
 
   const activeHref = NAV.find((n) => n.href === router.pathname)?.href
@@ -77,9 +79,13 @@ export default function Layout({ children }) {
 
   useIsoLayoutEffect(() => {
     resetIndicator();
+    const frame = requestAnimationFrame(() => setIndicatorInstant(false));
     window.addEventListener("resize", resetIndicator);
-    return () => window.removeEventListener("resize", resetIndicator);
-  }, [activeHref, scrolled]);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", resetIndicator);
+    };
+  }, [activeHref]);
 
   return (
     <>
@@ -103,6 +109,7 @@ export default function Layout({ children }) {
             <nav className={styles.navLinks} ref={navRef} onMouseLeave={resetIndicator}>
               <span
                 className={styles.navIndicator}
+                data-instant={indicatorInstant || undefined}
                 style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width, opacity: indicator.opacity }}
               />
               {NAV.map((item) => (
