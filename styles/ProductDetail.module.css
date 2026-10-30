@@ -159,3 +159,242 @@
   .detailTab { padding: 0.65rem 1rem; font-size: 0.8rem; }
   .galleryGrid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ===== LIQUID GLASS v2 LAYER ===== (override ด้านบน — พื้นหลังมาจาก components/LiquidBackground) ===== */
+
+.pageContainer {
+  background: transparent;
+}
+
+.breadcrumb {
+  animation: lg-pop 0.7s var(--ease-out) backwards;
+}
+
+.mediaSection, .priceBox, .featureBox, .couponSection, .detailContent, .recommendedCard {
+  background: var(--lg-fill);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow);
+  border-radius: var(--lg-radius);
+}
+
+.mediaSection {
+  padding: 8px;
+  animation: lg-pop 0.9s var(--ease-out) 0.05s backwards;
+}
+
+.productSidebar {
+  animation: lg-pop 0.9s var(--ease-out) 0.15s backwards;
+}
+
+.slideshow, .videoWrapper {
+  border-radius: calc(var(--lg-radius) - 8px);
+  overflow: hidden;
+}
+
+.productName {
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.priceValue {
+  background: var(--accent-grad);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: lg-hue-flow 6s linear infinite;
+  font-weight: 800;
+}
+
+.buyButton {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 48%),
+    linear-gradient(120deg, #3fb8ff, #7c8cff 45%, #b46cff 80%, #ff6fb5);
+  background-size: 100% 100%, 220% 100%;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -6px 14px rgba(40, 20, 120, 0.35),
+    0 14px 34px -12px rgba(124, 140, 255, 0.95);
+  transition: background-position 0.8s var(--ease-out), box-shadow 0.4s var(--ease-out), transform 0.4s var(--ease-spring);
+  border-radius: 18px;
+}
+
+.buyButton:hover:not(:disabled) {
+  background-position: 0 0, 100% 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -6px 14px rgba(40, 20, 120, 0.3),
+    0 18px 44px -12px rgba(180, 108, 255, 1);
+}
+
+.buyButton:disabled {
+  filter: grayscale(0.7) brightness(0.8);
+  box-shadow: none;
+}
+
+.couponInput {
+  color: var(--ink);
+  background: rgba(5, 8, 20, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+  border-radius: 14px;
+}
+
+.couponInput:focus {
+  outline: none;
+  background: rgba(10, 14, 32, 0.6);
+  border-color: rgba(124, 140, 255, 0.65);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(124, 140, 255, 0.18), 0 0 24px -4px rgba(57, 213, 255, 0.45);
+}
+
+.couponApplyBtn {
+  position: relative;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--lg-fill);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow);
+  transition: background 0.35s, border-color 0.35s, box-shadow 0.35s, transform 0.4s var(--ease-spring);
+  border-radius: 14px;
+}
+
+.couponApplyBtn:hover:not(:disabled) {
+  background: var(--lg-fill-strong);
+  border-color: var(--lg-edge-strong);
+  box-shadow: var(--lg-shadow-hover);
+}
+
+.couponApplied {
+  background: linear-gradient(150deg, rgba(52, 227, 164, 0.18), rgba(52, 227, 164, 0.05));
+  border: 1px solid rgba(52, 227, 164, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: lg-pop 0.5s var(--ease-spring) backwards;
+}
+
+.slideNavBtn, .lightboxClose {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 18px -8px rgba(0, 0, 0, 0.6);
+  transition: transform 0.4s var(--ease-spring), background 0.3s;
+}
+
+.slideNavBtn:hover, .lightboxClose:hover {
+  transform: scale(1.12);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.dot {
+  background: rgba(255, 255, 255, 0.3);
+  transition: width 0.45s var(--ease-spring), background 0.3s;
+}
+
+.dotActive {
+  background: var(--accent-grad);
+  box-shadow: 0 0 10px rgba(124, 140, 255, 0.9);
+}
+
+.detailTabs {
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.35);
+  width: fit-content;
+  max-width: 100%;
+}
+
+.detailTab {
+  border-radius: 999px;
+  transition: color 0.3s, background 0.4s var(--ease-out), box-shadow 0.4s;
+}
+
+.detailTabActive {
+  color: #fff;
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 18px -8px rgba(124, 140, 255, 0.9);
+}
+
+.detailTabActive::after {
+  display: none;
+}
+
+.detailContent {
+  animation: lg-pop 0.6s var(--ease-out) backwards;
+}
+
+.galleryImage {
+  border-radius: 14px;
+  transition: transform 0.5s var(--ease-spring), box-shadow 0.4s;
+}
+
+.galleryImage:hover {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 16px 30px -12px rgba(124, 140, 255, 0.7);
+}
+
+.lightbox {
+  background: rgba(5, 6, 13, 0.55);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  animation: lg-pop 0.35s var(--ease-out) backwards;
+}
+
+.lightboxImage {
+  border-radius: 18px;
+  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.9);
+  animation: lg-pop 0.5s var(--ease-spring) backwards;
+}
+
+.recommendedCard:hover {
+  background: var(--lg-fill-strong);
+  border-color: var(--lg-edge-strong);
+  box-shadow: var(--lg-shadow-hover);
+}
+
+.recommendedImageWrapper {
+  border-radius: calc(var(--lg-radius) - 6px);
+  margin: 6px 6px 0;
+  overflow: hidden;
+}
+
+.recommendedImageWrapper img {
+  transition: transform 0.9s var(--ease-out), filter 0.9s var(--ease-out);
+}
+
+.recommendedPrice {
+  background: var(--accent-grad);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: lg-hue-flow 6s linear infinite;
+  font-weight: 800;
+}
+
+.recommendedNewBadge, .recommendedOwnedBadge, .productCategory {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 18px -8px rgba(0, 0, 0, 0.6);
+}
+
+.loadingSpinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: var(--accent-3);
+  box-shadow: 0 0 24px rgba(57, 213, 255, 0.4);
+}
+

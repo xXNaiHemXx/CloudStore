@@ -1,8 +1,9 @@
 import formidable from "formidable";
 import fs from "fs";
 import path from "path";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]";
+import { requireAdmin } from "@/utils/checkAdmin";
+import { sameOrigin } from "@/utils/apiGuard";
+import { isBlockedUpload } from "@/utils/uploadPolicy";
 
 export const config = {
   api: {
@@ -19,14 +20,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const session = await getServerSession(req, res, authOptions);
-  if (!session) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+  if (!sameOrigin(req, res)) return;
 
-  const adminIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
-  if (!adminIds.includes(session.user.id)) {
-    return res.status(403).json({ error: "Admin only" });
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) {
+    return res.status(auth.status).json({ error: auth.error });
   }
 
   try {
@@ -45,7 +43,8 @@ export default async function handler(req, res) {
       //  เพิ่ม timeout ให้ formidable
       timeout: 30 * 60 * 1000, // 30 minutes
       filename: (name, ext, part, form) => {
-        return part.originalFilename || "file";
+        // ชื่อไฟล์ชั่วคราวสุ่มเอง ห้ามใช้ชื่อจาก client ตรงๆ (กัน path traversal เช่น ../../pages/x.js)
+        return `tmp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       },
     });
 
@@ -84,7 +83,11 @@ export default async function handler(req, res) {
       });
     }
 
-    const originalName = file.originalFilename || path.basename(file.filepath);
+    const originalName = path.basename(file.originalFilename || "file").replace(/[^\w.\-ก-๙ ]/g, "_");
+    if (isBlockedUpload(originalName)) {
+      try { fs.unlinkSync(file.filepath); } catch (e) {}
+      return res.status(400).json({ error: "ไม่อนุญาตไฟล์ประเภทนี้" });
+    }
     const finalFileName = originalName;
     const finalFilePath = path.join(uploadDir, finalFileName);
     const finalFileUrl = `/uploads/${finalFileName}`;

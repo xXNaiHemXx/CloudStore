@@ -4,7 +4,7 @@ import Admin from "../models/Admin";
 async function initAdmin() {
   await connectToDB();
 
-  const headIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
+  const headIds = (process.env.ADMIN_DISCORD_IDS || process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS || "").split(",").filter(Boolean);
 
   for (const discordId of headIds) {
     const exists = await Admin.findOne({ discordId: discordId.trim() });

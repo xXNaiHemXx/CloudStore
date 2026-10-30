@@ -13,17 +13,17 @@ export const authOptions = {
         }),
     ],
     secret: process.env.NEXTAUTH_SECRET,
+    // session หมดอายุใน 7 วัน (เดิม 30 วัน) และต่ออายุทุก 12 ชม. ที่มีการใช้งาน
+    session: {
+        strategy: "jwt",
+        maxAge: 7 * 24 * 60 * 60,
+        updateAge: 12 * 60 * 60,
+    },
     pages: {
         signIn: "/",
     },
     callbacks: {
        async session({ session, token }) {
-        console.log("========================================");
-        console.log("🔍 SESSION CALLBACK");
-        console.log("📌 Token sub:", token.sub);
-        console.log("📌 Session user:", session.user);
-        console.log("========================================");
-        
         session.user.id = token.sub;
         session.user.discordId = token.sub;
 
@@ -42,12 +42,6 @@ export const authOptions = {
             return session;
         },
         async signIn({ user, account, profile }) {
-            console.log("========================================");
-            console.log("🔍 SIGN IN CALLBACK");
-            console.log("📌 User ID:", user.id);
-            console.log("📌 User Name:", user.name);
-            console.log("📌 Account Provider:", account.provider);
-            console.log("========================================");
             const client = await clientPromise;
             const db = client.db("CloudStore");
             const usersCollection = db.collection("users");

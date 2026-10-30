@@ -2,11 +2,14 @@ import { connectToDB } from "@/utils/db";
 import User from "@/models/User";
 import Item from "@/models/items";
 import { requireAdmin } from "@/utils/checkAdmin";
+import { sameOrigin } from "@/utils/apiGuard";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  if (!sameOrigin(req, res)) return;
 
   const auth = await requireAdmin(req, res);
   if (!auth.isAdmin) {

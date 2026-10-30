@@ -153,6 +153,7 @@ export default function Icon({ name, size = "1rem", color = "currentColor", clas
     "status-away": "fi-rr-circle",       // 🟡 ไม่ว่าง
     
     // การนำทาง
+    "help": "fi-rr-interrogation",
     "home": "fi-rr-home",                // 🏠 หน้าหลัก
     "back": "fi-rr-arrow-left",          // ⬅️ กลับ
     "next": "fi-rr-arrow-right",         // ➡️ ถัดไป

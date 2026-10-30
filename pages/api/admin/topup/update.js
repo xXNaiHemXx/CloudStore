@@ -2,12 +2,15 @@ import { connectToDB } from "@/utils/db";
 import Topup from "@/models/Topup";
 import User from "@/models/User";
 import { requireAdmin } from "@/utils/checkAdmin";
+import { sameOrigin } from "@/utils/apiGuard";
 
 export default async function handler(req, res) {
 
   if (req.method !== "PUT") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  if (!sameOrigin(req, res)) return;
 
   const auth = await requireAdmin(req, res);
   if (!auth.isAdmin) {
@@ -17,7 +20,8 @@ export default async function handler(req, res) {
   try {
     await connectToDB();
 
-    const { topupId, status, approvedBy } = req.body;
+    const { topupId, status } = req.body || {};
+    const approvedBy = auth.userId;
 
     if (!topupId || !status) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -26,6 +30,14 @@ export default async function handler(req, res) {
     const topup = await Topup.findById(topupId);
     if (!topup) {
       return res.status(404).json({ error: "Topup not found" });
+    }
+
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
+    // กันอนุมัติซ้ำ (เดิมกด approve ซ้ำได้แต้มซ้ำ)
+    if (topup.status === "approved") {
+      return res.status(409).json({ error: "รายการนี้อนุมัติไปแล้ว" });
     }
 
     topup.status = status;

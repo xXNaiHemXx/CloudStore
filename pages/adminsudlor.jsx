@@ -813,7 +813,7 @@ function VersionUpdateModal({ product, onClose, onUpdated }) {
 }
 
 // ==================== MAIN ADMIN PAGE ====================
-export default function Admin() {
+export default function Admin({ serverAdminRole = null }) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { userPoints, refreshPoints } = useUser();
@@ -988,26 +988,12 @@ useEffect(() => {
     return;
   }
 
-  // ✅ ใช้เฉพาะ Environment Variable เท่านั้น (ไม่เรียก API)
-  const envAdminIds = (process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS || "")
-    .split(",")
-    .map(id => id.trim())
-    .filter(Boolean);
-  
-  console.log("📌 [Client] รายชื่อ Admin จาก .env:", envAdminIds);
-  
-  if (envAdminIds.includes(session.user.id)) {
-    console.log("✅ [Client] เข้าสู่ระบบ Admin สำเร็จ");
-    setIsAdmin(true);
-    setAdminRole("admin");
-  } else {
-    console.log("❌ [Client] ไม่มีสิทธิ์เข้า Admin");
-    setIsAdmin(false);
-    setAdminRole(null);
-  }
+  // ✅ สิทธิ์ถูกตรวจแล้วฝั่งเซิร์ฟเวอร์ใน getServerSideProps (คนที่ไม่ใช่แอดมินจะได้ 404 ตั้งแต่แรก)
+  setIsAdmin(!!serverAdminRole);
+  setAdminRole(serverAdminRole);
   setLoading(false);
   
-}, [session, status, isMounted]);
+}, [session, status, isMounted, serverAdminRole]);
 
   // ==================== FETCH FUNCTIONS ====================
   const fetchItems = async () => { 
@@ -1373,7 +1359,7 @@ useEffect(() => {
     });
     if (!confirmed) return;
     try {
-      await axios.put("/api/admin/admins", { id: admin._id, role: newRole, headId: session.user.id });
+      await axios.put("/api/admin/admins", { id: admin._id, role: newRole });
       success("เปลี่ยน Role สำเร็จ!");
       fetchAdmins();
     } catch (err) { error(err.response?.data?.error || "เปลี่ยนไม่สำเร็จ"); }
@@ -1389,7 +1375,7 @@ useEffect(() => {
     });
     if (!confirmed) return;
     try {
-      await axios.delete(`/api/admin/admins?id=${adminId}&headId=${session.user.id}`);
+      await axios.delete(`/api/admin/admins?id=${adminId}`);
       success("ลบ Admin สำเร็จ!");
       fetchAdmins();
     } catch (err) { error(err.response?.data?.error || "ลบไม่สำเร็จ"); }
@@ -1399,7 +1385,7 @@ useEffect(() => {
     e.preventDefault();
     if (!adminForm.discordId) { error("กรุณากรอก Discord ID"); return; }
     try {
-      await axios.post("/api/admin/admins", { ...adminForm, headId: session.user.id, addedBy: session.user.name });
+      await axios.post("/api/admin/admins", adminForm);
       success("เพิ่ม Admin สำเร็จ!");
       setShowAdminModal(false);
       setAdminForm({ discordId: '', name: '', role: 'admin' });
@@ -3352,4 +3338,26 @@ useEffect(() => {
       </div>
     </div>
   );
+}
+
+// ==================== SERVER-SIDE GATE ====================
+// ตรวจสิทธิ์ก่อนส่งหน้าใดๆ ออกไป: ไม่ล็อกอิน / ไม่ใช่แอดมิน → 404 (ไม่บอกด้วยซ้ำว่ามีหน้านี้)
+export async function getServerSideProps({ req, res }) {
+  const { getServerSession } = await import("next-auth/next");
+  const { authOptions } = await import("./api/auth/[...nextauth]");
+  const { getAdminRole } = await import("../utils/checkAdmin");
+
+  const session = await getServerSession(req, res, authOptions);
+  const role = session?.user?.id ? await getAdminRole(String(session.user.id)) : null;
+
+  if (!role) {
+    if (session?.user?.id) {
+      console.warn(`🚫 [ADMIN PAGE DENIED] ${session.user.id} (${session.user.name})`);
+    }
+    return { notFound: true };
+  }
+
+  res.setHeader("Cache-Control", "private, no-store");
+  res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  return { props: { serverAdminRole: role } };
 }

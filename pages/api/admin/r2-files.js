@@ -1,5 +1,6 @@
 import { S3Client, ListObjectsV2Command, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { requireAdmin } from "@/utils/checkAdmin";
+import { sameOrigin } from "@/utils/apiGuard";
 
 const R2 = new S3Client({
   region: "auto",
@@ -11,6 +12,8 @@ const R2 = new S3Client({
 });
 
 export default async function handler(req, res) {
+  if (!sameOrigin(req, res)) return;
+
   const auth = await requireAdmin(req, res);
   if (!auth.isAdmin) {
     return res.status(auth.status).json({ error: auth.error });

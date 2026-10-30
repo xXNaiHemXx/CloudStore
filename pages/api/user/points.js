@@ -1,42 +1,52 @@
 import { connectToDB } from "../../../utils/db";
 import User from "../../../models/User";
+import { requireAdmin } from "@/utils/checkAdmin";
+import { sameOrigin, isDiscordId, serverError } from "@/utils/apiGuard";
+import { writeLogDirect } from "@/utils/serverLogWriter";
 
+// ⚠️ เดิม endpoint นี้ไม่มีการตรวจสิทธิ์เลย ใครก็ยิง PUT ตั้งแต้มให้ใครก็ได้
+// ตอนนี้แก้แต้มได้เฉพาะแอดมิน และบันทึกทุกครั้งว่าใครแก้
 export default async function handler(req, res) {
-  //  必须是 PUT 方法
   if (req.method !== "PUT") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+  if (!sameOrigin(req, res)) return;
+
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) {
+    return res.status(auth.status).json({ error: auth.error });
   }
 
   try {
     await connectToDB();
-    
-    const { userId, points } = req.body;
 
-    console.log("📌 Update points request:", { userId, points });
+    const { userId, points } = req.body || {};
+    const newPoints = Number(points);
 
-    if (!userId || points === undefined) {
-      return res.status(400).json({ error: "Missing userId or points" });
+    if (!isDiscordId(String(userId)) || !Number.isFinite(newPoints) || newPoints < 0 || newPoints > 10_000_000) {
+      return res.status(400).json({ error: "ข้อมูลไม่ถูกต้อง" });
     }
 
-    // 查找用户
-    const user = await User.findOne({ discordId: userId });
+    const user = await User.findOne({ discordId: String(userId) });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
     const oldPoints = user.points;
-    user.points = Number(points);
+    user.points = Math.floor(newPoints);
     await user.save();
 
-    console.log(`✅ Updated points for ${user.name}: ${oldPoints} -> ${user.points}`);
+    console.warn(`💎 [POINTS EDIT] ${user.discordId}: ${oldPoints} -> ${user.points} by admin ${auth.userId}`);
+    await writeLogDirect("user_edit", "แก้ไขแต้ม", `${auth.session.user.name} แก้แต้ม ${user.name}: ${oldPoints} → ${user.points}`, auth.session.user.name, {
+      discordId: user.discordId, oldPoints, newPoints: user.points, by: auth.userId,
+    }).catch(() => {});
 
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
       message: "Points updated successfully",
-      points: user.points 
+      points: user.points
     });
   } catch (error) {
-    console.error("Error updating points:", error);
-    return res.status(500).json({ error: "Failed to update points: " + error.message });
+    return serverError(res, error, "user/points");
   }
 }

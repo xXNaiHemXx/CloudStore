@@ -1,7 +1,32 @@
 import { connectToDB } from "../../utils/db";
 import Item from "../../models/items";
+import { requireAdmin, getSessionUserId, getAdminRole } from "@/utils/checkAdmin";
+import { sameOrigin, isObjectId } from "@/utils/apiGuard";
+
+// ซ่อนลิงก์ไฟล์ที่ต้องซื้อก่อนจากคนทั่วไป (เดิม GET /api/items ส่ง itemsfile ให้ทุกคนโหลดฟรีได้)
+function toPublic(item) {
+  const obj = item.toObject ? item.toObject() : { ...item };
+  delete obj.itemsfile;
+  if (Array.isArray(obj.versionHistory)) {
+    obj.versionHistory = obj.versionHistory.map(({ fileUrl, ...rest }) => rest);
+  }
+  return obj;
+}
 
 export default async function handler(req, res) {
+  if (!sameOrigin(req, res)) return;
+
+  // GET เปิดให้ทุกคน (ข้อมูลหน้าร้าน), เปลี่ยนแปลงข้อมูลได้เฉพาะแอดมิน
+  let isAdmin = false;
+  if (req.method === "GET") {
+    const { userId } = await getSessionUserId(req, res);
+    isAdmin = !!(userId && (await getAdminRole(userId)));
+  } else {
+    const auth = await requireAdmin(req, res);
+    if (!auth.isAdmin) return res.status(auth.status).json({ error: auth.error });
+    isAdmin = true;
+  }
+
   await connectToDB();
 
   switch (req.method) {
@@ -9,12 +34,13 @@ export default async function handler(req, res) {
       try {
         const { id } = req.query;
         if (id) {
+          if (!isObjectId(id)) return res.status(400).json({ error: "Invalid id" });
           const item = await Item.findById(id);
           if (!item) return res.status(404).json({ error: "Item not found" });
-          return res.status(200).json(item);
+          return res.status(200).json(isAdmin ? item : toPublic(item));
         }
         const items = await Item.find({});
-        res.status(200).json(items);
+        res.status(200).json(isAdmin ? items : items.map(toPublic));
       } catch (error) {
         console.error("Error fetching items:", error);
         res.status(500).json({ error: "Failed to fetch items" });
@@ -23,7 +49,6 @@ export default async function handler(req, res) {
 
     case "POST":
       try {
-        console.log("✅ Received Data from Frontend:", req.body);
 
         const { 
           itemsname, itemsprice, itemsimage, itemsimages, 
@@ -69,7 +94,6 @@ export default async function handler(req, res) {
         });
 
         await newItem.save();
-        console.log("✅ Saved Item to MongoDB:", newItem);
 
         res.status(201).json(newItem);
       } catch (error) {
@@ -86,7 +110,7 @@ export default async function handler(req, res) {
           itemsversion, discordRoleIds, currentVersion  //  เพิ่ม currentVersion
         } = req.body;
         
-        if (!id) return res.status(400).json({ error: "Missing item ID" });
+        if (!isObjectId(id)) return res.status(400).json({ error: "Missing item ID" });
 
         //  แปลง discordRoleIds ให้เป็น Array ของ String
         let formattedRoleIds = [];
@@ -124,7 +148,7 @@ export default async function handler(req, res) {
     case "DELETE":
       try {
         const { id } = req.query;
-        if (!id) return res.status(400).json({ error: "Missing item ID" });
+        if (!isObjectId(id)) return res.status(400).json({ error: "Missing item ID" });
 
         const deletedItem = await Item.findByIdAndDelete(id);
         if (!deletedItem) return res.status(404).json({ error: "Item not found" });

@@ -1,7 +1,11 @@
 import { connectToDB } from "../../../utils/db";
 import User from "@/models/User";
+import { requireAdmin } from "@/utils/checkAdmin";
 
 export default async function handler(req, res) {
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) return res.status(auth.status).json({ error: auth.error });
+
   await connectToDB();
 
   if (req.method === "GET") {

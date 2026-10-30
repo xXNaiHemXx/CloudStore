@@ -1,7 +1,12 @@
 import fs from "fs";
 import path from "path";
 
+import { requireAdmin } from "@/utils/checkAdmin";
+
 export default async function handler(req, res) {
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) return res.status(auth.status).json({ error: auth.error });
+
   const uploadDir = path.join(process.cwd(), "public/uploads");
 
   try {

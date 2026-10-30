@@ -1,5 +1,6 @@
 import { connectToDB } from "../../../utils/db";
 import Item from "../../../models/items";
+import { isObjectId } from "@/utils/apiGuard";
 
 export default async function handler(req, res) {
   await connectToDB();
@@ -10,8 +11,10 @@ export default async function handler(req, res) {
 
   const { id } = req.query;
 
+  if (!isObjectId(id)) return res.status(400).json({ error: "ไม่พบสินค้า" });
+
   try {
-    const item = await Item.findById(id);
+    const item = await Item.findById(id).select("-itemsfile -versionHistory.fileUrl");
     
     if (!item) {
       return res.status(404).json({ error: "ไม่พบสินค้า" });

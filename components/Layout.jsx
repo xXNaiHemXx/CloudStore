@@ -1,34 +1,73 @@
 import Link from "next/link";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import Head from "next/head";
 import styles from "../styles/Layout.module.css";
 import Icon from "./Icon";
+
+const NAV = [
+  { href: "/", label: "Main", icon: "home" },
+  { href: "/shop", label: "Products", icon: "product" },
+  { href: "/legal", label: "Terms & Privacy", icon: "file" },
+  { href: "/support", label: "Support", icon: "help" },
+];
+
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export default function Layout({ children }) {
   const { data: session } = useSession();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 });
+  const navRef = useRef(null);
 
-  const isActive = (path) => {
-    return router.pathname === path;
-  };
+  const activeHref = NAV.find((n) => n.href === router.pathname)?.href
+    ?? (router.pathname.startsWith("/products") ? "/shop" : null);
 
-  // Detect scroll for glass effect
+  // header หดเป็นแคปซูลเมื่อเลื่อน และซ่อนตอนเลื่อนลงเร็วๆ
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 12);
+      setHidden(y > 240 && y > lastY + 4);
+      if (y < lastY - 4) setHidden(false);
+      lastY = y;
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [router.pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileMenuOpen]);
+
+  // หยดแก้วที่ไหลไปอยู่ใต้เมนูที่ active / ที่ hover
+  const moveIndicatorTo = (el) => {
+    if (!el || !navRef.current) return setIndicator((p) => ({ ...p, opacity: 0 }));
+    const nav = navRef.current.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    setIndicator({ left: r.left - nav.left, width: r.width, opacity: 1 });
+  };
+
+  const resetIndicator = () => {
+    moveIndicatorTo(navRef.current?.querySelector(`[data-active="true"]`));
+  };
+
+  useIsoLayoutEffect(() => {
+    resetIndicator();
+    window.addEventListener("resize", resetIndicator);
+    return () => window.removeEventListener("resize", resetIndicator);
+  }, [activeHref, scrolled]);
 
   return (
     <>
@@ -38,55 +77,39 @@ export default function Layout({ children }) {
       </Head>
 
       <div className={styles.layout}>
-        
-        {/* ===== HEADER - Liquid Glass ===== */}
-        <header className={`${styles.header} ${scrolled ? styles.headerScrolled : ''}`}>
+        <header className={`${styles.header} ${scrolled ? styles.headerScrolled : ""} ${hidden && !mobileMenuOpen ? styles.headerHidden : ""}`}>
           <div className={styles.headerWrap}>
-            
-            {/* Logo/Brand */}
             <Link href="/" className={styles.brand}>
               <div className={styles.brandIcon}>
-                <img 
-                  src="/logo.png" 
-                  alt="xCloud" 
-                  className={styles.brandLogo}
-                  onError={(e) => {
-                    e.target.src = '/favicon.ico';
-                  }}
-                />
+                <img src="/favicon.ico" alt="xCloud" className={styles.brandLogo} />
               </div>
               <span className={styles.brandName}>
                 xCloud <span>Studio</span>
               </span>
             </Link>
 
-            {/* Navigation - Desktop */}
-            <nav className={styles.navLinks}>
-              <Link 
-                href="/" 
-                className={`${styles.navLink} ${isActive('/') ? styles.navLinkActive : ''}`}
-              >
-                <Icon name="home" size="0.9rem" />
-                <span>Main</span>
-              </Link>
-              <Link 
-                href="/shop" 
-                className={`${styles.navLink} ${isActive('/shop') ? styles.navLinkActive : ''}`}
-              >
-                <Icon name="product" size="0.9rem" />
-                <span>Products</span>
-              </Link>
-              <Link 
-                href="/legal" 
-                className={`${styles.navLink} ${isActive('/legal') ? styles.navLinkActive : ''}`}
-              >
-                <Icon name="file" size="0.9rem" />
-                <span>Terms &amp; Privacy</span>
-              </Link>
-              <a 
-                href="https://discord.gg/ntGypaUBNG" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+            <nav className={styles.navLinks} ref={navRef} onMouseLeave={resetIndicator}>
+              <span
+                className={styles.navIndicator}
+                style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width, opacity: indicator.opacity }}
+              />
+              {NAV.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  data-active={activeHref === item.href}
+                  onMouseEnter={(e) => moveIndicatorTo(e.currentTarget)}
+                  className={`${styles.navLink} ${activeHref === item.href ? styles.navLinkActive : ""}`}
+                >
+                  <Icon name={item.icon} size="0.9rem" />
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+              <a
+                href="https://discord.gg/ntGypaUBNG"
+                target="_blank"
+                rel="noopener noreferrer"
+                onMouseEnter={(e) => moveIndicatorTo(e.currentTarget)}
                 className={`${styles.navLink} ${styles.navLinkDiscord}`}
               >
                 <Icon name="discord" size="0.9rem" color="#818cf8" />
@@ -94,108 +117,91 @@ export default function Layout({ children }) {
               </a>
             </nav>
 
-            {/* CTA */}
             <div className={styles.navCta}>
               {session ? (
                 <Link href="/profile" className={styles.userBtn}>
-                  <img 
-                    src={session.user.image} 
-                    alt={session.user.name} 
-                    className={styles.userAvatar}
-                    onError={(e) => {
-                      e.target.src = '/images/default-avatar.png';
-                    }}
-                  />
+                  <span className={styles.userAvatarRing}>
+                    <img
+                      src={session.user.image}
+                      alt={session.user.name}
+                      className={styles.userAvatar}
+                      onError={(e) => { e.target.src = "/images/profile.png"; }}
+                    />
+                  </span>
                   <span className={styles.userName}>{session.user.name}</span>
                 </Link>
               ) : (
                 <button onClick={() => signIn("discord")} className={styles.loginBtn}>
-                  <Icon name="login" size="0.9rem" />
+                  <Icon name="discord" size="0.95rem" />
                   <span>Login</span>
                 </button>
               )}
             </div>
 
-            {/* Mobile Menu Toggle - Glass */}
-            <button 
-              className={styles.mobileToggle} 
+            <button
+              className={`${styles.mobileToggle} ${mobileMenuOpen ? styles.mobileToggleOpen : ""}`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
+              aria-expanded={mobileMenuOpen}
             >
-              <span className={`${styles.mobileToggleBar} ${mobileMenuOpen ? styles.mobileToggleBarActive : ''}`} />
-              <span className={`${styles.mobileToggleBar} ${mobileMenuOpen ? styles.mobileToggleBarActive : ''}`} />
-              <span className={`${styles.mobileToggleBar} ${mobileMenuOpen ? styles.mobileToggleBarActive : ''}`} />
+              <span className={styles.mobileToggleBar} />
+              <span className={styles.mobileToggleBar} />
+              <span className={styles.mobileToggleBar} />
             </button>
-          </div>
-
-          {/* Mobile Menu Overlay - Glass */}
-          <div className={`${styles.mobileOverlay} ${mobileMenuOpen ? styles.mobileOverlayOpen : ''}`}>
-            <nav className={styles.mobileNav}>
-              <Link 
-                href="/" 
-                className={`${styles.mobileNavLink} ${isActive('/') ? styles.mobileNavLinkActive : ''}`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Icon name="home" size="1rem" />
-                <span>Main</span>
-              </Link>
-              <Link 
-                href="/shop" 
-                className={`${styles.mobileNavLink} ${isActive('/shop') ? styles.mobileNavLinkActive : ''}`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Icon name="product" size="1rem" />
-                <span>Products</span>
-              </Link>
-              <Link 
-                href="/legal" 
-                className={`${styles.mobileNavLink} ${isActive('/legal') ? styles.mobileNavLinkActive : ''}`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Icon name="file" size="1rem" />
-                <span>Terms &amp; Privacy</span>
-              </Link>
-              <a 
-                href="https://discord.gg/ntGypaUBNG" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className={styles.mobileNavLink}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Icon name="discord" size="1rem" color="#818cf8" />
-                <span>Discord</span>
-              </a>
-              {session ? (
-                <Link 
-                  href="/profile" 
-                  className={styles.mobileNavLink}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Icon name="user" size="1rem" />
-                  <span>Profile</span>
-                </Link>
-              ) : (
-                <button 
-                  onClick={() => { 
-                    signIn("discord"); 
-                    setMobileMenuOpen(false); 
-                  }} 
-                  className={styles.mobileLoginBtn}
-                >
-                  <Icon name="login" size="1rem" />
-                  <span>Login</span>
-                </button>
-              )}
-            </nav>
           </div>
         </header>
 
-        {/* Main Content */}
-        <main className={styles.main}>
-          {children}
-        </main>
+        {/* ===== Mobile sheet ===== */}
+        <div
+          className={`${styles.mobileOverlay} ${mobileMenuOpen ? styles.mobileOverlayOpen : ""}`}
+          onClick={() => setMobileMenuOpen(false)}
+        >
+          <nav className={styles.mobileNav} onClick={(e) => e.stopPropagation()}>
+            {NAV.map((item, i) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{ transitionDelay: mobileMenuOpen ? `${80 + i * 50}ms` : "0ms" }}
+                className={`${styles.mobileNavLink} ${activeHref === item.href ? styles.mobileNavLinkActive : ""}`}
+              >
+                <Icon name={item.icon} size="1rem" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+            <a
+              href="https://discord.gg/ntGypaUBNG"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ transitionDelay: mobileMenuOpen ? `${80 + NAV.length * 50}ms` : "0ms" }}
+              className={styles.mobileNavLink}
+            >
+              <Icon name="discord" size="1rem" color="#818cf8" />
+              <span>Discord</span>
+            </a>
+            {session ? (
+              <Link
+                href="/profile"
+                style={{ transitionDelay: mobileMenuOpen ? `${130 + NAV.length * 50}ms` : "0ms" }}
+                className={styles.mobileNavLink}
+              >
+                <Icon name="user" size="1rem" />
+                <span>Profile</span>
+              </Link>
+            ) : (
+              <button
+                onClick={() => { signIn("discord"); setMobileMenuOpen(false); }}
+                style={{ transitionDelay: mobileMenuOpen ? `${130 + NAV.length * 50}ms` : "0ms" }}
+                className={styles.mobileLoginBtn}
+              >
+                <Icon name="discord" size="1rem" />
+                <span>Login with Discord</span>
+              </button>
+            )}
+          </nav>
+        </div>
 
-        {/* ===== FOOTER - Liquid Glass ===== */}
+        <main className={styles.main}>{children}</main>
+
         <footer className={styles.footer}>
           <div className={styles.footerWrap}>
             <div className={styles.footerLeft}>
@@ -204,35 +210,17 @@ export default function Layout({ children }) {
                 <span className={styles.footerCopyTail}> All rights reserved.</span>
               </span>
             </div>
-            
+
             <div className={styles.footerCenter}>
               <div className={styles.footerSocials}>
-                <a 
-                  href="https://www.youtube.com/@hemgarage542" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  aria-label="YouTube"
-                  className={styles.footerSocialLink}
-                >
-                  <Icon name="youtube" size="1.2rem" color="#ff0000" />
+                <a href="https://www.youtube.com/@hemgarage542" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className={styles.footerSocialLink}>
+                  <Icon name="youtube" size="1.15rem" color="#ff4d4d" />
                 </a>
-                <a 
-                  href="https://discord.gg/ntGypaUBNG" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  aria-label="Discord"
-                  className={styles.footerSocialLink}
-                >
-                  <Icon name="discord" size="1.2rem" color="#818cf8" />
+                <a href="https://discord.gg/ntGypaUBNG" target="_blank" rel="noopener noreferrer" aria-label="Discord" className={styles.footerSocialLink}>
+                  <Icon name="discord" size="1.15rem" color="#818cf8" />
                 </a>
-                <a 
-                  href="https://github.com/xcloudstudio" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  aria-label="GitHub"
-                  className={styles.footerSocialLink}
-                >
-                  <Icon name="github" size="1.2rem" color="#6b7280" />
+                <a href="https://github.com/xcloudstudio" target="_blank" rel="noopener noreferrer" aria-label="GitHub" className={styles.footerSocialLink}>
+                  <Icon name="github" size="1.15rem" color="#cbd5e1" />
                 </a>
               </div>
             </div>
@@ -240,9 +228,9 @@ export default function Layout({ children }) {
             <div className={styles.footerRight}>
               <div className={styles.footerLinks}>
                 <Link href="/legal#terms" className={styles.footerLink}>Terms</Link>
-                <span className={styles.footerLinkDivider}>|</span>
+                <span className={styles.footerLinkDivider} />
                 <Link href="/legal#privacy" className={styles.footerLink}>Privacy</Link>
-                <span className={styles.footerLinkDivider}>|</span>
+                <span className={styles.footerLinkDivider} />
                 <Link href="/support" className={styles.footerLink}>Support</Link>
               </div>
             </div>

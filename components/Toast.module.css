@@ -159,3 +159,28 @@
     font-size: 0.8rem;
   }
 }
+
+/* ===== LIQUID GLASS v2 LAYER ===== (override ด้านบน — พื้นหลังมาจาก components/LiquidBackground) ===== */
+
+.toast {
+  background: var(--lg-fill-dark);
+  backdrop-filter: var(--lg-blur-heavy);
+  -webkit-backdrop-filter: var(--lg-blur-heavy);
+  border: 1px solid var(--lg-edge-strong);
+  border-radius: 18px;
+  box-shadow: var(--lg-shadow), 0 24px 60px -20px rgba(0, 0, 0, 0.9);
+}
+
+.toastProgress {
+  background: var(--accent-grad);
+  box-shadow: 0 0 10px rgba(124, 140, 255, 0.9);
+}
+
+.toastClose {
+  transition: transform 0.4s var(--ease-spring);
+}
+
+.toastClose:hover {
+  transform: rotate(90deg);
+}
+

@@ -1,6 +1,8 @@
 import { connectToDB } from "@/utils/db";
 import User from "@/models/User";
 import Item from "@/models/items";
+import { requireUser } from "@/utils/checkAdmin";
+import { sameOrigin } from "@/utils/apiGuard";
 
 export default async function handler(req, res) {
 
@@ -8,11 +10,16 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (!sameOrigin(req, res)) return;
+  const me = await requireUser(req, res);
+  if (!me) return;
+
   try {
 
     await connectToDB();
 
-    const { userId, productId } = req.body;
+    const userId = me.userId; // ใช้ session เท่านั้น
+    const { productId } = req.body || {};
 
     if (!userId || !productId) {
       return res.status(400).json({ error: "Missing userId or productId" });

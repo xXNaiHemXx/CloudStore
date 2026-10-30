@@ -119,51 +119,23 @@ const copyToClipboard = async (text) => {
     setRedeemStatus(null);
 
     try {
-      const receiverMobile = '0800451901';
-      const redeemResult = await redeemTrueWalletVoucher(extractedCode, receiverMobile);
-
-      if (redeemResult.status?.code !== 'SUCCESS') {
-        const errorMessages = {
-          'TARGET_USER_REDEEMED': 'คุณรับอังเปานี้ไปแล้ว',
-          'VOUCHER_OUT_OF_STOCK': 'มีคนรับอังเปานี้ไปแล้ว',
-          'VOUCHER_EXPIRED': 'อังเปาหมดอายุแล้ว',
-          'VOUCHER_NOT_FOUND': 'ไม่พบอังเปาในระบบ',
-          'CANNOT_GET_OWN_VOUCHER': 'ไม่สามารถรับอังเปาของตัวเองได้',
-          'TARGET_USER_NOT_FOUND': 'ไม่พบเบอร์ผู้รับในระบบ',
-        };
-        const errorMsg = errorMessages[redeemResult.status?.code] || redeemResult.status?.message || 'การรับเงินล้มเหลว';
-        error(`❌ ${errorMsg}`);
-        setRedeemStatus({ success: false, message: errorMsg });
-        setSubmitting(false);
-        return;
-      }
-
-      const redeemedAmount = redeemResult.data?.my_ticket?.amount_baht || '0';
-      
-      // ✅ เรียก API เพิ่มแต้ม (ใช้ endpoint ใหม่)
+      // ✅ เซิร์ฟเวอร์เป็นคนแลกอังเปาและคำนวณแต้มเอง ส่งไปแค่รหัสอังเปา
       const addPointsResponse = await fetch('/api/topup/add-points-wallet', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId: session.user.id,
-          userName: session.user.name,
-          amount: redeemedAmount,
-          voucherCode: extractedCode,
-          provider: 'truemoney-api'
-        })
+        body: JSON.stringify({ voucherCode: extractedCode })
       });
 
       const addPointsResult = await addPointsResponse.json();
 
       if (!addPointsResult.success) {
-        error(`⚠️ รับเงิน ${redeemedAmount} บาท แล้ว แต่ระบบเพิ่มแต้มไม่สำเร็จ: ${addPointsResult.message}`);
-        setRedeemStatus({ 
-          success: false, 
-          message: `รับเงิน ${redeemedAmount} บาท แล้ว แต่ระบบเพิ่มแต้มไม่สำเร็จ กรุณาแจ้งแอดมิน`
-        });
+        const errorMsg = addPointsResult.message || 'การรับเงินล้มเหลว';
+        error(`❌ ${errorMsg}`);
+        setRedeemStatus({ success: false, message: errorMsg });
       } else {
+        const redeemedAmount = addPointsResult.data?.amount ?? 0;
         // ✅ สำเร็จ
         success(`✅ รับเงินสำเร็จ! จำนวน ${redeemedAmount} บาท (เพิ่ม ${redeemedAmount} พ้อยท์)`);
         
@@ -237,8 +209,6 @@ const copyToClipboard = async (text) => {
         headers: { "Content-Type": "application/json" }, 
         body: JSON.stringify({ 
           fileUrl: uploadData.fileUrl, 
-          amount, 
-          userId: session.user.id 
         }) 
       });
       const verifyData = await verifyRes.json();
@@ -275,20 +245,6 @@ const copyToClipboard = async (text) => {
       setSubmitting(false); 
     }
   };
-  // ฟังก์ชันเรียกใช้ API TrueWallet
-  const redeemTrueWalletVoucher = async (code, mobile) => {
-    try {
-      const response = await fetch(`https://tw.oiioioiiioooioio.de/api/${code}/${mobile}`, {
-        method: 'POST'
-      });
-      const result = await response.json();
-      return result;
-    } catch (error) {
-      console.error('API Error:', error);
-      return { status: { code: 'INTERNAL_ERROR', message: 'เชื่อมต่อล้มเหลว' } };
-    }
-  };
-
   // เช็คสิทธิ์ Admin จาก Database + .env Fallback
   useEffect(() => {
     if (session?.user?.id) {
@@ -298,16 +254,10 @@ const copyToClipboard = async (text) => {
 
   const checkAdminStatus = async () => {
     try {
-      const res = await axios.get(`/api/admin/check-admin?discordId=${session.user.id}`);
-      if (res.data.isAdmin) {
-        setIsUserAdmin(true);
-        return;
-      }
-    } catch {}
-    
-    const envIds = process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS?.split(",") || [];
-    if (envIds.includes(session.user.id)) {
-      setIsUserAdmin(true);
+      const res = await axios.get(`/api/admin/check-admin`);
+      setIsUserAdmin(!!res.data.isAdmin);
+    } catch {
+      setIsUserAdmin(false);
     }
   };
   
@@ -317,9 +267,7 @@ const copyToClipboard = async (text) => {
     
     const syncProducts = async () => {
       try {
-        const res = await axios.post("/api/user/sync-products", {
-          userId: session.user.discordId || session.user.id
-        });
+        const res = await axios.post("/api/user/sync-products");
         if (res.data.success) {
           await refreshPoints();
         }
@@ -338,7 +286,7 @@ const copyToClipboard = async (text) => {
   useEffect(() => {
     if (!session || activeTab !== "history") return;
     setLoadingHistory(true);
-    axios.get(`/api/topups?discordId=${session.user.id}`)
+    axios.get(`/api/topups`)
       .then((res) => setTopups(res.data || []))
       .catch((err) => console.error("History load error:", err))
       .finally(() => setLoadingHistory(false));
@@ -360,9 +308,7 @@ const copyToClipboard = async (text) => {
     setLastCheckTime(now);
     
     try {
-      const res = await axios.post("/api/user/check-updates", {
-        userId: session.user.discordId || session.user.id
-      });
+      const res = await axios.post("/api/user/check-updates");
       
       if (res.data.hasUpdates) {
         setAvailableUpdates(res.data.updates);
@@ -388,7 +334,7 @@ const copyToClipboard = async (text) => {
     if (!confirmed) return;
     setDownloading(productId);
     try {
-      const res = await axios.post("/api/user/download-update", { userId: session.user.discordId || session.user.id, productId });
+      const res = await axios.post("/api/user/download-update", { productId });
       if (res.data.success) {
         window.open(res.data.downloadUrl, "_blank");
         success(`ดาวน์โหลด ${productName} เวอร์ชัน ${res.data.version} สำเร็จ`);

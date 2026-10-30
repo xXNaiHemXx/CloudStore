@@ -2,6 +2,7 @@
 import { S3Client, CreateMultipartUploadCommand, UploadPartCommand, CompleteMultipartUploadCommand, AbortMultipartUploadCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { requireAdmin } from "@/utils/checkAdmin";
+import { sameOrigin } from "@/utils/apiGuard";
 
 export const config = {
   api: {
@@ -30,6 +31,8 @@ export default async function handler(req, res) {
   });
 
   // ✅ ตรวจสอบสิทธิ์ Admin จาก Database
+  if (!sameOrigin(req, res)) return;
+
   const auth = await requireAdmin(req, res);
   if (auth.error) {
     return res.status(auth.status).json({ error: auth.error });

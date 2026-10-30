@@ -1,152 +1,67 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import styles from "../styles/PageLoader.module.css";
 
-export default function PageLoader({ children, isLoading = false }) {
-  const [loading, setLoading] = useState(true);
-  const [fadeOut, setFadeOut] = useState(false);
-  const [textIndex, setTextIndex] = useState(0);
-  const [revealProgress, setRevealProgress] = useState(0); // ✅ 0-1 สำหรับไล่สี
-  const fullText = "xCloud";
+// Intro แบบ liquid glass — เล่นครั้งแรกที่เข้าเว็บต่อ session แล้วละลายหายไป
+// หน้าเว็บจริง render อยู่ข้างใต้แล้ว ไม่ต้องรอ loader
+export default function PageLoader() {
+  const [phase, setPhase] = useState("show"); // show → melt → gone
+  const word = "xCloud";
 
-  // ✅ ใช้ isLoading prop จากภายนอก
   useEffect(() => {
-    if (!isLoading) {
-      setFadeOut(true);
-      setTimeout(() => {
-        setLoading(false);
-      }, 800);
-    } else {
-      setLoading(true);
-      setFadeOut(false);
-      setTextIndex(0);
-      setRevealProgress(0);
+    let seen = false;
+    try {
+      seen = sessionStorage.getItem("lg-intro") === "1";
+      sessionStorage.setItem("lg-intro", "1");
+    } catch {}
+
+    if (seen || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setPhase("gone");
+      return;
     }
-  }, [isLoading]);
 
-  // ✅ แสดงตัวอักษรทีละตัว
-  useEffect(() => {
-    if (!loading || fadeOut) return;
+    const melt = setTimeout(() => setPhase("melt"), 1500);
+    const gone = setTimeout(() => setPhase("gone"), 2300);
+    return () => {
+      clearTimeout(melt);
+      clearTimeout(gone);
+    };
+  }, []);
 
-    const interval = setInterval(() => {
-      setTextIndex((prev) => {
-        if (prev < fullText.length) {
-          return prev + 1;
-        }
-        clearInterval(interval);
-        return prev;
-      });
-    }, 120);
-
-    return () => clearInterval(interval);
-  }, [loading, fadeOut]);
-
-  // ✅ เมื่อแสดงครบแล้ว เริ่มไล่สีหาย
-  useEffect(() => {
-    if (textIndex >= fullText.length && !fadeOut) {
-      // รอ 0.5s แล้วเริ่มไล่สีหาย
-      const timer = setTimeout(() => {
-        const progressInterval = setInterval(() => {
-          setRevealProgress((prev) => {
-            if (prev < 1) {
-              return prev + 0.02; // ความเร็วในการไล่สี
-            }
-            clearInterval(progressInterval);
-            return 1;
-          });
-        }, 30);
-
-        return () => clearInterval(progressInterval);
-      }, 500);
-
-      return () => clearTimeout(timer);
-    }
-  }, [textIndex, fadeOut]);
-
-  // ✅ เมื่อไล่สีครบ 100% แล้วจางหาย
-  useEffect(() => {
-    if (revealProgress >= 1 && !fadeOut) {
-      const timer = setTimeout(() => {
-        setFadeOut(true);
-        setTimeout(() => {
-          setLoading(false);
-        }, 500);
-      }, 200);
-      return () => clearTimeout(timer);
-    }
-  }, [revealProgress, fadeOut]);
-
-  // ✅ Fallback
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (loading && !fadeOut) {
-        setFadeOut(true);
-        setTimeout(() => {
-          setLoading(false);
-        }, 500);
-      }
-    }, 8000);
-
-    return () => clearTimeout(timeout);
-  }, [loading, fadeOut]);
-
-  if (!loading) {
-    return children;
-  }
+  if (phase === "gone") return null;
 
   return (
-    <div className={`${styles.pageLoader} ${fadeOut ? styles.fadeOut : ''}`}>
-      <div className={styles.blurBackground}></div>
-      <div className={styles.loaderContent}>
-        
-        {/* Logo */}
-        <div className={styles.logoContainer}>
-          <div className={styles.logoGlow}></div>
-          <img src="/logo.png" alt="xCloud" className={styles.logo} />
+    <div className={`${styles.pageLoader} ${phase === "melt" ? styles.fadeOut : ""}`} aria-hidden="true">
+      <div className={styles.orbStage}>
+        <div className={styles.goo}>
+          <div className={styles.orb} />
+          <div className={`${styles.orb} ${styles.orbB}`} />
+          <div className={`${styles.orb} ${styles.orbC}`} />
         </div>
-
-        {/* ✅ ตัวอักษร xCloud - แสดงแล้วค่อยๆหายไล่จากหัวไปท้าย */}
-        <div className={styles.textContainer}>
-          {fullText.split("").map((char, charIndex) => {
-            // ✅ คำนวณว่า char นี้ถูกเปิดเผยแค่ไหน
-            const charStart = charIndex / fullText.length;
-            const charEnd = (charIndex + 1) / fullText.length;
-            
-            // ✅ progress ของ char นี้ (0-1)
-            let charProgress = 0;
-            if (revealProgress > charStart) {
-              charProgress = Math.min((revealProgress - charStart) / (charEnd - charStart), 1);
-            }
-
-            // ✅ แสดงเฉพาะตัวอักษรที่แสดงแล้ว
-            const isVisible = charIndex < textIndex;
-            
-            return (
-              <span
-                key={charIndex}
-                className={`${styles.char} ${isVisible ? styles.charVisible : ''}`}
-                style={{
-                  transitionDelay: `${charIndex * 50}ms`,
-                  // ✅ ใช้ clip-path เพื่อไล่สีจากซ้ายไปขวา
-                  clipPath: isVisible ? `inset(0 ${100 - (charProgress * 100)}% 0 0)` : 'inset(0 100% 0 0)',
-                  opacity: isVisible ? 1 : 0,
-                }}
-              >
-                {char}
-              </span>
-            );
-          })}
+        <div className={styles.lens}>
+          <img src="/favicon.ico" alt="" className={styles.logo} />
         </div>
-
-        {/* ✅ แสดงสถานะ */}
-        <p className={styles.loadingText}>
-          {textIndex < fullText.length 
-            ? "กำลังโหลด" 
-            : revealProgress < 1 
-              ? "กำลังโหลด" 
-              : "พร้อมใช้งาน"
-          }
-        </p>
       </div>
+
+      <div className={styles.textContainer}>
+        {word.split("").map((char, i) => (
+          <span key={i} className={styles.char} style={{ animationDelay: `${0.25 + i * 0.07}s` }}>
+            {char}
+          </span>
+        ))}
+        <span className={styles.studio}>Studio</span>
+      </div>
+
+      <div className={styles.progress}>
+        <span className={styles.progressFill} />
+      </div>
+
+      {/* filter สำหรับเอฟเฟกต์ "หยดน้ำรวมตัว" (gooey) */}
+      <svg width="0" height="0" style={{ position: "absolute" }}>
+        <filter id="lg-goo">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
+          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
+        </filter>
+      </svg>
     </div>
   );
 }

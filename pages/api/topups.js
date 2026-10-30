@@ -1,10 +1,12 @@
 // pages/api/topups.js
 import { connectToDB } from "@/utils/db";
 import TopupHistory from "@/models/TopupHistory";
+import { requireUser } from "@/utils/checkAdmin";
 
 export default async function handler(req, res) {
-  const { discordId } = req.query;
-  if (!discordId) return res.status(400).json({ error: "ต้องระบุ discordId" });
+  const me = await requireUser(req, res);
+  if (!me) return;
+  const discordId = me.userId; // ดูได้เฉพาะประวัติของตัวเอง
 
   try {
     await connectToDB();

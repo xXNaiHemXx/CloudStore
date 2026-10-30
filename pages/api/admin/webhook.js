@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { requireAdmin } from '@/utils/checkAdmin';
+import { sameOrigin } from '@/utils/apiGuard';
+import { isDiscordWebhookUrl } from '@/utils/logWebhook';
 
 const WEBHOOK_FILE = path.join(process.cwd(), 'data', 'webhook.json');
 
@@ -29,6 +31,8 @@ if (!fs.existsSync(WEBHOOK_FILE)) {
 }
 
 export default async function handler(req, res) {
+  if (!sameOrigin(req, res)) return;
+
   const auth = await requireAdmin(req, res);
   if (!auth.isAdmin) {
     return res.status(auth.status).json({ error: auth.error });
@@ -45,8 +49,20 @@ export default async function handler(req, res) {
 
   if (req.method === 'PUT') {
     try {
-      const { enabled, webhooks } = req.body;
-      fs.writeFileSync(WEBHOOK_FILE, JSON.stringify({ enabled, webhooks }, null, 2));
+      const { enabled, webhooks } = req.body || {};
+
+      // รับเฉพาะ URL ของ Discord webhook เท่านั้น (เซิร์ฟเวอร์เป็นคนยิง จึงต้องกัน SSRF)
+      const clean = {};
+      for (const [event, hook] of Object.entries(webhooks || {})) {
+        if (!/^[a-z_]{1,32}$/.test(event) || !hook || typeof hook !== 'object') continue;
+        const url = typeof hook.url === 'string' ? hook.url.trim() : '';
+        if (url && !isDiscordWebhookUrl(url)) {
+          return res.status(400).json({ error: `URL ของ ${event} ไม่ใช่ Discord webhook` });
+        }
+        clean[event] = { url, enabled: hook.enabled !== false };
+      }
+
+      fs.writeFileSync(WEBHOOK_FILE, JSON.stringify({ enabled: !!enabled, webhooks: clean }, null, 2));
       return res.status(200).json({ success: true });
     } catch (err) {
       return res.status(500).json({ error: err.message });

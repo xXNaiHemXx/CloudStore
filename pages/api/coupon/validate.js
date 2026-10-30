@@ -1,16 +1,20 @@
 import { connectToDB } from "@/utils/db";
 import Coupon from "@/models/Coupon";
+import { rateLimit } from "@/utils/apiGuard";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  // กันการสุ่มเดาโค้ดคูปอง
+  if (!rateLimit(req, res, { key: "coupon", limit: 15 })) return;
+
   await connectToDB();
 
-  const { code, totalPrice, productId } = req.body;
+  const { code, totalPrice, productId } = req.body || {};
 
-  if (!code) {
+  if (typeof code !== "string" || !code.trim()) {
     return res.status(400).json({ error: "กรุณากรอกโค้ดคูปอง" });
   }
 

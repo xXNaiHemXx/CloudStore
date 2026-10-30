@@ -2,8 +2,14 @@ import { connectToDB } from "@/utils/db";
 import Coupon from "@/models/Coupon";
 import Item from "@/models/items"; // ✅ เพิ่ม
 import { requireAdmin } from "@/utils/checkAdmin";
+import { sameOrigin, isObjectId } from "@/utils/apiGuard";
+
+// ฟิลด์ที่อนุญาตให้แก้ผ่าน PUT (กัน mass-assignment เช่นแอบตั้ง usedCount)
+const EDITABLE = ["code", "description", "discountType", "discountValue", "minPurchase", "maxUsage", "expiresAt", "isActive", "productRestriction", "allowedProductIds"];
 
 export default async function handler(req, res) {
+  if (!sameOrigin(req, res)) return;
+
   const auth = await requireAdmin(req, res);
   if (!auth.isAdmin) {
     return res.status(auth.status).json({ error: auth.error });
@@ -28,7 +34,7 @@ export default async function handler(req, res) {
     try {
       const { code, description, discountType, discountValue, minPurchase, maxUsage, expiresAt, productRestriction, allowedProductIds } = req.body;
       
-      if (!code || !discountValue) {
+      if (typeof code !== "string" || !code.trim() || !discountValue) {
         return res.status(400).json({ error: "กรุณากรอกโค้ดและส่วนลด" });
       }
 
@@ -58,7 +64,14 @@ export default async function handler(req, res) {
   // PUT - แก้ไขคูปอง
   if (req.method === "PUT") {
     try {
-      const { id, ...updateData } = req.body;
+      const { id } = req.body || {};
+      if (!isObjectId(id)) return res.status(400).json({ error: "Invalid id" });
+
+      const updateData = {};
+      for (const key of EDITABLE) {
+        if (req.body[key] !== undefined) updateData[key] = req.body[key];
+      }
+      if (typeof updateData.code === "string") updateData.code = updateData.code.toUpperCase();
       
       // ✅ ถ้าเปลี่ยนเป็น all → ล้าง allowedProductIds
       if (updateData.productRestriction === "all") {
@@ -76,6 +89,7 @@ export default async function handler(req, res) {
   if (req.method === "DELETE") {
     try {
       const { id } = req.query;
+      if (!isObjectId(id)) return res.status(400).json({ error: "Invalid id" });
       await Coupon.findByIdAndDelete(id);
       return res.status(200).json({ success: true });
     } catch (error) {

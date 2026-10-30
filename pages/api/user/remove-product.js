@@ -2,6 +2,8 @@ import { connectToDB } from "../../../utils/db";
 import User from "../../../models/User";
 import Items from "../../../models/items";
 import { removeDiscordRoles } from "../../../utils/discord";
+import { requireAdmin } from "@/utils/checkAdmin";
+import { sameOrigin } from "@/utils/apiGuard";
 
 export default async function handler(req, res) {
   if (req.method !== "PUT") {
@@ -10,10 +12,14 @@ export default async function handler(req, res) {
     });
   }
 
+  if (!sameOrigin(req, res)) return;
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) return res.status(auth.status).json({ error: auth.error });
+
   try {
     await connectToDB();
 
-    const { userId, productId, index } = req.body;
+    const { userId, productId, index } = req.body || {};
 
     console.log("📌 REMOVE PRODUCT:", {
       userId,

@@ -1,5 +1,6 @@
 import { connectToDB } from "../../../utils/db";
 import User from "../../../models/User";
+import { getSessionUserId, getAdminRole } from "@/utils/checkAdmin";
 
 export default async function handler(req, res) {
   //  必须是 GET 方法
@@ -11,6 +12,13 @@ export default async function handler(req, res) {
     await connectToDB();
     
     const { userId } = req.query;
+
+    // ดูได้เฉพาะของตัวเอง หรือเป็นแอดมิน
+    const me = await getSessionUserId(req, res);
+    if (!me.userId) return res.status(401).json({ error: "Unauthorized" });
+    if (String(userId) !== me.userId && !(await getAdminRole(me.userId))) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
     
     console.log("📌 Fetch products for userId:", userId);
     

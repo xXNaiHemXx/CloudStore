@@ -6,6 +6,8 @@ import { connectToDB } from "@/utils/db";
 import User from "@/models/User";
 import SlipLog from "@/models/SlipLog";
 import TopupHistory from "@/models/TopupHistory";
+import { requireUser } from "@/utils/checkAdmin";
+import { sameOrigin, rateLimit } from "@/utils/apiGuard";
 
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 const BASE_URL = process.env.BASE_URL;
@@ -39,17 +41,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { fileUrl, userId } = req.body; // ✅ ไม่รับ amount แล้ว
+  if (!sameOrigin(req, res)) return;
 
-  console.log("📥 ข้อมูลที่รับมา:", { fileUrl, userId });
+  // ✅ เติมแต้มให้คนที่ล็อกอินอยู่เท่านั้น (เดิมรับ userId จาก body)
+  const me = await requireUser(req, res);
+  if (!me) return;
+  if (!rateLimit(req, res, { key: "slip-verify", limit: 10, id: me.userId })) return;
+  const userId = me.userId;
 
-  if (!fileUrl || !userId) {
-    await notifyDiscord("❌ ข้อมูลไม่ครบ", `fileUrl: ${fileUrl}\nuserId: ${userId}`, 16711680);
+  const { fileUrl } = req.body || {}; // ✅ ไม่รับ amount แล้ว
+
+  // ✅ รับเฉพาะไฟล์ที่ upload-slip สร้างขึ้นเท่านั้น (กัน path traversal เช่น /slip/../../.env.local)
+  if (typeof fileUrl !== "string" || !/^\/slip\/[a-f0-9]{32}\.(jpg|png|webp)$/.test(fileUrl)) {
     return res.status(400).json({ error: "ข้อมูลไม่ครบ" });
   }
 
-  const safeFileUrl = fileUrl.startsWith("/") ? fileUrl : `/${fileUrl}`;
-  const imagePath = path.join(process.cwd(), "public", safeFileUrl.replace("/slip/", "slip/"));
+  const safeFileUrl = fileUrl;
+  const imagePath = path.join(process.cwd(), "public", "slip", path.basename(fileUrl));
   const imageUrl = `${BASE_URL}${safeFileUrl}`;
 
   if (!fs.existsSync(imagePath)) {
@@ -127,7 +135,13 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: "สลิปนี้ถูกใช้งานไปแล้ว" });
     }
 
-    await SlipLog.create({ transRef, userId });
+    try {
+      await SlipLog.create({ transRef, userId });
+    } catch (e) {
+      // unique index ของ transRef กันกรณียิงสลิปเดียวกันพร้อมกันหลาย request
+      if (e?.code === 11000) return res.status(409).json({ error: "สลิปนี้ถูกใช้งานไปแล้ว" });
+      throw e;
+    }
 
     // ✅ เติมเงินตามจำนวนในสลิป
     const updated = await User.findOneAndUpdate(

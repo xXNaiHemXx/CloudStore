@@ -1,15 +1,21 @@
 import { connectToDB } from "@/utils/db";
 import User from "@/models/User";
 import Item from "@/models/items";
+import { requireUser } from "@/utils/checkAdmin";
+import { sameOrigin } from "@/utils/apiGuard";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (!sameOrigin(req, res)) return;
+  const me = await requireUser(req, res);
+  if (!me) return;
+
   try {
     await connectToDB();
-    const { userId } = req.body;
+    const userId = me.userId; // ใช้ session เท่านั้น
     
     const user = await User.findOne({ discordId: userId });
     if (!user) {

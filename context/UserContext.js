@@ -19,8 +19,7 @@ export function UserProvider({ children }) {
     }
     
     try {
-      const discordId = session.user.discordId || session.user.id;
-      const res = await axios.get(`/api/user?discordId=${discordId}`);
+      const res = await axios.get(`/api/user`);
       setUserPoints(res.data.points || 0);
       setUserProducts(res.data.products || []); //  ดึง products จาก API
     } catch (error) {
@@ -44,11 +43,7 @@ export function UserProvider({ children }) {
     (async () => {
       try {
         if (session?.user?.id) {
-          await axios.post("/api/user", {
-            discordId: session.user.id,
-            name: session.user.name,
-            email: session.user.email,
-          });
+          await axios.post("/api/user");
         }
       } catch (err) {
         console.error("Save user error:", err);

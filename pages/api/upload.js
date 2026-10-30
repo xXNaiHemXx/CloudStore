@@ -1,6 +1,9 @@
 import { IncomingForm } from 'formidable';
 import fs from 'fs';
 import path from 'path';
+import { requireAdmin } from '@/utils/checkAdmin';
+import { sameOrigin } from '@/utils/apiGuard';
+import { isBlockedUpload } from '@/utils/uploadPolicy';
 
 export const config = {
   api: {
@@ -9,6 +12,11 @@ export const config = {
 };
 
 export default async function handler(req, res) {
+  // ⚠️ เดิมไม่มีการตรวจสิทธิ์ ใครก็อัปโหลด/ลบไฟล์ใน public/uploads ได้
+  if (!sameOrigin(req, res)) return;
+  const auth = await requireAdmin(req, res);
+  if (!auth.isAdmin) return res.status(auth.status).json({ error: auth.error });
+
   //  GET - ดึงรายการไฟล์ทั้งหมด
   if (req.method === 'GET') {
     return handleGetFiles(req, res);
@@ -84,6 +92,10 @@ async function handleUpload(req, res) {
 
     const originalName = file.originalFilename || 'file';
     const ext = path.extname(originalName).toLowerCase();
+    if (isBlockedUpload(originalName)) {
+      try { fs.unlinkSync(file.filepath); } catch {}
+      return res.status(400).json({ error: 'ไม่อนุญาตไฟล์ประเภทนี้' });
+    }
     const uniqueId = Date.now() + "_" + Math.random().toString(36).substring(2, 8);
     const safeName = `${uniqueId}${ext}`;
     const finalPath = path.join(uploadDir, safeName);

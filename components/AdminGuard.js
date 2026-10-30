@@ -18,7 +18,7 @@ export default function AdminGuard({ children, requiredRole = "admin" }) {
 
     const checkAccess = async () => {
       try {
-        const res = await fetch(`/api/admin/check-admin?discordId=${session.user.id}`);
+        const res = await fetch(`/api/admin/check-admin`);
         const data = await res.json();
 
         if (data.isAdmin) {
@@ -32,13 +32,7 @@ export default function AdminGuard({ children, requiredRole = "admin" }) {
           setIsAuthorized(false);
         }
       } catch (error) {
-        // Fallback: เช็ค Env
-        const envAdminIds = (process.env.NEXT_PUBLIC_ADMIN_DISCORD_IDS || "").split(",").map(id => id.trim());
-        if (envAdminIds.includes(session.user.id)) {
-          setIsAuthorized(true);
-        } else {
-          setIsAuthorized(false);
-        }
+        setIsAuthorized(false);
       } finally {
         setLoading(false);
       }

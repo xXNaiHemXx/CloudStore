@@ -1,15 +1,16 @@
 import { connectToDB } from "@/utils/db";
 import Product from "@/models/Product";
 import User from "@/models/User";
+import { requireUser } from "@/utils/checkAdmin";
 
 export default async function handler(req, res) {
     await connectToDB();
 
     if (req.method === "GET") {
         try {
-            const { userId } = req.query;
-
-            if (!userId) return res.status(400).json({ error: "Missing userId" });
+            const me = await requireUser(req, res);
+            if (!me) return;
+            const userId = me.userId;
 
             const user = await User.findOne({ discordId: userId });
             if (!user) return res.status(404).json({ error: "User not found" });

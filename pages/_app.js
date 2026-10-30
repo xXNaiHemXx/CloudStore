@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { addLog, LOG_TYPES } from "../utils/logger";
 import PageLoader from "../components/PageLoader";
+import LiquidBackground from "../components/LiquidBackground";
+import LiquidFx from "../components/LiquidFx";
 
 // ==================== SESSION LOGGER ====================
 function SessionLogger({ children }) {
@@ -51,44 +53,45 @@ function SessionLogger({ children }) {
   return children;
 }
 
+// ==================== ROUTE TRANSITION ====================
+// แถบไล่สีด้านบน + เบลอแก้วระหว่างเปลี่ยนหน้า (ไม่ unmount หน้าเดิมทิ้งเหมือนเดิมแล้ว)
+function RouteTransition() {
+  const router = useRouter();
+  const [state, setState] = useState("idle");
+
+  useEffect(() => {
+    let doneTimer;
+    const start = (url) => {
+      if (url === router.asPath) return;
+      clearTimeout(doneTimer);
+      setState("loading");
+    };
+    const done = () => {
+      setState("done");
+      doneTimer = setTimeout(() => setState("idle"), 600);
+    };
+    router.events.on("routeChangeStart", start);
+    router.events.on("routeChangeComplete", done);
+    router.events.on("routeChangeError", done);
+    return () => {
+      clearTimeout(doneTimer);
+      router.events.off("routeChangeStart", start);
+      router.events.off("routeChangeComplete", done);
+      router.events.off("routeChangeError", done);
+    };
+  }, [router]);
+
+  return (
+    <>
+      <div className="lg-route-bar" data-state={state} />
+      <div className="lg-wipe" data-active={state === "loading"} />
+    </>
+  );
+}
+
 // ==================== MAIN APP ====================
 export default function App({ Component, pageProps: { session, ...pageProps } }) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true); // ✅ เริ่มต้น true
-  const [isRouteChanging, setIsRouteChanging] = useState(false); // ✅ สำหรับเปลี่ยนหน้า
-
-  // ✅ ตั้งค่า isLoading เป็น false เมื่อโหลดหน้าแรกเสร็จ
-  useEffect(() => {
-    // รอให้ component mount ก่อน
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300); // ให้ loader แสดงครบก่อน
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // ✅ แสดง loader เมื่อเปลี่ยนหน้า
-  useEffect(() => {
-    const handleStart = () => {
-      setIsRouteChanging(true);
-    };
-    
-    const handleComplete = () => {
-      setTimeout(() => {
-        setIsRouteChanging(false);
-      }, 400); // แสดง loader ระหว่างเปลี่ยนหน้า
-    };
-
-    router.events.on("routeChangeStart", handleStart);
-    router.events.on("routeChangeComplete", handleComplete);
-    router.events.on("routeChangeError", handleComplete);
-
-    return () => {
-      router.events.off("routeChangeStart", handleStart);
-      router.events.off("routeChangeComplete", handleComplete);
-      router.events.off("routeChangeError", handleComplete);
-    };
-  }, [router]);
 
   // ✅ Scroll restoration
   useEffect(() => {
@@ -97,17 +100,12 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
     }
 
     const handleRouteChange = () => {
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
+      window.scrollTo({ top: 0, behavior: "instant" });
     };
 
     router.events.on("routeChangeComplete", handleRouteChange);
     return () => router.events.off("routeChangeComplete", handleRouteChange);
   }, [router]);
-
-  // ✅ แสดง loader ถ้ากำลังโหลดหน้าแรก หรือกำลังเปลี่ยนหน้า
-  const showLoader = isLoading || isRouteChanging;
 
   return (
     <SessionProvider session={session}>
@@ -115,11 +113,13 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
         <ToastProvider>
           <ConfirmProvider>
             <SessionLogger>
-              {showLoader ? (
-                <PageLoader />
-              ) : (
+              <LiquidBackground />
+              <LiquidFx />
+              <RouteTransition />
+              <PageLoader />
+              <div className="lg-page" key={router.pathname}>
                 <Component {...pageProps} />
-              )}
+              </div>
             </SessionLogger>
           </ConfirmProvider>
         </ToastProvider>

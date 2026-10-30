@@ -1047,3 +1047,241 @@
   }
 }
 
+
+
+/* ===== LIQUID GLASS v2 LAYER ===== (override ด้านบน — พื้นหลังมาจาก components/LiquidBackground) ===== */
+
+.homePage {
+  background: transparent;
+}
+
+.liquidBg {
+  display: none;
+}
+
+.heroBadge {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 18px -8px rgba(0, 0, 0, 0.6);
+  color: #dbe2ff;
+  padding: 0.4rem 1rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  animation: lg-pop 0.8s var(--ease-spring) 0.1s backwards, lg-float 5s ease-in-out 1s infinite;
+}
+
+.heroTitle {
+  font-size: clamp(2.6rem, 7vw, 5rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  text-shadow: 0 10px 40px rgba(124, 140, 255, 0.25);
+  animation: lg-pop 1s var(--ease-out) 0.2s backwards;
+}
+
+.heroTitleAccent, .sectionTitle .gradient {
+  background: var(--accent-grad);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: lg-hue-flow 6s linear infinite;
+}
+
+.heroTitleAccent {
+  filter: drop-shadow(0 6px 24px rgba(124, 140, 255, 0.45));
+}
+
+.heroTitleSub, .heroSubtitle {
+  color: var(--ink-soft);
+  animation: lg-pop 1s var(--ease-out) 0.35s backwards;
+}
+
+.heroButtons {
+  animation: lg-pop 1s var(--ease-out) 0.5s backwards;
+}
+
+.btnBrowse {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 48%),
+    linear-gradient(120deg, #3fb8ff, #7c8cff 45%, #b46cff 80%, #ff6fb5);
+  background-size: 100% 100%, 220% 100%;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -6px 14px rgba(40, 20, 120, 0.35),
+    0 14px 34px -12px rgba(124, 140, 255, 0.95);
+  transition: background-position 0.8s var(--ease-out), box-shadow 0.4s var(--ease-out), transform 0.4s var(--ease-spring);
+  border-radius: 999px;
+  padding: 0.85rem 1.8rem;
+}
+
+.btnBrowse:hover {
+  background-position: 0 0, 100% 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -6px 14px rgba(40, 20, 120, 0.3),
+    0 18px 44px -12px rgba(180, 108, 255, 1);
+}
+
+.btnDiscord {
+  position: relative;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--lg-fill);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow);
+  transition: background 0.35s, border-color 0.35s, box-shadow 0.35s, transform 0.4s var(--ease-spring);
+  border-radius: 999px;
+  padding: 0.85rem 1.8rem;
+}
+
+.btnDiscord:hover {
+  background: var(--lg-fill-strong);
+  border-color: var(--lg-edge-strong);
+  box-shadow: var(--lg-shadow-hover);
+  color: #fff;
+}
+
+.heroStats {
+  background: var(--lg-fill);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow);
+  border-radius: 26px;
+  animation: lg-pop 1s var(--ease-out) 0.65s backwards;
+}
+
+.heroStatValue {
+  background: var(--accent-grad);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: lg-hue-flow 6s linear infinite;
+  font-family: 'Urbanist', sans-serif;
+  font-weight: 800;
+}
+
+.heroStatDivider {
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+}
+
+.productCard, .recommendedCard, .glassCard, .teamCardFeatured, .emptyState {
+  background: var(--lg-fill);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow);
+  border-radius: var(--lg-radius);
+}
+
+.productCard:hover, .recommendedCard:hover, .glassCard:hover {
+  background: var(--lg-fill-strong);
+  border-color: var(--lg-edge-strong);
+  box-shadow: var(--lg-shadow-hover);
+}
+
+.productImageWrapper, .recommendedImage {
+  border-radius: calc(var(--lg-radius) - 6px);
+  margin: 6px 6px 0;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.productImageWrapper img, .recommendedImage img {
+  transition: transform 0.9s var(--ease-out), filter 0.9s var(--ease-out);
+}
+
+.productCard:hover .productImageWrapper img, .recommendedCard:hover .recommendedImage img {
+  transform: scale(1.08);
+  filter: saturate(1.15) brightness(1.05);
+}
+
+.productPrice, .recommendedPrice {
+  background: var(--accent-grad);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: lg-hue-flow 6s linear infinite;
+  font-weight: 800;
+}
+
+.newBadge, .ownedTag, .verifiedBadge {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 18px -8px rgba(0, 0, 0, 0.6);
+}
+
+.newBadge {
+  color: #ffe08a;
+  animation: lg-pulse-ring 2.2s ease-out infinite;
+}
+
+.recommendedView, .teamFollowBtn {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 48%),
+    linear-gradient(120deg, #3fb8ff, #7c8cff 45%, #b46cff 80%, #ff6fb5);
+  background-size: 100% 100%, 220% 100%;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -6px 14px rgba(40, 20, 120, 0.35),
+    0 14px 34px -12px rgba(124, 140, 255, 0.95);
+  transition: background-position 0.8s var(--ease-out), box-shadow 0.4s var(--ease-out), transform 0.4s var(--ease-spring);
+  border-radius: 999px;
+}
+
+.teamFollowBtn:hover {
+  background-position: 0 0, 100% 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -6px 14px rgba(40, 20, 120, 0.3),
+    0 18px 44px -12px rgba(180, 108, 255, 1);
+}
+
+.sectionTitle {
+  letter-spacing: -0.02em;
+}
+
+.productCardSkeleton, .recommendedCardSkeleton {
+  background: var(--lg-fill);
+  backdrop-filter: var(--lg-blur);
+  -webkit-backdrop-filter: var(--lg-blur);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-shadow);
+  border-radius: var(--lg-radius);
+}
+
+.skeletonImage, .skeletonText, .skeletonTitle, .skeletonPrice, .skeletonLine, .skeletonLineShort, .skeletonName, .skeletonPill, .skeletonStat {
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.04) 20%, rgba(255, 255, 255, 0.12) 40%, rgba(255, 255, 255, 0.04) 60%);
+  background-size: 200% 100%;
+  animation: lg-shimmer 1.6s linear infinite;
+}
+
+.scrollMouse {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 0 20px rgba(124, 140, 255, 0.35);
+}
+
+.productTitleTag {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  color: var(--ink-mute);
+}

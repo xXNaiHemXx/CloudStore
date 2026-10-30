@@ -4,14 +4,21 @@ import Item from "../../../models/items";
 import Purchase from "../../../models/Purchase";
 import Coupon from "../../../models/Coupon";
 import { addDiscordRoles } from "../../../utils/discord";
+import { requireAdmin, requireUser } from "@/utils/checkAdmin";
+import { sameOrigin, rateLimit, isObjectId, serverError } from "@/utils/apiGuard";
 
 export default async function handler(req, res) {
+  if (!sameOrigin(req, res)) return;
   await connectToDB();
 
   // =====================================================
   // GET = ดึงรายการคำสั่งซื้อทั้งหมด
   // =====================================================
   if (req.method === "GET") {
+    // รายการสั่งซื้อทั้งหมดเป็นข้อมูลของแอดมินเท่านั้น
+    const auth = await requireAdmin(req, res);
+    if (!auth.isAdmin) return res.status(auth.status).json({ error: auth.error });
+
     try {
       const purchases = await Purchase.find({}).sort({ purchaseDate: -1 });
 
@@ -47,9 +54,15 @@ export default async function handler(req, res) {
     try {
       // ⚠️ SECURITY FIX: ไม่รับ price / finalPrice / discount จาก client อีกต่อไป
       // รับแค่ userId, productId, couponCode เท่านั้น ราคาทั้งหมดคำนวณจาก DB ฝั่งเซิร์ฟเวอร์
-      const { userId, productId, couponCode } = req.body;
+      // ✅ ผู้ซื้อคือคนที่ล็อกอินอยู่เท่านั้น (เดิมรับ userId จาก body → ใช้แต้มคนอื่นซื้อได้)
+      const me = await requireUser(req, res);
+      if (!me) return;
+      if (!rateLimit(req, res, { key: "purchase", limit: 10, id: me.userId })) return;
 
-      if (!userId || !productId) {
+      const userId = me.userId;
+      const { productId, couponCode } = req.body || {};
+
+      if (!isObjectId(productId)) {
         return res.status(400).json({ error: "Missing userId or productId" });
       }
 
@@ -108,24 +121,11 @@ export default async function handler(req, res) {
       }
 
       // =====================================================
-      // เช็ค POINT
+      // หัก POINT + เพิ่มสินค้า แบบ atomic ในคำสั่งเดียว
+      // เงื่อนไข: แต้มพอ และยังไม่มีสินค้านี้ → กันยิงซื้อพร้อมกันหลาย request (double-spend)
       // =====================================================
-      if ((user.points || 0) < actualPrice) {
-        return res.status(400).json({ error: "Point ไม่เพียงพอ" });
-      }
-
-      // =====================================================
-      // หัก POINT (ใช้ actualPrice ที่คำนวณเองฝั่งเซิร์ฟเวอร์)
-      // =====================================================
-      user.points -= actualPrice;
-
-      // =====================================================
-      // เพิ่มสินค้าใน USER
-      // =====================================================
-      if (!user.products) user.products = [];
-
-      user.products.push({
-        productId: product._id,
+      const newProduct = {
+        productId: product._id.toString(),
         name: product.itemsname,
         version: product.itemsversion,
         fileUrl: product.itemsfile,
@@ -137,10 +137,22 @@ export default async function handler(req, res) {
         originalPrice: realPrice,
         couponCode: normalizedCouponCode,
         discount,
-      });
+      };
 
-      user.markModified("products");
-      await user.save();
+      const updatedUser = await User.findOneAndUpdate(
+        {
+          discordId: userId,
+          points: { $gte: actualPrice },
+          "products.productId": { $ne: product._id.toString() },
+        },
+        { $inc: { points: -actualPrice }, $push: { products: newProduct } },
+        { new: true }
+      );
+
+      if (!updatedUser) {
+        return res.status(400).json({ error: "Point ไม่เพียงพอ หรือมีสินค้านี้อยู่แล้ว" });
+      }
+      user.points = updatedUser.points;
 
       // =====================================================
       // ✅ อัปเดต usedCount ของคูปอง
@@ -241,7 +253,7 @@ export default async function handler(req, res) {
 
     } catch (error) {
       console.error("PURCHASE ERROR:", error);
-      return res.status(500).json({ error: error.message });
+      return serverError(res, error, "purchase:POST");
     }
   }
 
