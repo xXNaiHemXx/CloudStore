@@ -6850,7 +6850,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: lg-hue-flow 6s linear infinite;
 }
 
 .sidebarAvatar {
@@ -6875,7 +6874,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: lg-hue-flow 6s linear infinite;
 }
 
 .statCardPremium:hover, .statsCard:hover, .ordersStatCard:hover, .topupsStatCard:hover, .productCardPremium:hover, .productCard:hover, .userCard:hover, .r2FileCard:hover, .galleryItem:hover, .bestSellerCard:hover, .quickStatsCard:hover, .purchasedItemCardPremium:hover, .userModalStatCardPremium:hover {
@@ -6916,8 +6914,8 @@
 
 .modalOverlay {
   background: radial-gradient(circle at 50% 40%, rgba(124, 140, 255, 0.12), rgba(5, 6, 13, 0.7));
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
   animation: lg-fade 0.3s var(--ease-out) backwards;
 }
 
@@ -7063,7 +7061,7 @@
 }
 
 @keyframes lg-modal-in {
-  from { opacity: 0; transform: translateY(24px) scale(0.94); filter: blur(10px); }
-  to { opacity: 1; transform: none; filter: none; }
+  from { opacity: 0; transform: translateY(24px) scale(0.94); }
+  to { opacity: 1; transform: none; }
 }
 

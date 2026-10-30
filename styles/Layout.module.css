@@ -111,7 +111,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: lg-hue-flow 6s linear infinite;
 }
 
 /* ---------- nav ---------- */
@@ -304,8 +303,8 @@
 .mobileOverlayOpen {
   opacity: 1;
   pointer-events: auto;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .mobileNav {
@@ -387,8 +386,6 @@
   background: var(--lg-fill);
   border: 1px solid var(--lg-edge);
   box-shadow: var(--lg-shadow);
-  backdrop-filter: var(--lg-blur);
-  -webkit-backdrop-filter: var(--lg-blur);
 }
 
 .footerCopy {

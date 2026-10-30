@@ -36,46 +36,81 @@ const pseudoUsed = (el, which) => {
   return c && c !== "none" && c !== "normal";
 };
 
-function enhance(el, ctx) {
-  if (ctx.seen.has(el)) return;
+// แยกเป็น 3 รอบ: จัดประเภท (ไม่แตะ layout) → อ่านค่าทั้งหมด → เขียนทั้งหมด
+// ถ้าอ่านสลับเขียนทีละ element เบราว์เซอร์ต้องคำนวณ layout ใหม่ทุกตัว (layout thrashing) หน้าเลยกระตุกตอนโหลด
+function classify(el, ctx) {
+  if (ctx.seen.has(el)) return null;
   ctx.seen.add(el);
 
   const names = localNames(el);
-  if (!names.length) return;
+  if (!names.length) return null;
 
   const isButton = el.tagName === "BUTTON" || (el.tagName === "A" && names.some((n) => /btn|Btn|Button/.test(n)));
   const isTilt = names.some((n) => TILT.test(n));
   const isSurface = isTilt || names.some((n) => SURFACE.test(n) && !SURFACE_EXCLUDE.test(n.replace(/(Card|Box|Panel|Item|Chip|Tile)(Premium|Featured|Full)?$/, "")));
+  const sheen = ctx.finePointer && (isSurface || isButton);
+  const tilt = ctx.finePointer && isTilt;
+  const magnet = ctx.finePointer && names.some((n) => MAGNET.test(n));
+  const reveal =
+    !ctx.reduced &&
+    (isTilt || names.some((n) => REVEAL.test(n)) || (isSurface && !isButton)) &&
+    el.getAttribute("data-lg-reveal") !== "in" &&
+    !el.closest(NO_REVEAL_INSIDE);
 
-  if (ctx.finePointer && (isSurface || isButton)) {
-    if (!pseudoUsed(el, "::after")) {
-      el.setAttribute("data-lg-sheen", pseudoUsed(el, "::before") ? "sheen-only" : "");
-      if (getComputedStyle(el).position === "static") el.style.position = "relative";
-    }
+  if (!sheen && !tilt && !magnet && !reveal) return null;
+  return { el, sheen, tilt, magnet, reveal };
+}
+
+function measure(job) {
+  const { el } = job;
+  if (job.sheen) {
+    job.afterUsed = pseudoUsed(el, "::after");
+    job.beforeUsed = !job.afterUsed && pseudoUsed(el, "::before");
+    job.isStatic = !job.afterUsed && getComputedStyle(el).position === "static";
   }
-
-  if (ctx.finePointer && isTilt) el.setAttribute("data-lg-tilt", "");
-  if (ctx.finePointer && names.some((n) => MAGNET.test(n))) el.setAttribute("data-lg-magnet", "");
-
-  const wantsReveal = isTilt || names.some((n) => REVEAL.test(n)) || (isSurface && !isButton);
-  if (wantsReveal && !ctx.reduced && el.getAttribute("data-lg-reveal") !== "in" && !el.closest(NO_REVEAL_INSIDE)) {
-    const rect = el.getBoundingClientRect();
-    // ของที่อยู่ในจอตั้งแต่แรกก็ยังเล่น animation แต่เร็วกว่า
-    const siblings = el.parentElement ? Array.prototype.indexOf.call(el.parentElement.children, el) : 0;
-    el.style.setProperty("--lg-delay", `${Math.min(siblings, 10) * 70}ms`);
-    el.setAttribute("data-lg-reveal", "");
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-      requestAnimationFrame(() => requestAnimationFrame(() => el.setAttribute("data-lg-reveal", "in")));
-    } else {
-      ctx.io.observe(el);
-    }
+  if (job.reveal) {
+    const rect = job.el.getBoundingClientRect();
+    job.onScreen = rect.top < window.innerHeight && rect.bottom > 0;
   }
 }
 
-function scan(root, ctx) {
-  if (root.nodeType !== 1) return;
-  if (root.hasAttribute("class")) enhance(root, ctx);
-  root.querySelectorAll("[class]").forEach((el) => enhance(el, ctx));
+function apply(job, ctx, showNow) {
+  const { el } = job;
+  if (job.sheen && !job.afterUsed) {
+    el.setAttribute("data-lg-sheen", job.beforeUsed ? "sheen-only" : "");
+    if (job.isStatic) el.style.position = "relative";
+  }
+  if (job.tilt) el.setAttribute("data-lg-tilt", "");
+  if (job.magnet) el.setAttribute("data-lg-magnet", "");
+  if (job.reveal) {
+    const siblings = el.parentElement ? Array.prototype.indexOf.call(el.parentElement.children, el) : 0;
+    el.style.setProperty("--lg-delay", `${Math.min(siblings, 10) * 70}ms`);
+    el.setAttribute("data-lg-reveal", "");
+    if (job.onScreen) showNow.push(el);
+    else ctx.io.observe(el);
+  }
+}
+
+function scan(roots, ctx) {
+  const jobs = [];
+  const add = (el) => {
+    const job = classify(el, ctx);
+    if (job) jobs.push(job);
+  };
+  for (const root of roots) {
+    if (root.nodeType !== 1 || !root.isConnected) continue;
+    if (root.hasAttribute("class")) add(root);
+    root.querySelectorAll("[class]").forEach(add);
+  }
+  if (!jobs.length) return;
+
+  jobs.forEach(measure);
+  const showNow = [];
+  jobs.forEach((job) => apply(job, ctx, showNow));
+  // ของที่อยู่ในจอตั้งแต่แรกก็ยังเล่น animation (รอให้สถานะเริ่มต้นถูกวาดก่อน 1 เฟรม)
+  if (showNow.length) {
+    requestAnimationFrame(() => requestAnimationFrame(() => showNow.forEach((el) => el.setAttribute("data-lg-reveal", "in"))));
+  }
 }
 
 export default function LiquidFx() {
@@ -104,7 +139,7 @@ export default function LiquidFx() {
       scheduled = false;
       const nodes = pending;
       pending = [];
-      nodes.forEach((n) => n.isConnected && scan(n, ctx));
+      scan(nodes, ctx);
     };
     const mo = new MutationObserver((records) => {
       for (const r of records) r.addedNodes.forEach((n) => n.nodeType === 1 && pending.push(n));
@@ -113,7 +148,7 @@ export default function LiquidFx() {
         requestAnimationFrame(flush);
       }
     });
-    scan(document.body, ctx);
+    scan([document.body], ctx);
     mo.observe(document.body, { childList: true, subtree: true });
 
     // ---------- pointer effects ----------

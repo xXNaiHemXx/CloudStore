@@ -33,8 +33,9 @@
   --lg-fill: linear-gradient(150deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.04) 42%, rgba(255, 255, 255, 0.025) 60%, rgba(255, 255, 255, 0.07) 100%);
   --lg-fill-strong: linear-gradient(150deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.06) 45%, rgba(255, 255, 255, 0.1) 100%);
   --lg-fill-dark: linear-gradient(150deg, rgba(20, 24, 48, 0.72) 0%, rgba(10, 12, 26, 0.6) 100%);
-  --lg-blur: blur(22px) saturate(180%) brightness(1.06);
-  --lg-blur-heavy: blur(40px) saturate(200%) brightness(1.04);
+  /* blur ยิ่งรัศมีมากยิ่งกินเครื่อง: 14px ดูแทบไม่ต่างจาก 22px บนพื้นหลังที่นุ่มอยู่แล้ว */
+  --lg-blur: blur(14px) saturate(170%);
+  --lg-blur-heavy: blur(20px) saturate(180%);
   --lg-edge: rgba(255, 255, 255, 0.14);
   --lg-edge-strong: rgba(255, 255, 255, 0.26);
   --lg-shadow:
@@ -135,52 +136,53 @@ button, input, select, textarea {
   z-index: -1;
   overflow: hidden;
   pointer-events: none;
+  contain: strict;
   background:
     radial-gradient(1200px 800px at 85% -10%, rgba(124, 140, 255, 0.16), transparent 60%),
     radial-gradient(900px 700px at -10% 110%, rgba(180, 108, 255, 0.14), transparent 60%),
     linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
 }
 
+/* blob เป็น radial-gradient ที่ขอบจางอยู่แล้ว จึงไม่ใช้ filter: blur / mix-blend-mode
+   (สองอย่างนี้ทำให้ต้องวาดใหม่ทุกเฟรม และแก้วทุกชิ้นที่อยู่ด้านบนต้อง blur ใหม่ตาม) */
 .lg-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(70px);
-  opacity: 0.55;
-  mix-blend-mode: screen;
-  will-change: transform;
+  opacity: 0.6;
 }
+
 
 .lg-blob--1 {
   width: 46vmax; height: 46vmax;
   top: -14vmax; left: -10vmax;
-  background: radial-gradient(circle at 30% 30%, rgba(57, 213, 255, 0.55), rgba(57, 213, 255, 0) 65%);
-  animation: lg-drift-1 26s var(--ease-liquid) infinite alternate;
+  background: radial-gradient(closest-side, rgba(57, 213, 255, 0.42), rgba(57, 213, 255, 0.12) 55%, rgba(57, 213, 255, 0));
 }
 .lg-blob--2 {
   width: 52vmax; height: 52vmax;
   top: 10vmax; right: -18vmax;
-  background: radial-gradient(circle at 60% 40%, rgba(124, 140, 255, 0.55), rgba(124, 140, 255, 0) 65%);
-  animation: lg-drift-2 32s var(--ease-liquid) infinite alternate;
+  background: radial-gradient(closest-side, rgba(124, 140, 255, 0.42), rgba(124, 140, 255, 0.12) 55%, rgba(124, 140, 255, 0));
 }
 .lg-blob--3 {
   width: 40vmax; height: 40vmax;
   bottom: -16vmax; left: 20vmax;
-  background: radial-gradient(circle at 50% 50%, rgba(180, 108, 255, 0.5), rgba(180, 108, 255, 0) 65%);
-  animation: lg-drift-3 28s var(--ease-liquid) infinite alternate;
+  background: radial-gradient(closest-side, rgba(180, 108, 255, 0.38), rgba(180, 108, 255, 0.1) 55%, rgba(180, 108, 255, 0));
 }
 .lg-blob--4 {
   width: 26vmax; height: 26vmax;
   top: 40vh; left: 45vw;
-  background: radial-gradient(circle, rgba(255, 111, 181, 0.4), rgba(255, 111, 181, 0) 65%);
-  animation: lg-drift-4 22s var(--ease-liquid) infinite alternate;
+  background: radial-gradient(closest-side, rgba(255, 111, 181, 0.3), rgba(255, 111, 181, 0.08) 55%, rgba(255, 111, 181, 0));
 }
 
-/* ไฟส่องตามเมาส์ */
+/* ไฟส่องตามเมาส์: ขยับด้วย transform (ไม่ต้องวาด gradient ใหม่ทุกครั้งที่เมาส์ขยับ) */
 .lg-spotlight {
   position: absolute;
-  inset: 0;
-  background: radial-gradient(600px circle at var(--cursor-x, 50%) var(--cursor-y, 30%), rgba(124, 140, 255, 0.12), transparent 60%);
-  transition: opacity 0.4s;
+  top: -600px;
+  left: -600px;
+  width: 1200px;
+  height: 1200px;
+  background: radial-gradient(closest-side, rgba(124, 140, 255, 0.12), transparent);
+  transform: translate3d(var(--cursor-x, 50vw), var(--cursor-y, 30vh), 0);
+  will-change: transform;
 }
 
 /* grid เส้นบางๆ จางขอบ */
@@ -193,7 +195,6 @@ button, input, select, textarea {
   background-size: 64px 64px;
   mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
   -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
-  animation: lg-grid-pan 40s linear infinite;
 }
 
 /* noise ให้แก้วดูมีเนื้อ */
@@ -204,11 +205,6 @@ button, input, select, textarea {
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
-@keyframes lg-drift-1 { to { transform: translate3d(18vw, 14vh, 0) scale(1.15) rotate(25deg); } }
-@keyframes lg-drift-2 { to { transform: translate3d(-22vw, 18vh, 0) scale(0.9) rotate(-30deg); } }
-@keyframes lg-drift-3 { to { transform: translate3d(14vw, -24vh, 0) scale(1.2) rotate(40deg); } }
-@keyframes lg-drift-4 { to { transform: translate3d(-30vw, -20vh, 0) scale(1.4); } }
-@keyframes lg-grid-pan { to { background-position: 64px 64px, 64px 64px; } }
 
 /* ==================== GLASS PRIMITIVES ==================== */
 .lg-glass {
@@ -221,18 +217,32 @@ button, input, select, textarea {
   box-shadow: var(--lg-shadow);
 }
 
+/* ประสิทธิภาพ: การ์ดที่เลื่อนไปพร้อมหน้าลอยอยู่บนพื้นหลังที่นุ่มอยู่แล้ว blur แทบมองไม่เห็น
+   แต่เบราว์เซอร์ต้อง blur ใหม่ทุกเฟรมที่เลื่อน จึงเก็บ backdrop-filter ไว้เฉพาะของที่ลอยทับเนื้อหา
+   (navbar อยู่นอก <main>, modal / overlay / dropdown / toast / sidebar / topBar / lightbox) */
+main :not([class*="odal"]):not([class*="verlay"]):not([class*="ropdown"]):not([class*="oast"]):not([class*="onfirm"]):not([class*="ightbox"]):not([class*="idebar"]):not([class*="topBar"]):not([class*="opover"]):not([class*="ooltip"]) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 .lg-text-grad {
   background: var(--accent-grad);
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: lg-hue-flow 6s linear infinite;
 }
 
 @keyframes lg-hue-flow { to { background-position: 200% center; } }
 
 /* ==================== FX ENGINE (components/LiquidFx.jsx) ==================== */
+
+/* ค่าที่ JS อัปเดตตามเมาส์ทุกเฟรม: ไม่ให้ inherit ลงลูก ไม่งั้น style ทั้ง subtree ต้องคำนวณใหม่
+   (--lg-x/--lg-y ต้อง inherit เพราะ ::before/::after อ่านค่าจาก element แม่) */
+@property --lg-rx { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@property --lg-ry { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@property --lg-mx { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@property --lg-my { syntax: '<length>'; inherits: false; initial-value: 0px; }
 
 /* แสงสะท้อนบนผิวแก้วที่วิ่งตามเมาส์ */
 [data-lg-sheen]::after {
@@ -311,17 +321,14 @@ button, input, select, textarea {
 [data-lg-reveal] {
   opacity: 0;
   transform: translate3d(0, 28px, 0) scale(0.98);
-  filter: blur(8px);
   transition:
     opacity 0.9s var(--ease-out),
-    transform 0.9s var(--ease-out),
-    filter 0.9s var(--ease-out);
+    transform 0.9s var(--ease-out);
   transition-delay: var(--lg-delay, 0ms);
 }
 [data-lg-reveal="in"] {
   opacity: 1;
   transform: none;
-  filter: none;
 }
 
 /* ==================== PAGE TRANSITION ==================== */
@@ -329,8 +336,8 @@ button, input, select, textarea {
   animation: lg-page-in 0.75s var(--ease-out) backwards;
 }
 @keyframes lg-page-in {
-  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(0.995); filter: blur(10px); }
-  to   { opacity: 1; transform: none; filter: none; }
+  from { opacity: 0; transform: translate3d(0, 18px, 0); }
+  to   { opacity: 1; transform: none; }
 }
 
 .lg-route-bar {
@@ -365,15 +372,12 @@ button, input, select, textarea {
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  backdrop-filter: blur(0px);
-  -webkit-backdrop-filter: blur(0px);
-  background: radial-gradient(circle at 50% 50%, rgba(124, 140, 255, 0), rgba(5, 6, 13, 0));
-  transition: backdrop-filter 0.35s var(--ease-out), background 0.35s var(--ease-out);
+  opacity: 0;
+  background: radial-gradient(circle at 50% 40%, rgba(124, 140, 255, 0.12), rgba(5, 6, 13, 0.55));
+  transition: opacity 0.35s var(--ease-out);
 }
 .lg-wipe[data-active="true"] {
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  background: radial-gradient(circle at 50% 40%, rgba(124, 140, 255, 0.12), rgba(5, 6, 13, 0.45));
+  opacity: 1;
 }
 
 /* ==================== SHARED KEYFRAMES ==================== */
@@ -386,8 +390,8 @@ button, input, select, textarea {
   100% { background-position: 200% 0; }
 }
 @keyframes lg-pop {
-  0% { opacity: 0; transform: scale(0.92) translateY(10px); filter: blur(6px); }
-  100% { opacity: 1; transform: none; filter: none; }
+  0% { opacity: 0; transform: scale(0.92) translateY(10px); }
+  100% { opacity: 1; transform: none; }
 }
 @keyframes lg-spin { to { transform: rotate(360deg); } }
 @keyframes lg-pulse-ring {
@@ -411,6 +415,7 @@ button, input, select, textarea {
 
 /* เครื่องแรงไม่พอ/มือถือ: ลด blur ของพื้นหลัง */
 @media (max-width: 768px) {
-  .lg-blob { filter: blur(50px); opacity: 0.45; }
+  .lg-blob { opacity: 0.45; }
+  .lg-blob--3, .lg-spotlight { display: none; }
   .lg-blob--4 { display: none; }
 }

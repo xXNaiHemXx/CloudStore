@@ -303,7 +303,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: lg-hue-flow 6s linear infinite;
 }
 
 .heroSubtitle {
@@ -327,7 +326,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: lg-hue-flow 6s linear infinite;
   font-weight: 800;
 }
 
@@ -395,7 +393,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: lg-hue-flow 6s linear infinite;
   font-weight: 800;
 }
 

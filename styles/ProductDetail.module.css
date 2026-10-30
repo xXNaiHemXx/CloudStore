@@ -204,7 +204,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: lg-hue-flow 6s linear infinite;
   font-weight: 800;
 }
 
@@ -347,8 +346,8 @@
 
 .lightbox {
   background: rgba(5, 6, 13, 0.55);
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
   animation: lg-pop 0.35s var(--ease-out) backwards;
 }
 
@@ -380,7 +379,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: lg-hue-flow 6s linear infinite;
   font-weight: 800;
 }
 

@@ -27,19 +27,31 @@ export default function Layout({ children }) {
   const activeHref = NAV.find((n) => n.href === router.pathname)?.href
     ?? (router.pathname.startsWith("/products") ? "/shop" : null);
 
-  // header หดเป็นแคปซูลเมื่อเลื่อน และซ่อนตอนเลื่อนลงเร็วๆ
+  // header หดเป็นแคปซูลเมื่อเลื่อน และซ่อนตอนเลื่อนลง
+  // อ่านค่าแค่เฟรมละครั้ง และสะสมระยะก่อนสลับ ไม่ให้ header สลับซ่อน/โชว์ถี่ๆ ระหว่างเลื่อน
   useEffect(() => {
     let lastY = window.scrollY;
-    const onScroll = () => {
+    let travel = 0;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
       const y = window.scrollY;
-      setScrolled(y > 12);
-      setHidden(y > 240 && y > lastY + 4);
-      if (y < lastY - 4) setHidden(false);
+      const dy = y - lastY;
       lastY = y;
+      travel = Math.sign(dy) === Math.sign(travel) ? travel + dy : dy;
+      setScrolled(y > 12);
+      if (y <= 240 || travel < -24) setHidden(false);
+      else if (travel > 24) setHidden(true);
     };
-    onScroll();
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+    };
   }, []);
 
   useEffect(() => {

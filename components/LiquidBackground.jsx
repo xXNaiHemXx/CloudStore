@@ -6,22 +6,22 @@ export default function LiquidBackground() {
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || window.matchMedia("(pointer: coarse)").matches) return;
-
+    if (!el) return;
     let frame = 0;
-    let x = 50, y = 30;
+    let x = 0, y = 0;
     const onMove = (e) => {
-      x = (e.clientX / window.innerWidth) * 100;
-      y = (e.clientY / window.innerHeight) * 100;
+      x = e.clientX;
+      y = e.clientY;
       if (frame) return;
       frame = requestAnimationFrame(() => {
-        el.style.setProperty("--cursor-x", `${x}%`);
-        el.style.setProperty("--cursor-y", `${y}%`);
+        el.style.setProperty("--cursor-x", `${x}px`);
+        el.style.setProperty("--cursor-y", `${y}px`);
         frame = 0;
       });
     };
+    const finePointer = window.matchMedia("(pointer: fine)").matches;
+    if (finePointer) window.addEventListener("pointermove", onMove, { passive: true });
 
-    window.addEventListener("pointermove", onMove, { passive: true });
     return () => {
       window.removeEventListener("pointermove", onMove);
       cancelAnimationFrame(frame);
