@@ -27,16 +27,21 @@ export const authOptions = {
         session.user.id = token.sub;
         session.user.discordId = token.sub;
 
-            const client = await clientPromise;
-            const db = client.db("CloudStore");
-            const usersCollection = db.collection("users");
+            // ถ้า DB มีปัญหา ยังต้องคืน session ได้ ไม่งั้นหน้าเว็บจะเหมือนไม่ได้ล็อคอิน
+            try {
+                const client = await clientPromise;
+                const db = client.db("CloudStore");
+                const usersCollection = db.collection("users");
 
-            const dbUser = await usersCollection.findOne({ discordId: token.sub });
+                const dbUser = await usersCollection.findOne({ discordId: token.sub });
 
-            if (dbUser) {
-                session.user.points = dbUser.points || 0;
-                session.user.name = dbUser.name || session.user.name;
-                session.user.email = dbUser.email || session.user.email;
+                if (dbUser) {
+                    session.user.points = dbUser.points || 0;
+                    session.user.name = dbUser.name || session.user.name;
+                    session.user.email = dbUser.email || session.user.email;
+                }
+            } catch (err) {
+                console.error("❌ [session callback] DB error:", err?.message || err);
             }
 
             return session;
