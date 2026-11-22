@@ -10,6 +10,9 @@ export const authOptions = {
         DiscordProvider({
             clientId: process.env.DISCORD_CLIENT_ID,
             clientSecret: process.env.DISCORD_CLIENT_SECRET,
+            // Discord ส่ง ?iss=https://discord.com กลับมาตอน callback แล้ว (RFC 9207)
+            // openid-client จะ error "issuer must be configured" ถ้าไม่ได้ตั้งค่านี้
+            issuer: "https://discord.com",
         }),
     ],
     secret: process.env.NEXTAUTH_SECRET,
